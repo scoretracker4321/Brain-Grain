@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Brain Grain — Skills Assessment</title>
+  <style>
+    /* Light theme with spacious card layout + larger interactive elements */
+    :root{
+      --bg:#ffffff;
+      --surface:#ffffff;
+      --accent:#0b66d0; /* logo blue */
+      --text:#0b66d0;
+      --muted:#4a90d9;
+      --card-shadow: 0 6px 20px rgba(16,24,32,0.06);
+    }
+
+    html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,system-ui,Arial;background:var(--bg);color:var(--text);}
+
+    .app{max-width:980px;margin:28px auto;padding:26px;background:var(--surface);border-radius:12px;border:1px solid rgba(11,58,63,0.04);box-shadow:var(--card-shadow)}
+
+    .header{display:flex;justify-content:flex-start;align-items:center;margin-bottom:18px}
+    .title{font-size:20px;font-weight:700;color:var(--text)}
+    .summary{color:var(--muted);font-size:13px}
+    .welcome{display:flex;gap:12px;align-items:center}
+
+    .form-input{padding:10px;border-radius:8px;border:1px solid rgba(11,58,63,0.06);background:transparent;color:var(--text);min-width:260px}
+
+    .btn{padding:10px 14px;border-radius:8px;border:none;cursor:pointer;font-weight:600}
+    .btn-primary{background:var(--accent);color:#fff}
+    .btn-secondary{background:#fff;border:1px solid rgba(11,58,63,0.06);color:var(--text)}
+    .btn.active{background:var(--accent);color:#fff;border:none}
+
+    .skill-badge{padding:6px 10px;border-radius:999px;background:rgba(45,154,166,0.08);color:var(--accent);font-weight:700}
+
+    /* Question card */
+    #question-container{margin-top:18px;padding:22px;border-radius:12px;background:linear-gradient(180deg,#ffffff,#fbfeff);border:1px solid rgba(11,58,63,0.04);box-shadow:0 8px 28px rgba(9,30,33,0.05)}
+
+    #question-number{font-size:13px;color:var(--muted)}
+    #question-text{font-size:22px;font-weight:800;margin-top:10px;color:var(--text)}
+
+    /* Emoji/choice area - larger, centered and tactile */
+    .emoji-options,.choice-options{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+
+    .emoji-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:28px;border-radius:16px;border:1px solid rgba(11,58,63,0.06);background:#fff;cursor:pointer;min-width:140px;min-height:140px;font-size:48px;box-shadow:0 6px 24px rgba(16,24,32,0.06);transition:transform .12s ease,box-shadow .12s ease}
+    .emoji-btn .emoji-label{font-size:13px;color:var(--muted)}
+    .emoji-btn.selected{transform:translateY(-6px);box-shadow:0 14px 32px rgba(16,24,32,0.12);border-color:var(--accent)}
+
+    .choice-btn{padding:14px 20px;border-radius:12px;border:1px solid rgba(11,58,63,0.06);background:#fff;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 6px 18px rgba(16,24,32,0.04);min-width:240px;text-align:center}
+    .choice-btn.selected{border-color:var(--accent);transform:translateY(-4px)}
+
+    .tf-options{display:flex;gap:12px;justify-content:center;margin-top:12px}
+    .tf-btn{padding:12px 18px;border-radius:10px;border:1px solid rgba(11,58,63,0.06);background:#fff;font-weight:800;cursor:pointer}
+
+    .slider-container{margin-top:14px;display:flex;flex-direction:column;align-items:center;gap:10px}
+    input[type=range]{width:80%;max-width:520px} 
+    .slider-value{font-weight:800;margin-top:8px;color:var(--accent);font-size:18px}
+    .slider-value{font-weight:700;margin-top:8px;color:var(--accent)}
+
+    .star{cursor:pointer;font-size:36px;transition:transform .12s ease;color:#cfcfcf}
+    .star.active{transform:translateY(-6px);color:var(--accent)}
+
+    .sort-item{padding:12px;border-radius:10px;border:1px solid rgba(11,58,63,0.06);background:#fff;margin-bottom:8px;box-shadow:0 6px 18px rgba(16,24,32,0.04);display:flex;gap:12px;align-items:center}
+    .sort-number{font-weight:800;color:var(--muted);width:28px;text-align:center}
+
+    .progress-fill{height:10px;background:linear-gradient(90deg,var(--accent),#218089);border-radius:6px;width:0%}
+
+    .results-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+    .card{background:#fff;padding:14px;border-radius:10px;border:1px solid rgba(11,58,63,0.04);box-shadow:0 6px 18px rgba(16,24,32,0.04)}
+
+    .small{font-size:13px;color:var(--muted)}
+
+    /* Feedback popup */
+    #feedback-popup{transition:opacity .18s ease,transform .18s ease}
+    #feedback-popup.hidden{opacity:0;pointer-events:none;transform:translateY(-6px)}
+    #feedback-popup.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+
+    @media(max-width:700px){
+      .results-grid{grid-template-columns:1fr}
+      .emoji-btn{min-width:70px;min-height:70px;font-size:22px;padding:14px}
+      #question-text{font-size:18px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div style="text-align:left;">
+        <img src="assets/braingrainupdatedlogo.png?v=1" class="site-logo" alt="Brain Grain logo" style="width:200px;display:block;margin:0 0 8px">
+        <!-- Title and tagline removed as requested -->
+      </div>
+      <div id="studentSummary" class="summary">No student selected</div>
+    </div>
+
+    <div id="assessment-app">
+      <div id="welcome-screen" class="welcome">
+        <label class="small" for="user-name">Student name</label>
+        <input id="user-name" class="form-input" placeholder="Student name">
+        <button id="start-assessment-btn" class="btn btn-primary" onclick="startAssessment()">Start assessment</button>
+        <button class="btn btn-secondary" onclick="window.close()">Close</button>
+      </div>
+
+      <div id="assessment-screen" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+          <div>
+            <div id="progress-text" class="small">Question 1 of 15</div>
+            <div id="current-skill" class="skill-badge" style="margin-top:8px">❤️ Feelings</div>
+          </div>
+          <div style="text-align:right">
+            <div id="current-score" style="font-weight:800;font-size:20px">0</div>
+            <div class="small">points</div>
+          </div>
+        </div>
+
+        <!-- Question card (matching ids expected by assessment-app.js) -->
+        <div id="question-container" class="question-card">
+          <div id="question-number" class="small" style="opacity:0.8">Question 1 of 15</div>
+          <div id="question-text" style="font-size:28px;font-weight:800;margin-top:10px;color:var(--text)">How do you feel when helping a friend?</div>
+          <div id="question-hint" class="small" style="text-align:center;margin-top:8px;color:var(--muted)">Tip: Tap the emoji that best matches how you feel.</div>
+          <div id="answer-area" style="margin-top:14px"></div>
+        </div>
+
+        <div style="height:10px;margin-top:12px;background:rgba(0,0,0,0.06);border-radius:6px;overflow:hidden"><div id="progress-fill" class="progress-fill" style="width:0%"></div></div>
+
+        <!-- Feedback popup and confetti container -->
+        <div id="feedback-popup" class="hidden" style="position:fixed;left:50%;top:30%;transform:translate(-50%,-50%);background:#fff;padding:12px;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,0.16);z-index:40;text-align:center">
+          <div id="feedback-emoji" style="font-size:28px">🎉</div>
+          <div id="feedback-text" style="font-weight:700;margin-top:6px">Nice!</div>
+          <div id="feedback-points" style="margin-top:6px;color:#00796b">+10 points</div>
+        </div>
+        <div id="confetti-container" style="position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:20"></div>
+      </div>
+
+      <!-- student-friendly thank-you screen (shown when student opens the page directly) -->
+      <div id="student-thanks" style="display:none;text-align:center;padding:32px">
+        <h2 style="margin-bottom:8px">Thanks for completing the assessment!</h2>
+        <p class="small">An adult will review your results. You're all done.</p>
+        <div style="margin-top:12px"><button class="btn btn-primary" onclick="window.close()">Close</button></div>
+      </div>
+
+      <!-- admin flow: show a short saved message and link back to admin dashboard -->
+      <div id="admin-done" style="display:none;text-align:center;padding:32px">
+        <h2 style="margin-bottom:8px">Results saved</h2>
+        <p class="small">You can view the assessment in the admin dashboard.</p>
+        <div style="margin-top:12px">
+          <button class="btn btn-primary" id="return-to-admin">Return to Admin</button>
+          <button class="btn btn-secondary" onclick="window.close()">Close</button>
+        </div>
+      </div>
+
+      <div id="results-screen" style="display:none;">
+        <div style="display:flex;align-items:center;gap:12px;margin-top:12px">
+          <div id="score-emoji-big" style="font-size:36px">🏆</div>
+          <div>
+            <div style="font-weight:800;font-size:20px">Overall Score: <span id="overall-score">0</span></div>
+            <div id="skill-level" class="small">🌱 Beginner</div>
+          </div>
+        </div>
+
+        <div class="results-grid" style="margin-top:12px">
+          <div class="card"><strong>❤️ Feelings</strong><div id="sel-score">0%</div><div style="height:8px;background:rgba(0,0,0,0.06);border-radius:6px;margin-top:10px;overflow:hidden"><div id="sel-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#218089)"></div></div></div>
+          <div class="card"><strong>🧠 Thinking</strong><div id="ct-score">0%</div><div style="height:8px;background:rgba(0,0,0,0.06);border-radius:6px;margin-top:10px;overflow:hidden"><div id="ct-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#218089)"></div></div></div>
+          <div class="card"><strong>👑 Leading</strong><div id="lead-score">0%</div><div style="height:8px;background:rgba(0,0,0,0.06);border-radius:6px;margin-top:10px;overflow:hidden"><div id="lead-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#218089)"></div></div></div>
+        </div>
+
+        <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="card">
+            <h4 style="margin:0 0 8px 0">Strengths</h4>
+            <div id="strengths-text" class="small">Your strongest area will appear here.</div>
+          </div>
+          <div class="card">
+            <h4 style="margin:0 0 8px 0">Growth</h4>
+            <div id="growth-text" class="small">Personalized growth advice will appear here.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:12px">
+          <div class="card" style="flex:1">
+            <h4 style="margin:0 0 8px 0">6-Month Plan</h4>
+            <ul id="phase1-plan" style="margin:0 0 8px 16px"></ul>
+            <ul id="phase2-plan" style="margin:0 0 8px 16px"></ul>
+            <ul id="phase3-plan" style="margin:0 0 8px 16px"></ul>
+          </div>
+
+          <div class="card" style="width:320px">
+            <h4 style="margin:0 0 8px 0">Next steps</h4>
+            <div id="next-level-text" class="small">Your next level goals.</div>
+            <div id="action-steps" style="margin-top:8px"></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+          <button class="btn btn-secondary" onclick="retakeAssessment()">Retake</button>
+          <button class="btn btn-primary" onclick="(function(){ if(typeof saveInteractiveResultsToStudent==='function') saveInteractiveResultsToStudent(); if(window.opener && window.opener.loadStudents) try{window.opener.loadStudents()}catch(e){} window.close(); })()">Save & Close</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="utils.js"></script>
+  <script src="assessment-app.js"></script>
+  <script>
+    // initialize from query param studentId
+    (function(){
+      const params = new URLSearchParams(location.search);
+      const sid = params.get('studentId');
+      if (sid) {
+        window.currentAssessmentStudentId = sid;
+        try {
+          const arr = StorageHelper.loadStudents();
+          const st = arr.find(s => s.id === sid);
+          if (st) {
+            const summary = document.getElementById('studentSummary');
+            const nameField = document.getElementById('user-name');
+            const startBtn = document.getElementById('start-assessment-btn');
+            const forcedReport = params.get('view') === 'report';
+            const openedByAdmin = !!window.opener;
+
+            // Show "Retake" when this student already has saved assessment data
+            if (startBtn) {
+              if (st.assessmentScore || (st.assessmentBreakdown && (typeof st.assessmentBreakdown.selPercent === 'number' || typeof st.assessmentBreakdown.ctPercent === 'number' || typeof st.assessmentBreakdown.leadPercent === 'number'))) {
+                startBtn.textContent = 'Retake';
+              }
+            }
+
+            // Only show admin summary when opened by admin or when explicitly requesting a report
+            if (openedByAdmin || forcedReport) {
+              if (summary) summary.textContent = `${st.firstName || ''} ${st.lastName || ''} (Grade ${st.grade || 'N/A'})`;
+              if (nameField) nameField.value = `${st.firstName || ''}${st.lastName ? ' ' + st.lastName : ''}`.trim();
+            } else {
+              // Hide the summary for direct student opens to avoid exposing admin-only info
+              if (summary) summary.style.display = 'none';
+            }
+          }
+        } catch(e){ console.error(e) }
+      }
+
+      // If admin requested a direct report view, show it immediately (uses saved breakdown if present)
+      try {
+        if (params.get('view') === 'report') {
+          setTimeout(() => { try { showResults(); } catch(e){} }, 400);
+        }
+      } catch(e){}
+
+      // expose saveAndClose used by UI
+      window.saveAndClose = function(){
+        // call the same save function used after showResults
+        if (typeof saveInteractiveResultsToStudent === 'function') {
+          saveInteractiveResultsToStudent();
+        }
+        // attempt to notify opener
+        if (window.opener && window.opener.loadStudents) {
+          try { window.opener.loadStudents(); } catch(e){}
+        }
+        // close window
+        window.close();
+      };
+
+      // wire the Return to Admin button to refresh opener and close this window
+      try {
+        const returnBtn = document.getElementById('return-to-admin');
+        if (returnBtn) {
+          returnBtn.addEventListener('click', function(){
+            if (window.opener) {
+              try {
+                if (typeof window.opener.loadStudents === 'function') window.opener.loadStudents();
+                if (typeof window.opener.focus === 'function') window.opener.focus();
+              } catch (e) { /* ignore */ }
+            }
+            window.close();
+          });
+        }
+      } catch (e) { /* ignore */ }
+
+    })();
+  </script>
+</body>
+</html>

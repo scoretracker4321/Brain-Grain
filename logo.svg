@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
+  <rect width="100%" height="100%" fill="white"/>
+  <!-- Simple brain-like circle -->
+  <g transform="translate(200,80)">
+    <ellipse cx="160" cy="80" rx="140" ry="90" fill="#f2b6a0"/>
+    <ellipse cx="100" cy="100" rx="80" ry="50" fill="#bfe6f8"/>
+    <ellipse cx="220" cy="100" rx="80" ry="50" fill="#8fd4ff"/>
+    <ellipse cx="160" cy="60" rx="50" ry="30" fill="#7cd0ff"/>
+  </g>
+  <!-- Seeds falling -->
+  <g fill="#d2a05a">
+    <ellipse cx="420" cy="20" rx="8" ry="14"/>
+    <ellipse cx="450" cy="40" rx="8" ry="14"/>
+    <ellipse cx="380" cy="30" rx="8" ry="14"/>
+    <ellipse cx="440" cy="10" rx="8" ry="14"/>
+  </g>
+  <!-- Text -->
+  <g transform="translate(150,250)">
+    <text x="0" y="0" font-family="Segoe UI, Roboto, Arial" font-size="42" fill="#0b66d0" font-weight="700">Brain Grain</text>
+    <text x="0" y="40" font-family="Segoe UI, Roboto, Arial" font-size="18" fill="#1976d2">Feed the Brain, Feel the Change</text>
+  </g>
+</svg>

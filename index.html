@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Grain - Complete Platform</title>
+    <link rel="icon" href="assets/braingrainupdatedlogo.png" />
+    <style>
+        :root {
+            /* White background + blue text theme (logo blue: #0b66d0) */
+            --color-primary: #0b66d0;
+            --color-accent: #1976d2;
+            --color-success: #22c55e;
+            --color-error: #ef4444;
+            --color-bg: #ffffff;
+            --color-surface: #ffffff;
+            --color-text: #0b66d0;
+            --color-text-secondary: #4a90d9;
+            --color-border: rgba(11,102,208,0.12);
+            --spacing-8: 8px;
+            --spacing-12: 12px;
+            --spacing-16: 16px;
+            --spacing-20: 20px;
+            --spacing-32: 32px;
+            --radius-base: 8px;
+            --radius-lg: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; padding: var(--spacing-20); }
+
+        .header {
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            padding: var(--spacing-24) var(--spacing-20);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--spacing-24);
+            text-align: center;
+        }
+
+        .site-logo { display:block; margin: 0 auto var(--spacing-12); width:160px; height:auto }
+
+        .header h1 { font-size: 28px; margin-bottom: var(--spacing-8); font-weight: 600; }
+        .header p { font-size: 14px; opacity: 0.95; margin: 0; }
+
+        .tabs {
+            display: flex;
+            gap: var(--spacing-12);
+            margin-bottom: var(--spacing-24);
+            border-bottom: 2px solid var(--color-border);
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: var(--spacing-12) var(--spacing-16);
+            border: none;
+        }
+
+        .icon-btn { background: transparent; border: none; font-size: 16px; padding: 6px; cursor: pointer; }
+        .icon-btn:hover { background: rgba(11,102,208,0.06); border-radius:6px }
+        .link-small { color: var(--color-primary); font-size: 13px; text-decoration: underline; cursor: pointer; white-space: nowrap; }
+
+        .tab-btn.active { color: var(--color-accent); border-bottom-color: var(--color-accent); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .form-group { margin-bottom: var(--spacing-20); }
+        .form-label { display: block; font-weight: 500; margin-bottom: var(--spacing-8); font-size: 14px; }
+        .form-required::after { content: " *"; color: var(--color-error); }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: var(--spacing-12);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-base);
+            font-size: 14px;
+            background-color: var(--color-surface);
+            color: var(--color-text);
+            font-family: inherit;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px rgba(50, 184, 198, 0.2);
+        }
+
+        .form-input.error, .form-textarea.error, .form-select.error {
+            border-color: var(--color-error) !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+        }
+
+        .form-input.valid, .form-textarea.valid, .form-select.valid {
+            border-color: var(--color-success) !important;
+        }
+
+        .error-message {
+            color: var(--color-error);
+            font-size: 12px;
+            margin-top: var(--spacing-4);
+            display: block;
+            font-weight: 500;
+        }
+
+        .error-message.hidden { display: none; }
+
+        .form-group.has-error .form-input,
+        .form-group.has-error .form-textarea,
+        .form-group.has-error .form-select {
+            border-color: var(--color-error) !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+        }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-16); }
+
+        @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+        .form-radio, .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-8);
+            cursor: pointer;
+            margin-bottom: var(--spacing-12);
+        }
+
+        .form-radio input, .form-checkbox input { cursor: pointer; accent-color: var(--color-accent); }
+
+        .button-group {
+            display: flex;
+            gap: var(--spacing-12);
+            margin-top: var(--spacing-32);
+            justify-content: space-between;
+        }
+
+        .btn {
+            padding: var(--spacing-12) var(--spacing-20);
+            border: none;
+            border-radius: var(--radius-base);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary { background-color: var(--color-primary); color: white; }
+        .btn-primary:hover { filter: brightness(0.95); }
+        .btn-secondary { background-color: transparent; color: var(--color-accent); border: 2px solid var(--color-accent); }
+        .btn-secondary:hover { background-color: rgba(50, 184, 198, 0.1); }
+
+        .section-header {
+            background: rgba(50, 184, 198, 0.1);
+            padding: var(--spacing-16);
+            border-radius: var(--radius-base);
+            margin-bottom: var(--spacing-20);
+            border-left: 4px solid var(--color-accent);
+        }
+
+        .section-header h3 { margin: 0 0 var(--spacing-4) 0; font-size: 16px; }
+        .section-header p { margin: 0; font-size: 13px; color: var(--color-text-secondary); }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--color-border);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: var(--spacing-16) 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-accent), var(--color-primary));
+            transition: width 0.3s ease;
+        }
+
+        .success-message {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid var(--color-success);
+            border-radius: var(--radius-base);
+            padding: var(--spacing-16);
+            margin-bottom: var(--spacing-20);
+            text-align: center;
+            display: none;
+        }
+
+        .success-message.show { display: block; }
+
+        .info-box {
+            background: rgba(50, 184, 198, 0.1);
+            border-left: 4px solid var(--color-accent);
+            padding: var(--spacing-12);
+            border-radius: var(--radius-base);
+            font-size: 13px;
+            margin-bottom: var(--spacing-16);
+        }
+
+        .subject-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: var(--spacing-16);
+            margin: var(--spacing-16) 0;
+        }
+
+        .subject-card {
+            background: var(--color-surface);
+            padding: var(--spacing-16);
+            border-radius: var(--radius-base);
+            border: 1px solid var(--color-border);
+        }
+
+        .subject-card label { display: block; margin-bottom: var(--spacing-8); font-weight: 500; }
+
+        .subject-card input {
+            width: 100%;
+            padding: var(--spacing-8);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-base);
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            text-align: center;
+        }
+
+        .admin-header {
+            background: var(--color-surface);
+            padding: var(--spacing-16);
+            border-radius: var(--radius-base);
+            margin-bottom: var(--spacing-20);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--color-border);
+        }
+
+        .student-list {
+            background: var(--color-surface);
+            border-radius: var(--radius-base);
+            overflow: hidden;
+        }
+
+        .student-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .student-table th {
+            background: var(--color-border);
+            padding: var(--spacing-12);
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .student-table td {
+            padding: var(--spacing-12);
+            border-bottom: 1px solid var(--color-border);
+            font-size: 13px;
+        }
+        .student-table td a, .student-table td .link-small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .student-table tr:hover { background: rgba(50, 184, 198, 0.05); }
+
+        .status-badge {
+            display: inline-block;
+            padding: var(--spacing-4) var(--spacing-12);
+            border-radius: var(--radius-base);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending { background: rgba(245, 158, 11, 0.2); color: #f59e61; }
+        .status-in-progress { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+        .status-completed { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+
+        /* Report availability badge */
+        .report-available { background: rgba(11,102,208,0.08); color: var(--color-primary); padding: var(--spacing-4) var(--spacing-8); border-radius: 8px; font-weight: 700; }
+        .archived-badge { background: rgba(0,0,0,0.04); padding: 6px 8px; border-radius: 6px; color: #666; font-weight:700 }
+
+        .action-btns {
+            display: flex;
+            gap: var(--spacing-8);
+        }
+        /* Overflow row menu for actions */
+        .row-menu {
+            min-width: 160px;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 6px 18px rgba(11,102,208,0.08);
+        }
+        .row-menu div { margin-bottom: 6px; }
+        .row-menu .icon-btn { width: 100%; text-align: left; padding: 6px; }
+
+        .btn-small {
+            padding: var(--spacing-4) var(--spacing-12);
+            font-size: 12px;
+            border-radius: var(--radius-base);
+        }
+
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: var(--color-surface);
+            padding: var(--spacing-32);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--color-border);
+        }
+
+        .login-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: var(--spacing-16);
+            text-align: center;
+            color: var(--color-accent);
+        }
+
+        .form-helper { font-size: 12px; color: var(--color-text-secondary); margin-top: var(--spacing-4); }
+
+        .custom-subject-section {
+            background: rgba(50, 184, 198, 0.05);
+            padding: var(--spacing-16);
+            border-radius: var(--radius-base);
+            margin-top: var(--spacing-16);
+        }
+
+        .add-subject-btn {
+            background: rgba(50, 184, 198, 0.2);
+            border: 2px dashed var(--color-accent);
+            padding: var(--spacing-12);
+            border-radius: var(--radius-base);
+            color: var(--color-accent);
+            cursor: pointer;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* Full-page student detail view */
+        #studentDetailView {
+            display: none;
+            margin-top: var(--spacing-20);
+            background: var(--color-surface);
+            border-radius: var(--radius-base);
+            border: 1px solid var(--color-border);
+            padding: var(--spacing-20);
+        }
+        #studentDetailView h2 {
+            margin-bottom: var(--spacing-16);
+        }
+        .detail-section {
+            margin-bottom: var(--spacing-20);
+            padding-bottom: var(--spacing-16);
+            border-bottom: 1px solid var(--color-border);
+        }
+        .detail-section:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-row {
+            margin-bottom: var(--spacing-8);
+            font-size: 14px;
+        }
+        .detail-label {
+            font-weight: 600;
+        }
+    </style>
+  <script src="utils.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Screen -->
+        <div id="loginScreen" class="tab-content active">
+            <div class="header">
+                <img src="assets/braingrainupdatedlogo.png?v=1" class="site-logo" alt="Brain Grain logo">
+            </div>
+
+            <div class="login-container">
+                <div class="login-title">Choose Your Role</div>
+                
+                <div style="margin-bottom: var(--spacing-20);">
+                    <button type="button" class="btn btn-primary" style="width: 100%; margin-bottom: var(--spacing-12);" onclick="switchToStudent()">
+                        👤 Student Registration
+                    </button>
+                    <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="switchToAdmin()">
+                        👨‍💼 Admin Login
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Registration -->
+        <div id="studentScreen" class="tab-content">
+            <div class="header">
+                <img src="assets/braingrainupdatedlogo.png?v=1" class="site-logo" alt="Brain Grain logo">
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                ✓ Registration submitted successfully!
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="student-info">Student Info</button>
+                <button class="tab-btn" data-tab="parent-info">Parent/Guardian</button>
+                <button class="tab-btn" data-tab="academic">Academic</button>
+                <button class="tab-btn" data-tab="review">Review</button>
+            </div>
+
+            <!-- Tab 1: Student Info -->
+            <div class="tab-content active" id="student-info">
+                <div class="section-header">
+                    <h3>Student Information</h3>
+                    <p>Basic details to get to know you better</p>
+                </div>
+
+                <form id="studentInfoForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label form-required">First Name</label>
+                            <input type="text" class="form-input" name="firstName" data-validation="text" data-min="2" required>
+                            <span class="error-message hidden"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label form-required">Last Name</label>
+                            <input type="text" class="form-input" name="lastName" data-validation="text" data-min="1" required>
+                            <span class="error-message hidden"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label form-required">Date of Birth</label>
+                            <input type="date" class="form-input" name="dob" data-validation="date" required>
+                            <span class="error-message hidden"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label form-required">Grade</label>
+                            <select class="form-select" name="grade" data-validation="select" required>
+                                <option value="">Select Grade</option>
+                                <option value="6">Grade 6</option>
+                                <option value="7">Grade 7</option>
+                                <option value="8">Grade 8</option>
+                                <option value="9">Grade 9</option>
+                                <option value="10">Grade 10</option>
+                                <option value="11">Grade 11</option>
+                                <option value="12">Grade 12</option>
+                            </select>
+                            <span class="error-message hidden"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label form-required">School Name</label>
+                        <input type="text" class="form-input" name="school" data-validation="text" data-min="2" required>
+                        <span class="error-message hidden"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label form-required">Phone Number</label>
+                        <input type="tel" class="form-input" name="phone" placeholder="10-digit mobile number" data-validation="phone" required>
+                        <span class="error-message hidden"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">When I don\'t understand something, I usually</label>
+                        <div style="display:flex; gap: var(--spacing-12); margin-top: var(--spacing-8);">
+                            <label style="display:flex; align-items:center; gap:8px;"><input type="radio" name="whenDontUnderstand" value="ask-help"> Ask for help</label>
+                            <label style="display:flex; align-items:center; gap:8px;"><input type="radio" name="whenDontUnderstand" value="try-own"> Try on my own</label>
+                            <label style="display:flex; align-items:center; gap:8px;"><input type="radio" name="whenDontUnderstand" value="feel-stuck"> Feel stuck</label>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">One thing I enjoy doing</label>
+                            <input type="text" class="form-input" name="enjoyDoing" placeholder="e.g., drawing, coding" data-validation="text">
+                            <span class="error-message hidden"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">One thing I find difficult sometimes</label>
+                            <input type="text" class="form-input" name="findDifficult" placeholder="e.g., fractions, reading aloud" data-validation="text">
+                            <span class="error-message hidden"></span>
+                        </div>
+                    </div>
+
+                    <div class="section-header">
+                        <h3>Address</h3>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label form-required">Door No / House Name</label>
+                            <input type="text" class="form-input" name="doorNo" placeholder="e.g., 123/A" data-validation="text" data-min="1" required>
+                            <span class="error-message hidden"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label form-required">Street Name</label>
+                            <input type="text" class="form-input" name="street" data-validation="text" data-min="2" required>
+                            <span class="error-message hidden"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label form-required">Area / Locality</label>
+                            <input type="text" class="form-input" name="area" data-validation="text" data-min="2" required>
+                            <span class="error-message hidden"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label form-required">Pincode</label>
+                            <input type="text" class="form-input" name="pincode" placeholder="6-digit pincode" data-validation="pincode" onblur="fetchCityState()" required>
+                            <span class="error-message hidden"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">City</label>
+                            <input type="text" class="form-input" name="city" readonly style="background-color: var(--color-bg);">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">State</label>
+                            <input type="text" class="form-input" name="state" readonly style="background-color: var(--color-bg);">
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn btn-secondary" onclick="switchToLogin()">Back</button>
+                        <button type="button" class="btn btn-primary" onclick="handleNextTab('parent-info')">Next: Parent Info</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tab 2: Parent Info -->
+            <div class="tab-content" id="parent-info">
+                <div class="section-header">
+                    <h3>Parent/Guardian Information</h3>
+                    <p>We'll keep your parents/guardians informed about progress</p>
+                </div>
+
+                <form id="parentInfoForm">
+                    <div class="form-group">
+                        <label class="form-label form-required">Parent/Guardian Name</label>
+                        <input type="text" class="form-input" name="parentName" data-validation="text" data-min="2" required>
+                        <span class="error-message hidden"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email Address (optional)</label>
+                        <input type="email" class="form-input" name="parentEmail" data-validation="email">
+                        <span class="error-message hidden"></span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label form-required">Relationship</label>
+                            <select class="form-select" name="parentRelation" data-validation="select" required>
+                                <option value="">Select</option>
+                                <option value="mother">Mother</option>
+                                <option value="father">Father</option>
+                                <option value="guardian">Guardian</option>
+                            </select>
+                            <span class="error-message hidden"></span>
+
+                            <div class="form-checkbox" style="margin-top: var(--spacing-8);">
+                                <input type="checkbox" id="sameAsStudent" onchange="toggleSameNumber()">
+                                <label for="sameAsStudent">Same as student number</label>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: var(--spacing-12);">
+                            <div class="form-group">
+                                <label class="form-label form-required">Contact Number</label>
+                                <input type="tel" class="form-input" name="parentPhone" placeholder="10-digit mobile number" data-validation="phone" required>
+                                <span class="error-message hidden"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Alternate Contact Number</label>
+                                <input type="tel" class="form-input" name="parentPhoneAlt" placeholder="Optional 10-digit number" data-validation="phone">
+                                <span class="error-message hidden"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">My child is really good at</label>
+                            <input type="text" class="form-input" name="childGoodAt" data-validation="text">
+                            <span class="error-message hidden"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">My wish for my child in this one year is</label>
+                            <input type="text" class="form-input" name="wishForChild" data-validation="text">
+                            <span class="error-message hidden"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-checkbox">
+                        <input type="checkbox" onchange="toggleSameNumber()">
+                        <label>Same as student number</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">How did you hear about Brain Grain?</label>
+                        <select class="form-select" name="source">
+                            <option value="">Select</option>
+                            <option value="chs-adyar">Student-CHS, Adyar</option>
+                            <option value="school-rec">School recommendation</option>
+                            <option value="friend">Friend/Family referral</option>
+                            <option value="social">Social media</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <span class="error-message hidden"></span>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn btn-secondary" onclick="prevStudentTab('student-info')">Back</button>
+                        <button type="button" class="btn btn-primary" onclick="handleNextTab('academic')">Next: Academic</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tab 3: Academic -->
+            <div class="tab-content" id="academic">
+                <div class="section-header">
+                    <h3>Academic Performance</h3>
+                    <p>Recent exam scores and subject-wise performance</p>
+                </div>
+
+                <form id="academicForm">
+                    <div class="form-group">
+                        <label class="form-label form-required">Recent Exam</label>
+                        <select class="form-select" name="examType" data-validation="select" onchange="handleExamType()" required>
+                            <option value="">Select Exam</option>
+                            <option value="mid-term">Mid-term</option>
+                            <option value="term1">Term 1</option>
+                            <option value="term2">Term 2</option>
+                            <option value="term3">Term 3</option>
+                            <option value="term4">Term 4</option>
+                            <option value="custom">Custom Exam</option>
+                        </select>
+                        <span class="error-message hidden"></span>
+                    </div>
+
+                    <div class="form-group" id="customExamDiv" style="display: none;">
+                        <label class="form-label form-required">Exam Name</label>
+                        <input type="text" class="form-input" name="customExamName" placeholder="e.g., Final Exam, Pre-board" data-validation="text" data-min="2">
+                        <span class="error-message hidden"></span>
+                    </div>
+
+                    <div class="section-header">
+                        <h3>Subject-wise Scores (out of 60)</h3>
+                    </div>
+
+                        <div class="form-row" style="align-items:center; margin-bottom: var(--spacing-12);">
+                            <div class="form-group" style="flex: 0 0 220px;">
+                                <label class="form-label">Max marks per subject</label>
+                                <select class="form-select" name="maxMarks" id="maxMarksSelect" onchange="handleMaxMarksChange()">
+                                    <option value="60">60</option>
+                                    <option value="100">100</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="maxMarksCustomDiv" style="display:none; flex: 0 0 180px;">
+                                <label class="form-label">Custom max</label>
+                                <input type="number" class="form-input" name="maxMarksCustom" id="maxMarksCustom" min="1" value="60" oninput="handleMaxMarksChange()">
+                            </div>
+                        </div>
+
+                        <div class="subject-grid" id="subjectGrid">
+                            <div class="subject-card">
+                                <label>English</label>
+                                <div class="form-group">
+                                    <input type="number" class="form-input" name="english" data-validation="number" data-max="60" min="0" placeholder="0-60">
+                                    <span class="error-message hidden"></span>
+                                </div>
+                            </div>
+                            <div class="subject-card">
+                                <label>Maths</label>
+                                <div class="form-group">
+                                    <input type="number" class="form-input" name="maths" data-validation="number" data-max="60" min="0" placeholder="0-60">
+                                    <span class="error-message hidden"></span>
+                                </div>
+                            </div>
+                            <div class="subject-card">
+                                <label>Tamil</label>
+                                <div class="form-group">
+                                    <input type="number" class="form-input" name="tamil" data-validation="number" data-max="60" min="0" placeholder="0-60">
+                                    <span class="error-message hidden"></span>
+                                </div>
+                            </div>
+                            <div class="subject-card">
+                                <label>Science</label>
+                                <div class="form-group">
+                                    <input type="number" class="form-input" name="science" data-validation="number" data-max="60" min="0" placeholder="0-60">
+                                    <span class="error-message hidden"></span>
+                                </div>
+                            </div>
+                            <div class="subject-card">
+                                <label>Social</label>
+                                <div class="form-group">
+                                    <input type="number" class="form-input" name="social" data-validation="number" data-max="60" min="0" placeholder="0-60">
+                                    <span class="error-message hidden"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                    <div class="custom-subject-section" id="customSubjectSection" style="display: none;">
+                        <div id="customSubjectsList"></div>
+                        <button type="button" class="add-subject-btn" onclick="addCustomSubject()">+ Add Custom Subject</button>
+                    </div>
+
+                    <div class="section-header" style="margin-top: var(--spacing-32);">
+                        <h3>Behaviour Assessment</h3>
+                        <p>As reported by parent/guardian</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label form-required">Classroom Behaviour</label>
+                        <select class="form-select" name="behaviour" data-validation="select" required>
+                            <option value="">Select</option>
+                            <option value="excellent">Excellent - Attentive, participative, follows rules</option>
+                            <option value="good">Good - Generally well-behaved, occasional issues</option>
+                            <option value="average">Average - Needs attention, some discipline needed</option>
+                            <option value="needs-support">Needs Support - Significant behaviour challenges</option>
+                        </select>
+                    </div>
+
+                    <div class="section-header" style="margin-top: var(--spacing-32);">
+                        <h3>Support Needed to Improve</h3>
+                        <p>Select the types of support that will help you improve academically</p>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-checkbox">
+                            <input type="checkbox" name="supportNeeds" value="extra-practice" id="support-extra-practice">
+                            <label for="support-extra-practice">Extra practice worksheets</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" name="supportNeeds" value="one-on-one" id="support-one-on-one">
+                            <label for="support-one-on-one">One-on-one tutoring</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" name="supportNeeds" value="doubt-clearing" id="support-doubt">
+                            <label for="support-doubt">Doubt-clearing sessions</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" name="supportNeeds" value="mock-tests" id="support-mock">
+                            <label for="support-mock">Mock tests & practice exams</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" name="supportNeeds" value="study-plan" id="support-study-plan">
+                            <label for="support-study-plan">Study plan & time management</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" name="supportNeeds" value="other" id="support-other" onchange="toggleSupportOther()">
+                            <label for="support-other">Other</label>
+                        </div>
+                        <div class="form-group" id="supportOtherDiv" style="display:none; margin-top: var(--spacing-8);">
+                            <input type="text" class="form-input" name="supportOther" placeholder="Describe other support needed">
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn btn-secondary" onclick="prevStudentTab('parent-info')">Back</button>
+                        <button type="button" class="btn btn-primary" onclick="handleNextTab('review')">Next</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tab 4: Review -->
+            <div class="tab-content" id="review">
+                <div class="section-header">
+                    <h3>Review Information</h3>
+                    <p>Verify all details before submitting</p>
+                </div>
+
+                <div id="reviewContent" style="margin-bottom: 20px;"></div>
+
+                <div class="info-box" style="background: rgba(34, 197, 94, 0.15);">
+                    <strong>✓ Privacy:</strong> Your information is secure and used only for Brain Grain mentoring.
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" id="agree-terms" required>
+                    <label for="agree-terms">I agree to the Brain Grain program terms</label>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" onclick="prevStudentTab('academic')">Back</button>
+                    <button type="button" class="btn btn-primary" onclick="submitStudentRegistration()">Submit Registration</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminScreen" class="tab-content">
+            <div class="header">
+                <img src="assets/braingrainupdatedlogo.png?v=1" class="site-logo" alt="Brain Grain logo">
+            </div>
+
+            <!-- List view -->
+            <div id="adminListView">
+                <div class="admin-header">
+                    <div>
+                        <h2 style="margin: 0;">Registered Students</h2>
+                        <p style="color: var(--color-text-secondary); margin: var(--spacing-8) 0 0 0;">Total: <span id="studentCount">0</span></p>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px">
+                        <label style="display:flex; align-items:center; gap:8px; color: var(--color-text-secondary);">
+                            <input type="checkbox" id="showArchived" onchange="loadStudents()"> Show archived
+                        </label>
+
+                        <label style="display:flex; align-items:center; gap:8px; color: var(--color-text-secondary);">
+                            <input type="checkbox" id="autoBackupToggle" onchange="toggleAutoBackup(this.checked)"> Auto-backup
+                        </label>
+
+                        <button type="button" class="btn btn-secondary" onclick="restoreFromBackup()">Restore backup</button>
+                        <button type="button" class="btn btn-secondary" onclick="restoreDemoData()">Restore demo</button>
+                        <button type="button" class="btn btn-secondary" onclick="exportStudents()">Export</button>
+                        <button type="button" class="btn btn-secondary" onclick="switchToLogin()">Logout</button>
+                    </div>
+                </div>
+
+                <div class="student-list">
+                    <table class="student-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Grade</th>
+                                <th>School</th>
+                                <th>Phone</th>
+                                <th>Academic Avg</th>
+                                <th>Registration</th>
+                                <th>Assessment</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody">
+                            <tr><td colspan="7" style="text-align: center; padding: 40px;">No students registered yet</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Full-page student detail view -->
+            <div id="studentDetailView">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: var(--spacing-16);">
+                    <h2>Student Details</h2>
+                    <button class="btn btn-secondary btn-small" onclick="backToStudentList()">← Back to list</button>
+                </div>
+
+                <div id="studentDetailContent"></div>
+            </div>
+
+            <!-- Full-page Interactive Assessment Screen (replaces simple form) -->
+            <div id="assessmentScreen" style="display:none; margin-top: var(--spacing-20); background: var(--color-surface); border-radius: var(--radius-base); border: 1px solid var(--color-border); padding: var(--spacing-20);">
+                <div style="display:flex; justify-content:flex-start; align-items:center; margin-bottom: var(--spacing-16);">
+                    <h2 id="assessmentHeaderName">Student Assessment</h2>
+                </div>
+
+                <div id="assessmentStudentSummary" class="info-box" style="margin-bottom: var(--spacing-20);">
+                    <!-- Filled by JS with student name, grade, school, average -->
+                </div>
+
+                <div id="assessment-app" style="min-height:400px;">
+                    <!-- Welcome Screen -->
+                    <div id="welcome-screen" class="active">
+                        <div style="display:flex; gap:12px; align-items:center; margin-bottom:12px;">
+                            <label class="form-label">Enter student name</label>
+                            <input id="user-name" class="form-input" placeholder="Student name">
+                        </div>
+                        <div style="margin-top:12px; display:flex; gap:12px;">
+                            <button id="start-assessment-btn" class="btn btn-primary" onclick="startAssessment()">Start Assessment</button>
+                            <button class="btn btn-secondary" onclick="closeAssessment()">Cancel</button>
+                        </div>
+                    </div>
+
+                    <!-- Assessment Screen -->
+                    <div id="assessment-screen" style="display:none;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <div>
+                                <div id="progress-text" style="font-size:13px; color:var(--color-text-secondary);">Question 1 of 15</div>
+                                <div id="current-skill" class="skill-badge" style="margin-top:6px;">❤️ Feelings</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div id="current-score" style="font-size:20px; font-weight:700;">0</div>
+                                <div style="font-size:12px; color:var(--color-text-secondary);">points</div>
+                            </div>
+                        </div>
+
+                        <div id="question-container" style="padding:16px; background:var(--color-bg); border-radius:8px;">
+                            <div id="question-number" style="font-weight:600; margin-bottom:8px;">Question 1</div>
+                            <div id="question-text" style="font-size:16px; margin-bottom:12px;"></div>
+                            <div id="answer-area"></div>
+                        </div>
+
+                        <div style="height:12px; margin-top:12px; background:var(--color-border); border-radius:6px; overflow:hidden;">
+                            <div id="progress-fill" class="progress-fill" style="width:0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Results Screen -->
+                    <div id="results-screen" style="display:none; margin-top:12px;">
+                        <div style="display:flex; gap:16px; align-items:center;">
+                            <div id="score-emoji-big" style="font-size:42px;">🏆</div>
+                            <div>
+                                <div style="font-size:18px; font-weight:700">Overall Score: <span id="overall-score">0</span></div>
+                                <div id="skill-level" style="color:var(--color-text-secondary);">🌱 Beginner</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:12px;">
+                            <div style="display:flex; gap:12px;">
+                                <div style="flex:1; background:var(--color-surface); padding:12px; border-radius:8px;">
+                                    <div style="font-weight:700">❤️ Feelings</div>
+                                    <div id="sel-score">0%</div>
+                                    <div style="height:8px; background:var(--color-border); border-radius:4px; margin-top:8px; overflow:hidden;"><div id="sel-bar" style="height:100%; width:0%; background:linear-gradient(90deg,var(--color-accent),var(--color-primary));"></div></div>
+                                </div>
+                                <div style="flex:1; background:var(--color-surface); padding:12px; border-radius:8px;">
+                                    <div style="font-weight:700">🧠 Thinking</div>
+                                    <div id="ct-score">0%</div>
+                                    <div style="height:8px; background:var(--color-border); border-radius:4px; margin-top:8px; overflow:hidden;"><div id="ct-bar" style="height:100%; width:0%; background:linear-gradient(90deg,var(--color-accent),var(--color-primary));"></div></div>
+                                </div>
+                                <div style="flex:1; background:var(--color-surface); padding:12px; border-radius:8px;">
+                                    <div style="font-weight:700">👑 Leading</div>
+                                    <div id="lead-score">0%</div>
+                                    <div style="height:8px; background:var(--color-border); border-radius:4px; margin-top:8px; overflow:hidden;"><div id="lead-bar" style="height:100%; width:0%; background:linear-gradient(90deg,var(--color-accent),var(--color-primary));"></div></div>
+                                </div>
+                            </div>
+
+                            <div style="margin-top:12px; background:var(--color-surface); padding:12px; border-radius:8px;">
+                                <h4 style="margin:0 0 8px 0;">Insights</h4>
+                                <div id="strengths-text"></div>
+                                <div id="growth-text" style="margin-top:8px;"></div>
+                            </div>
+
+                            <div style="margin-top:12px; display:flex; gap:12px;">
+                                <div style="flex:1; background:var(--color-surface); padding:12px; border-radius:8px;">
+                                    <h4 style="margin:0 0 8px 0;">6-Month Plan</h4>
+                                    <div><strong>Phase 1</strong><ul id="phase1-plan"></ul></div>
+                                    <div><strong>Phase 2</strong><ul id="phase2-plan"></ul></div>
+                                    <div><strong>Phase 3</strong><ul id="phase3-plan"></ul></div>
+                                </div>
+
+                                <div style="flex:1; background:var(--color-surface); padding:12px; border-radius:8px;">
+                                    <h4 style="margin:0 0 8px 0;">Next Steps</h4>
+                                    <div id="next-level-text"></div>
+                                    <div id="action-steps" style="margin-top:12px;"></div>
+                                </div>
+                            </div>
+
+                            <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end;">
+                                <button class="btn btn-secondary" onclick="retakeAssessment()">Retake</button>
+                                <button class="btn btn-secondary" onclick="downloadResults()">Download</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="confetti-container" style="position:relative; height:0;"></div>
+                    <div id="feedback-popup" class="hidden" style="position:fixed; right:20px; bottom:20px; background:var(--color-surface); padding:12px; border-radius:8px; box-shadow:0 6px 16px rgba(0,0,0,0.4);">
+                        <div id="feedback-emoji" style="font-size:22px;"></div>
+                        <div id="feedback-text"></div>
+                        <div id="feedback-points" style="font-weight:700; margin-top:6px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Login -->
+        <div id="adminLoginScreen" class="tab-content">
+                    <!-- Admin Dashboard Placeholder -->
+                    <div id="adminDashboard" class="tab-content" style="display:none;">
+                        <div class="header">
+                            <img src="assets/braingrainupdatedlogo.png?v=1" class="site-logo" alt="Brain Grain logo">
+                            <h1>Admin Dashboard</h1>
+                        </div>
+                        <div style="padding:32px; text-align:center; color:#888; font-size:22px;">
+                            Welcome to the Admin Dashboard!<br>
+                            (This is a placeholder. Add dashboard content here.)
+                        </div>
+                    </div>
+            <div class="header">
+                <img src="assets/braingrainupdatedlogo.png?v=1" class="site-logo" alt="Brain Grain logo">
+            </div>
+
+            <div class="login-container">
+                <div class="login-title">Admin Access</div>
+                
+                <form onsubmit="handleAdminLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label form-required">Email</label>
+                        <input type="email" class="form-input" id="adminEmail" placeholder="admin@braingrain.com" data-validation="email" required>
+                        <span class="error-message hidden"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label form-required">Password</label>
+                        <input type="password" class="form-input" id="adminPassword" placeholder="Enter password" data-validation="password" data-min="6" required>
+                        <span class="error-message hidden"></span>
+                    </div>
+
+                    <div class="form-helper">Demo: admin@braingrain.com / admin123</div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: var(--spacing-16);">Login</button>
+                    <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: var(--spacing-12);" onclick="switchToLogin()">Back</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const pincodeDB = {
+            "600020": {"city": "Chennai", "state": "Tamil Nadu", "area": "Adyar"},
+            "600004": {"city": "Chennai", "state": "Tamil Nadu", "area": "Nungambakkam"},
+            "600006": {"city": "Chennai", "state": "Tamil Nadu", "area": "T. Nagar"},
+            "600015": {"city": "Chennai", "state": "Tamil Nadu", "area": "Kilpauk"},
+            "600017": {"city": "Chennai", "state": "Tamil Nadu", "area": "Anna Nagar"},
+            "600040": {"city": "Chennai", "state": "Tamil Nadu", "area": "Velachery"},
+            "110001": {"city": "New Delhi", "state": "Delhi", "area": "New Delhi"},
+            "110002": {"city": "New Delhi", "state": "Delhi", "area": "Karol Bagh"},
+            "560001": {"city": "Bangalore", "state": "Karnataka", "area": "Bangalore City"},
+            "560004": {"city": "Bangalore", "state": "Karnataka", "area": "Jayanagar"},
+        };
+
+        let allStudents = [];
+        let currentStudentTab = 'student-info';
+        let currentStudentData = {};
+        let currentViewedStudentId = null;
+        let currentAssessmentStudentId = null;
+
+        // Load students from localStorage on page load
+        function initializeStudents() {
+            try {
+                const saved = StorageHelper.loadStudents();
+                try { console.log('INIT: raw storage =', window.localStorage ? window.localStorage.getItem('braingrain_students') : null); } catch(e) { console.log('INIT: cannot access localStorage', e); }
+                if (Array.isArray(saved)) {
+                    allStudents = saved;
+                    console.log('INIT: loaded students count =', allStudents.length);
+                } else {
+                    allStudents = [];
+                    console.log('INIT: no students found in storage');
+                }
+            } catch (e) {
+                console.log('Failed to load students from localStorage', e);
+                allStudents = [];
+            }
+        }
+
+        // Save students to localStorage (persists across browser sessions)
+        function persistStudents() {
+            try {
+                StorageHelper.saveStudents(allStudents);
+                try {
+                    const enabled = window.localStorage.getItem('braingrain_auto_backup') === 'true';
+                    if (enabled) {
+                        window.localStorage.setItem('braingrain_students_backup', JSON.stringify(allStudents));
+                    }
+                } catch (e) { /* ignore backup failures */ }
+            } catch (e) {
+                console.log('Failed to save students to localStorage');
+            }
+        }
+
+        /* switchToStudent moved to registration.js */
+
+        /* switchToAdmin moved to registration.js */
+
+        /* switchToLogin moved to registration.js */
+
+        /* switchToDashboard moved to registration.js */
+
+        /* handleNextTab moved to registration.js */
+
+        /* prevStudentTab moved to registration.js */
+
+        /* saveDraft moved to registration.js */
+
+        /* loadDraft moved to registration.js */
+
+        /* clearDraft moved to registration.js */
+
+        /* getDraftStatus moved to registration.js */
+
+        /* showStudentTab moved to registration.js */
+
+        /* updateProgress moved to registration.js */
+
+        /* validateStudentTab moved to registration.js */
+
+        /* saveStudentData moved to registration.js */
+
+        /* generateReview moved to registration.js */
+
+            
+
+            
+
+            
+
+
+
+        /* generateReview moved to registration.js */
+
+        /* fetchCityState moved to registration.js */
+
+        /* toggleSameNumber moved to registration.js */
+
+        /* handleExamType moved to registration.js */
+
+        /* handleMaxMarksChange moved to registration.js */
+
+        /* toggleSupportOther moved to registration.js */
+
+        /* addCustomSubject moved to registration.js */
+
+        /* removeCustomSubject moved to registration.js */
+
+        /* resetStudentForm moved to registration.js */
+
+        /* submitStudentRegistration moved to registration.js */
+
+        function handleAdminLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+
+            const emailField = document.getElementById('adminEmail');
+            const passwordField = document.getElementById('adminPassword');
+            
+            let isValid = true;
+            if (!validateField(emailField)) isValid = false;
+            if (!validateField(passwordField)) isValid = false;
+            
+            if (!isValid) {
+                return;
+            }
+
+            if (email === 'admin@braingrain.com' && password === 'admin123') {
+                switchToDashboard();
+            } else {
+                alert('Invalid credentials');
+            }
+        }
+
+        /* admin functions moved to admin.js */
+
+        /* calculateAcademicAverage moved to admin.js */
+
+        /* viewStudent moved to admin.js */
+
+        /* backToStudentList moved to admin.js */
+
+        /* toggleArchive moved to admin.js */
+
+        /* toggleRowMenu moved to admin.js */
+
+        /* deleteStudentConfirm moved to admin.js */
+
+        function openAssessment(studentId) {
+            const student = allStudents.find(s => s.id === studentId);
+            if (!student) return;
+
+            currentAssessmentStudentId = studentId;
+
+            // Fill summary
+            const avg = calculateAcademicAverage(student);
+            const summaryDiv = document.getElementById('assessmentStudentSummary');
+            summaryDiv.innerHTML = `
+                <strong>${student.firstName || ''} ${student.lastName || ''}</strong> (Grade ${student.grade || 'N/A'})<br>
+                School: ${student.school || 'N/A'}<br>
+                Phone: ${student.phone || 'N/A'}<br>
+                Academic average (scaled to 100): ${avg}%
+            `;
+            // Header should only show student name
+            const headerNameEl = document.getElementById('assessmentHeaderName');
+            if (headerNameEl) headerNameEl.textContent = `${student.firstName || ''} ${student.lastName || ''}`;
+
+            // If there's an existing assessment, populate summary and show results in embedded UI
+            if (student.assessmentBreakdown) {
+                const ab = student.assessmentBreakdown;
+                // Put a small summary into the summary box (no top actions here)
+                summaryDiv.innerHTML += `
+                  <div style="margin-top:8px">
+                    <strong>Assessment:</strong> ${student.assessmentScore || 'N/A'} pts — SEL: ${ab.selPercent}% / CT: ${ab.ctPercent}% / Lead: ${ab.leadPercent}%
+                  </div>
+                `;
+
+                // If embedded app present, populate results screen with stored breakdown
+                const selEl = document.getElementById('sel-score');
+                if (selEl) {
+                  // show results screen with stored breakdown
+                  document.getElementById('welcome-screen').classList.remove('active');
+                  document.getElementById('welcome-screen').style.display = 'none';
+                  document.getElementById('assessment-screen').style.display = 'none';
+                  const results = document.getElementById('results-screen');
+                  if (results) {
+                    results.style.display = 'block';
+                    results.classList.add('active');
+                  }
+
+                  // populate percentages and bars
+                  const ctEl = document.getElementById('ct-score');
+                  const leadEl = document.getElementById('lead-score');
+                  const selBar = document.getElementById('sel-bar');
+                  const ctBar = document.getElementById('ct-bar');
+                  const leadBar = document.getElementById('lead-bar');
+
+                  if (selEl) selEl.textContent = (ab.selPercent || 0) + '%';
+                  if (ctEl) ctEl.textContent = (ab.ctPercent || 0) + '%';
+                  if (leadEl) leadEl.textContent = (ab.leadPercent || 0) + '%';
+                  if (selBar) selBar.style.width = (ab.selPercent || 0) + '%';
+                  if (ctBar) ctBar.style.width = (ab.ctPercent || 0) + '%';
+                  if (leadBar) leadBar.style.width = (ab.leadPercent || 0) + '%';
+                }
+            }
+
+            // If legacy simple assessment form exists, prefill it
+            const form = document.getElementById('assessmentForm');
+            if (form) {
+                form.assessmentScore.value = student.assessmentScore || '';
+                form.assessmentComments.value = student.assessmentComments || '';
+                form.assessmentStatus.value = student.assessmentStatus || 'Pending';
+
+                // Show assessment screen, hide list & detail
+                document.getElementById('adminListView').style.display = 'none';
+                document.getElementById('studentDetailView').style.display = 'none';
+                document.getElementById('assessmentScreen').style.display = 'block';
+                return;
+            }
+
+            // Assessment UI handler moved to admin.js
+        }
+
+        /* closeAssessment moved to admin.js */
+
+        // Edit a student's registration: populate forms and switch to student registration view
+        function editStudent(studentId) {
+            if (!studentId) return;
+            const st = StorageHelper.getStudentById(studentId);
+            if (!st) return;
+
+            // Clone into currentStudentData for editing
+            currentStudentData = Object.assign({}, st);
+
+            // Populate student info form
+            const sForm = document.getElementById('studentInfoForm');
+            if (sForm) {
+                Array.from(sForm.elements).forEach(el => {
+                    if (!el.name) return;
+                    const val = currentStudentData[el.name];
+                    if (el.type === 'radio') {
+                        if (el.value === val) el.checked = true;
+                    } else if (el.type === 'date' || el.tagName.toLowerCase() === 'input' || el.tagName.toLowerCase() === 'select' || el.tagName.toLowerCase() === 'textarea') {
+                        try { el.value = val || ''; } catch(e) {}
+                    }
+                });
+            }
+
+            // Populate parent info form
+            const pForm = document.getElementById('parentInfoForm');
+            if (pForm) {
+                Array.from(pForm.elements).forEach(el => {
+                    if (!el.name) return;
+                    const val = currentStudentData[el.name];
+                    if (el.type === 'checkbox') {
+                        // supportNeeds checkboxes handled in academic
+                        return;
+                    } else {
+                        try { el.value = val || ''; } catch(e) {}
+                    }
+                });
+            }
+
+            // Populate academic form
+            const aForm = document.getElementById('academicForm');
+            if (aForm) {
+                Array.from(aForm.elements).forEach(el => {
+                    if (!el.name) return;
+                    if (el.name === 'maxMarks') return; // handled separately
+                    if (el.type === 'checkbox') {
+                        if (Array.isArray(currentStudentData.supportNeeds) && currentStudentData.supportNeeds.includes(el.value)) {
+                            el.checked = true;
+                        } else {
+                            el.checked = false;
+                        }
+                    } else {
+                        try { el.value = currentStudentData[el.name] || ''; } catch(e) {}
+                    }
+                });
+
+                // Handle max marks select / custom value
+                const maxSel = document.getElementById('maxMarksSelect');
+                if (maxSel) {
+                    if (currentStudentData.maxMarks && (currentStudentData.maxMarks === 60 || currentStudentData.maxMarks === 100)) {
+                        maxSel.value = String(currentStudentData.maxMarks);
+                        document.getElementById('maxMarksCustomDiv').style.display = 'none';
+                    } else if (currentStudentData.maxMarks) {
+                        maxSel.value = 'custom';
+                        document.getElementById('maxMarksCustomDiv').style.display = 'block';
+                        document.getElementById('maxMarksCustom').value = currentStudentData.maxMarks;
+                    } else {
+                        maxSel.value = '60';
+                        document.getElementById('maxMarksCustomDiv').style.display = 'none';
+                    }
+                }
+            }
+
+            // Ensure supportOther visibility
+            try { toggleSupportOther(); } catch(e) {}
+
+            // Switch to registration UI
+            switchToStudent();
+            showStudentTab('student-info');
+            updateProgress();
+        }
+
+        function saveAssessment() {
+            if (!currentAssessmentStudentId) return;
+
+            const form = document.getElementById('assessmentForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const student = allStudents.find(s => s.id === currentAssessmentStudentId);
+            if (!student) return;
+
+            const score = parseInt(form.assessmentScore.value, 10);
+            const comments = form.assessmentComments.value;
+            const status = form.assessmentStatus.value;
+
+            student.assessmentScore = isNaN(score) ? null : score;
+            student.assessmentComments = comments;
+            student.assessmentStatus = status || 'Pending';
+
+            StorageHelper.saveStudent(student);
+            loadStudents();
+            closeAssessment();
+        }
+
+        /* validationRules moved to registration.js */
+
+        /* validateField moved to registration.js */
+
+        /* setupValidation moved to registration.js */
+
+        /* validateFormTab moved to registration.js */
+
+        /* registration DOMContentLoaded tasks moved to registration.js */
+
+        /* enforceSubjectMaxs moved to registration.js */
+    </script>
+    <script src="registration.js"></script>
+    <script src="admin.js"></script>
+    <script src="assessment-app.js"></script>
+</body>
+</html>
