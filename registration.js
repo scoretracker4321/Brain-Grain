@@ -167,10 +167,15 @@
   }
 
   function switchToStudent() {
-    document.getElementById('loginScreen').classList.remove('active');
-    document.getElementById('studentScreen').classList.add('active');
-    document.getElementById('adminDashboard').classList.remove('active');
-    document.getElementById('adminLoginScreen').classList.remove('active');
+    const loginScreen = document.getElementById('loginScreen');
+    const studentScreen = document.getElementById('studentScreen');
+    const adminScreen = document.getElementById('adminScreen');
+    const adminLoginScreen = document.getElementById('adminLoginScreen');
+
+    if (loginScreen) loginScreen.classList.remove('active');
+    if (studentScreen) studentScreen.classList.add('active');
+    if (adminScreen) adminScreen.classList.remove('active');
+    if (adminLoginScreen) adminLoginScreen.classList.remove('active');
 
     if (getDraftStatus()) {
       loadDraft();
@@ -184,8 +189,9 @@
   function switchToLogin() {
     document.getElementById('loginScreen').classList.add('active');
     document.getElementById('studentScreen').classList.remove('active');
-    document.getElementById('adminDashboard').classList.remove('active');
+    document.getElementById('adminDashboard') && document.getElementById('adminDashboard').classList.remove('active');
     document.getElementById('adminLoginScreen').classList.remove('active');
+    document.getElementById('adminScreen') && (document.getElementById('adminScreen').classList.remove('active'), document.getElementById('adminScreen').style.display = 'none');
   }
 
   function switchToAdmin() {
@@ -220,7 +226,10 @@
     var adminLoginScreen = document.getElementById('adminLoginScreen');
     if (adminLoginScreen) adminLoginScreen.classList.remove('active');
     var adminDashboard = document.getElementById('adminScreen');
-    if (adminDashboard) adminDashboard.classList.add('active');
+    if (adminDashboard) {
+      adminDashboard.classList.add('active');
+      adminDashboard.style.display = '';
+    }
     try { initializeStudents(); loadStudents(); } catch (e) { /* ignore if not available */ }
   }
 
@@ -396,19 +405,72 @@
       supportText = items.join(', ');
     }
 
-    let html = `...`; // shortened for brevity, content mirrors index.html
+    let html = `
+      <div style="margin-bottom:var(--spacing-20); padding:var(--spacing-16); border:1px solid var(--color-border); border-radius:var(--radius-base);">
+        <h3 style="margin:0 0 var(--spacing-12) 0; color:var(--color-accent);">📝 Student Information</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--spacing-8); font-size:14px;">
+          <div><strong>Name:</strong> ${window.currentStudentData.firstName || ''} ${window.currentStudentData.lastName || ''}</div>
+          <div><strong>Date of Birth:</strong> ${window.currentStudentData.dob || 'Not provided'}</div>
+          <div><strong>Grade:</strong> ${window.currentStudentData.grade || 'Not selected'}</div>
+          <div><strong>School:</strong> ${window.currentStudentData.school || 'Not provided'}</div>
+          <div><strong>Phone:</strong> ${window.currentStudentData.phone || 'Not provided'}</div>
+          <div><strong>When don't understand:</strong> ${window.currentStudentData.whenDontUnderstand || 'Not specified'}</div>
+          <div><strong>Enjoys doing:</strong> ${window.currentStudentData.enjoyDoing || 'Not specified'}</div>
+          <div><strong>Finds difficult:</strong> ${window.currentStudentData.findDifficult || 'Not specified'}</div>
+        </div>
+        <div style="margin-top:var(--spacing-12); font-size:14px;">
+          <strong>Address:</strong> ${window.currentStudentData.doorNo || ''}, ${window.currentStudentData.street || ''}, ${window.currentStudentData.area || ''}, ${window.currentStudentData.city || ''}, ${window.currentStudentData.state || ''} - ${window.currentStudentData.pincode || ''}
+        </div>
+      </div>
+      <div style="margin-bottom:var(--spacing-20); padding:var(--spacing-16); border:1px solid var(--color-border); border-radius:var(--radius-base);">
+        <h3 style="margin:0 0 var(--spacing-12) 0; color:var(--color-accent);">👨‍👩‍👧 Parent/Guardian Information</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--spacing-8); font-size:14px;">
+          <div><strong>Name:</strong> ${window.currentStudentData.parentName || 'Not provided'}</div>
+          <div><strong>Relationship:</strong> ${window.currentStudentData.parentRelation || 'Not specified'}</div>
+          <div><strong>Email:</strong> ${window.currentStudentData.parentEmail || 'Not provided'}</div>
+          <div><strong>Contact:</strong> ${window.currentStudentData.parentPhone || 'Not provided'}</div>
+          <div><strong>Alternate Contact:</strong> ${window.currentStudentData.parentPhoneAlt || 'Not provided'}</div>
+          <div><strong>Child good at:</strong> ${window.currentStudentData.childGoodAt || 'Not specified'}</div>
+          <div style="grid-column:1/-1;"><strong>Wish for child:</strong> ${window.currentStudentData.wishForChild || 'Not specified'}</div>
+          <div><strong>Heard about us:</strong> ${window.currentStudentData.source || 'Not specified'}</div>
+        </div>
+      </div>
+      <div style="margin-bottom:var(--spacing-20); padding:var(--spacing-16); border:1px solid var(--color-border); border-radius:var(--radius-base);">
+        <h3 style="margin:0 0 var(--spacing-12) 0; color:var(--color-accent);">📚 Academic Performance</h3>
+        <div style="font-size:14px;">
+          <div style="margin-bottom:var(--spacing-8);"><strong>Recent Exam:</strong> ${examDisplay}</div>
+          <div style="margin-bottom:var(--spacing-8);"><strong>Subject Scores:</strong> ${subjects.length > 0 ? subjects.join(', ') : 'No scores entered'}</div>
+          <div style="margin-bottom:var(--spacing-8);"><strong>Classroom Behaviour:</strong> ${window.currentStudentData.behaviour || 'Not assessed'}</div>
+          <div><strong>Support Needed:</strong> ${supportText}</div>
+        </div>
+      </div>
+    `;
     reviewContent.innerHTML = html;
   }
 
   function fetchCityState() {
-    const pincode = document.querySelector('input[name="pincode"]').value;
-    if (window.pincodeDB && window.pincodeDB[pincode]) {
+    const pincodeField = document.querySelector('input[name="pincode"]');
+    if (!pincodeField) return;
+    
+    const pincode = pincodeField.value.trim();
+    const cityField = document.querySelector('input[name="city"]');
+    const stateField = document.querySelector('input[name="state"]');
+    
+    if (!cityField || !stateField) return;
+    
+    if (pincode.length === 6 && window.pincodeDB && window.pincodeDB[pincode]) {
       const data = window.pincodeDB[pincode];
-      document.querySelector('input[name="city"]').value = data.city;
-      document.querySelector('input[name="state"]').value = data.state;
-    } else {
-      document.querySelector('input[name="city"]').value = '';
-      document.querySelector('input[name="state"]').value = '';
+      cityField.value = data.city;
+      stateField.value = data.state;
+      
+      // Save to current student data
+      if (window.currentStudentData) {
+        window.currentStudentData.city = data.city;
+        window.currentStudentData.state = data.state;
+      }
+    } else if (pincode.length !== 6) {
+      cityField.value = '';
+      stateField.value = '';
     }
   }
 
@@ -552,6 +614,30 @@
     });
   }
 
+  // Save draft with user notification
+  function saveDraftAndNotify() {
+    saveStudentData(window.currentStudentTab);
+    saveDraft();
+    if (window.showSavingStatus) {
+      window.showSavingStatus('Draft saved successfully!', false);
+    } else {
+      alert('Draft saved successfully!');
+    }
+  }
+
+  // Clear draft with user notification
+  function clearDraftAndNotify() {
+    if (confirm('Are you sure you want to clear the saved draft? This cannot be undone.')) {
+      clearDraft();
+      resetStudentForm();
+      if (window.showSavingStatus) {
+        window.showSavingStatus('Draft cleared', false);
+      } else {
+        alert('Draft cleared successfully!');
+      }
+    }
+  }
+
   // Expose needed functions globally (so inline event handlers continue to work)
   window.switchToStudent = switchToStudent;
   window.switchToLogin = switchToLogin;
@@ -563,6 +649,8 @@
   window.loadDraft = loadDraft;
   window.clearDraft = clearDraft;
   window.getDraftStatus = getDraftStatus;
+  window.saveDraftAndNotify = saveDraftAndNotify;
+  window.clearDraftAndNotify = clearDraftAndNotify;
   window.showStudentTab = showStudentTab;
   window.updateProgress = updateProgress;
   window.validateStudentTab = validateStudentTab;

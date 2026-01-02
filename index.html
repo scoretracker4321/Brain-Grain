@@ -33,22 +33,52 @@
             background-color: var(--color-bg);
             color: var(--color-text);
             line-height: 1.6;
+            padding: 0;
+            margin: 0;
         }
 
-        .container { max-width: 1000px; margin: 0 auto; padding: var(--spacing-20); }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            padding: var(--spacing-16) var(--spacing-20) var(--spacing-20);
+        }
 
         .header {
             background-color: var(--color-bg);
             color: var(--color-text);
-            padding: var(--spacing-24) var(--spacing-20);
+            padding: var(--spacing-12) var(--spacing-16);
             border-radius: var(--radius-lg);
-            margin-bottom: var(--spacing-24);
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            justify-content: center;
             text-align: center;
         }
 
-        .site-logo { display:block; margin: 0 auto var(--spacing-12); width:160px; height:auto }
+        /* Keep the shared header visible while scrolling */
+        #globalHeader {
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            background: var(--color-bg);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            margin-bottom: var(--spacing-16);
+        }
 
-        .header h1 { font-size: 28px; margin-bottom: var(--spacing-8); font-weight: 600; }
+        .site-logo {
+            display: block;
+            margin: 0 24px 0 0;
+            width: 140px;
+            height: auto;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin: 0;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1.1;
+        }
         .header p { font-size: 14px; opacity: 0.95; margin: 0; }
 
         .tabs {
@@ -70,8 +100,14 @@
 
         .tab-btn.active { color: var(--color-accent); border-bottom-color: var(--color-accent); }
 
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        .tab-content { 
+            display: none;
+            padding-bottom: var(--spacing-20);
+        }
+        .tab-content.active { 
+            display: block;
+            animation: fadeIn 0.3s ease; 
+        }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -296,10 +332,13 @@
             border: 1px solid var(--color-border);
             padding: 8px;
             border-radius: 8px;
-            box-shadow: 0 6px 18px rgba(11,102,208,0.08);
+            box-shadow: 0 4px 12px rgba(11,102,208,0.15);
+            position: absolute !important;
+            z-index: 2001 !important;
         }
         .row-menu div { margin-bottom: 6px; }
-        .row-menu .icon-btn { width: 100%; text-align: left; padding: 6px; }
+        .row-menu .icon-btn { width: 100%; text-align: left; padding: 8px 12px; border: none; background: transparent; cursor: pointer; font-size: 14px; border-radius: 4px; }
+        .row-menu .icon-btn:hover { background: rgba(11,102,208,0.1); }
 
         .btn-small {
             padding: var(--spacing-4) var(--spacing-12);
@@ -309,11 +348,60 @@
 
         .login-container {
             max-width: 400px;
-            margin: 100px auto;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) translateY(-40px);
             background: var(--color-surface);
             padding: var(--spacing-32);
             border-radius: var(--radius-lg);
             border: 1px solid var(--color-border);
+            box-shadow: 0 8px 32px rgba(11,102,208,0.15);
+            opacity: 0;
+            transition: opacity 0.5s cubic-bezier(.4,0,.2,1), transform 0.5s cubic-bezier(.4,0,.2,1);
+            z-index: 1100;
+        }
+        .tab-content.active .login-container {
+            opacity: 1;
+            transform: translate(-50%, -50%) translateY(0);
+        }
+
+        /* Admin login screen layout (avoid overlapping header) */
+        #adminLoginScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 48px 16px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        #adminLoginScreen .header {
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+        #adminLoginScreen .header img {
+            width: 220px;
+        }
+        #adminLoginScreen .header h1 {
+            margin: 0;
+            font-size: 26px;
+        }
+        #adminLoginScreen .login-container {
+            position: static;
+            transform: none;
+            max-width: 520px;
+            width: 100%;
+            margin: 0 auto;
+            z-index: 0;
+        }
+        #adminLoginScreen.tab-content.active .login-container {
+            opacity: 1;
+            transform: none;
         }
 
         .login-title {
@@ -377,11 +465,12 @@
 </head>
 <body>
     <div class="container">
+        <div id="globalHeader" class="header" style="margin-bottom:16px;">
+            <img src="assets/braingrainupdatedlogo.png?v=1" class="site-logo" alt="Brain Grain logo">
+            <h1>Brain Grain</h1>
+        </div>
         <!-- Login Screen -->
         <div id="loginScreen" class="tab-content active">
-            <div class="header">
-                <img src="assets/braingrainupdatedlogo.png?v=1" class="site-logo" alt="Brain Grain logo">
-            </div>
 
             <div class="login-container">
                 <div class="login-title">Choose Your Role</div>
@@ -399,13 +488,51 @@
 
         <!-- Student Registration -->
         <div id="studentScreen" class="tab-content">
-            <div class="header">
-                <img src="assets/braingrainupdatedlogo.png?v=1" class="site-logo" alt="Brain Grain logo">
-            </div>
-
             <div class="progress-bar">
                 <div class="progress-fill" id="progressFill" style="width: 0%"></div>
             </div>
+
+            <div id="saveStatus" style="text-align:right; color:var(--color-success); font-size:13px; min-height:20px; margin-bottom:8px; display:none;">
+                <span id="saveStatusText">All changes saved</span>
+            </div>
+    <script>
+    // Saving status UI logic
+    let saveStatusTimeout;
+    function showSavingStatus(text, isSaving) {
+        const el = document.getElementById('saveStatus');
+        const txt = document.getElementById('saveStatusText');
+        if (!el || !txt) return;
+        txt.textContent = text || (isSaving ? 'Saving...' : 'All changes saved');
+        el.style.color = isSaving ? '#1976d2' : '#22c55e';
+        el.style.display = 'block';
+        if (!isSaving) {
+            clearTimeout(saveStatusTimeout);
+            saveStatusTimeout = setTimeout(() => { el.style.display = 'none'; }, 1800);
+        }
+    }
+
+    // Patch saveStudentData to show saving status
+    const origSaveStudentData = window.saveStudentData;
+    window.saveStudentData = function(tab) {
+        showSavingStatus('Saving...', true);
+        setTimeout(() => {
+            origSaveStudentData(tab);
+            showSavingStatus('All changes saved', false);
+        }, 200);
+    };
+
+    // Patch saveDraft to show saving status for drafts
+    if (window.saveDraft) {
+        const origSaveDraft = window.saveDraft;
+        window.saveDraft = function() {
+            showSavingStatus('Saving draft...', true);
+            setTimeout(() => {
+                origSaveDraft();
+                showSavingStatus('Draft saved', false);
+            }, 200);
+        };
+    }
+    </script>
 
             <div class="success-message" id="successMessage">
                 ✓ Registration submitted successfully!
@@ -520,7 +647,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label form-required">Pincode</label>
-                            <input type="text" class="form-input" name="pincode" placeholder="6-digit pincode" data-validation="pincode" onblur="fetchCityState()" required>
+                            <input type="text" class="form-input" name="pincode" placeholder="6-digit pincode" data-validation="pincode" oninput="fetchCityState()" onblur="fetchCityState()" required>
                             <span class="error-message hidden"></span>
                         </div>
                     </div>
@@ -528,16 +655,22 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">City</label>
-                            <input type="text" class="form-input" name="city" readonly style="background-color: var(--color-bg);">
+                            <input type="text" class="form-input" name="city" placeholder="Auto-fills from pincode or enter manually" data-validation="text" data-min="2">
+                            <span class="error-message hidden"></span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">State</label>
-                            <input type="text" class="form-input" name="state" readonly style="background-color: var(--color-bg);">
+                            <input type="text" class="form-input" name="state" placeholder="Auto-fills from pincode or enter manually" data-validation="text" data-min="2">
+                            <span class="error-message hidden"></span>
                         </div>
                     </div>
 
                     <div class="button-group">
-                        <button type="button" class="btn btn-secondary" onclick="switchToLogin()">Back</button>
+                        <div style="display:flex; gap:var(--spacing-12);">
+                            <button type="button" class="btn btn-secondary" onclick="switchToLogin()">Back</button>
+                            <button type="button" class="btn btn-secondary" onclick="saveDraftAndNotify()">💾 Save Draft</button>
+                            <button type="button" class="btn btn-secondary" onclick="clearDraftAndNotify()" style="background:transparent; color:var(--color-error); border-color:var(--color-error);">🗑️ Clear Draft</button>
+                        </div>
                         <button type="button" class="btn btn-primary" onclick="handleNextTab('parent-info')">Next: Parent Info</button>
                     </div>
                 </form>
@@ -608,11 +741,6 @@
                         </div>
                     </div>
 
-                    <div class="form-checkbox">
-                        <input type="checkbox" onchange="toggleSameNumber()">
-                        <label>Same as student number</label>
-                    </div>
-
                     <div class="form-group">
                         <label class="form-label">How did you hear about Brain Grain?</label>
                         <select class="form-select" name="source">
@@ -627,7 +755,11 @@
                     </div>
 
                     <div class="button-group">
-                        <button type="button" class="btn btn-secondary" onclick="prevStudentTab('student-info')">Back</button>
+                        <div style="display:flex; gap:var(--spacing-12);">
+                            <button type="button" class="btn btn-secondary" onclick="prevStudentTab('student-info')">Back</button>
+                            <button type="button" class="btn btn-secondary" onclick="saveDraftAndNotify()">💾 Save Draft</button>
+                            <button type="button" class="btn btn-secondary" onclick="clearDraftAndNotify()" style="background:transparent; color:var(--color-error); border-color:var(--color-error);">🗑️ Clear Draft</button>
+                        </div>
                         <button type="button" class="btn btn-primary" onclick="handleNextTab('academic')">Next: Academic</button>
                     </div>
                 </form>
@@ -775,7 +907,11 @@
                     </div>
 
                     <div class="button-group">
-                        <button type="button" class="btn btn-secondary" onclick="prevStudentTab('parent-info')">Back</button>
+                        <div style="display:flex; gap:var(--spacing-12);">
+                            <button type="button" class="btn btn-secondary" onclick="prevStudentTab('parent-info')">Back</button>
+                            <button type="button" class="btn btn-secondary" onclick="saveDraftAndNotify()">💾 Save Draft</button>
+                            <button type="button" class="btn btn-secondary" onclick="clearDraftAndNotify()" style="background:transparent; color:var(--color-error); border-color:var(--color-error);">🗑️ Clear Draft</button>
+                        </div>
                         <button type="button" class="btn btn-primary" onclick="handleNextTab('review')">Next</button>
                     </div>
                 </form>
@@ -808,29 +944,20 @@
 
         <!-- Admin Dashboard -->
         <div id="adminScreen" class="tab-content">
-            <div class="header">
-                <img src="assets/braingrainupdatedlogo.png?v=1" class="site-logo" alt="Brain Grain logo">
-            </div>
 
             <!-- List view -->
             <div id="adminListView">
-                <div class="admin-header">
-                    <div>
-                        <h2 style="margin: 0;">Registered Students</h2>
-                        <p style="color: var(--color-text-secondary); margin: var(--spacing-8) 0 0 0;">Total: <span id="studentCount">0</span></p>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:12px">
+                <div class="admin-header" style="justify-content: flex-end;">
+                    <p style="color: var(--color-text-secondary); margin: var(--spacing-8) 0 0 0; font-size:18px;">Total: <span id="studentCount">0</span></p>
+                    <div style="display:flex; align-items:center; gap:12px; margin-left:auto;">
                         <label style="display:flex; align-items:center; gap:8px; color: var(--color-text-secondary);">
                             <input type="checkbox" id="showArchived" onchange="loadStudents()"> Show archived
                         </label>
-
-                        <label style="display:flex; align-items:center; gap:8px; color: var(--color-text-secondary);">
-                            <input type="checkbox" id="autoBackupToggle" onchange="toggleAutoBackup(this.checked)"> Auto-backup
-                        </label>
-
-                        <button type="button" class="btn btn-secondary" onclick="restoreFromBackup()">Restore backup</button>
-                        <button type="button" class="btn btn-secondary" onclick="restoreDemoData()">Restore demo</button>
+                        <div style="display:flex; align-items:center; gap:8px; color: var(--color-success); font-weight:600;">
+                            <span style="font-size:18px;">💾</span> Data is always saved
+                        </div>
                         <button type="button" class="btn btn-secondary" onclick="exportStudents()">Export</button>
+                        <button type="button" class="btn btn-secondary" onclick="viewStoredData()">📊 View Data</button>
                         <button type="button" class="btn btn-secondary" onclick="switchToLogin()">Logout</button>
                     </div>
                 </div>
@@ -868,8 +995,9 @@
 
             <!-- Full-page Interactive Assessment Screen (replaces simple form) -->
             <div id="assessmentScreen" style="display:none; margin-top: var(--spacing-20); background: var(--color-surface); border-radius: var(--radius-base); border: 1px solid var(--color-border); padding: var(--spacing-20);">
-                <div style="display:flex; justify-content:flex-start; align-items:center; margin-bottom: var(--spacing-16);">
-                    <h2 id="assessmentHeaderName">Student Assessment</h2>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: var(--spacing-16); padding-bottom:var(--spacing-16); border-bottom:1px solid var(--color-border);">
+                    <h2 id="assessmentHeaderName" style="margin:0; font-size:28px; font-weight:800; flex:1; text-align:center;">Student Assessment</h2>
+                    <button class="btn btn-secondary btn-small" onclick="closeAssessment()" style="margin-left:auto;">← Back</button>
                 </div>
 
                 <div id="assessmentStudentSummary" class="info-box" style="margin-bottom: var(--spacing-20);">
@@ -879,9 +1007,12 @@
                 <div id="assessment-app" style="min-height:400px;">
                     <!-- Welcome Screen -->
                     <div id="welcome-screen" class="active">
+                        <div style="background:rgba(50, 184, 198, 0.05); padding:var(--spacing-16); border-radius:var(--radius-base); margin-bottom:var(--spacing-16);">
+                            <p style="margin:0; font-size:14px; color:var(--color-text-secondary);">Welcome! This assessment will help you understand your strengths in <strong>Feelings</strong>, <strong>Thinking</strong>, and <strong>Leading</strong>.</p>
+                        </div>
                         <div style="display:flex; gap:12px; align-items:center; margin-bottom:12px;">
-                            <label class="form-label">Enter student name</label>
-                            <input id="user-name" class="form-input" placeholder="Student name">
+                            <label class="form-label" style="margin:0;">Enter student name</label>
+                            <input id="user-name" class="form-input" placeholder="Student name" style="flex:1;">
                         </div>
                         <div style="margin-top:12px; display:flex; gap:12px;">
                             <button id="start-assessment-btn" class="btn btn-primary" onclick="startAssessment()">Start Assessment</button>
@@ -982,20 +1113,6 @@
 
         <!-- Admin Login -->
         <div id="adminLoginScreen" class="tab-content">
-                    <!-- Admin Dashboard Placeholder -->
-                    <div id="adminDashboard" class="tab-content" style="display:none;">
-                        <div class="header">
-                            <img src="assets/braingrainupdatedlogo.png?v=1" class="site-logo" alt="Brain Grain logo">
-                            <h1>Admin Dashboard</h1>
-                        </div>
-                        <div style="padding:32px; text-align:center; color:#888; font-size:22px;">
-                            Welcome to the Admin Dashboard!<br>
-                            (This is a placeholder. Add dashboard content here.)
-                        </div>
-                    </div>
-            <div class="header">
-                <img src="assets/braingrainupdatedlogo.png?v=1" class="site-logo" alt="Brain Grain logo">
-            </div>
 
             <div class="login-container">
                 <div class="login-title">Admin Access</div>
@@ -1018,6 +1135,22 @@
                     <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: var(--spacing-16);">Login</button>
                     <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: var(--spacing-12);" onclick="switchToLogin()">Back</button>
                 </form>
+            </div>
+        </div>
+
+        <!-- Data Viewer Modal -->
+        <div id="dataViewerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2000; padding:20px; overflow:auto;">
+            <div style="background:white; padding:30px; border-radius:8px; max-width:900px; margin:20px auto; max-height:80vh; overflow:auto;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; position:sticky; top:0; background:white; padding-bottom:15px; border-bottom:1px solid var(--color-border);">
+                    <h2 style="margin:0;">📊 Stored Student Data</h2>
+                    <button class="icon-btn" onclick="closeDataViewer()" style="font-size:24px; background:none; border:none; cursor:pointer;">&times;</button>
+                </div>
+                <div style="background:#f5f5f5; padding:15px; border-radius:8px; max-height:400px; overflow:auto; font-family:monospace; font-size:12px; white-space:pre-wrap; word-break:break-all; border:1px solid var(--color-border);" id="dataViewerContent">Loading...</div>
+                <div style="margin-top:20px; display:flex; gap:10px;">
+                    <button class="btn btn-primary" onclick="copyDataToClipboard()">📋 Copy to Clipboard</button>
+                    <button class="btn btn-secondary" onclick="downloadDataAsFile()">⬇️ Download File</button>
+                    <button class="btn btn-secondary" onclick="closeDataViewer()">Close</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1187,7 +1320,13 @@
             `;
             // Header should only show student name
             const headerNameEl = document.getElementById('assessmentHeaderName');
-            if (headerNameEl) headerNameEl.textContent = `${student.firstName || ''} ${student.lastName || ''}`;
+            if (headerNameEl) {
+              const studentName = `${student.firstName || ''} ${student.lastName || ''}`.trim();
+              headerNameEl.textContent = studentName || 'Student Assessment';
+              headerNameEl.style.textAlign = 'center';
+              headerNameEl.style.fontSize = '28px';
+              headerNameEl.style.fontWeight = '800';
+            }
 
             // If there's an existing assessment, populate summary and show results in embedded UI
             if (student.assessmentBreakdown) {
@@ -1364,6 +1503,58 @@
         /* registration DOMContentLoaded tasks moved to registration.js */
 
         /* enforceSubjectMaxs moved to registration.js */
+
+        // Data viewer functions
+        function viewStoredData() {
+          try {
+            const students = StorageHelper.loadStudents() || [];
+            const data = {
+              studentCount: students.length,
+              timestamp: new Date().toISOString(),
+              students: students
+            };
+            const jsonStr = JSON.stringify(data, null, 2);
+            document.getElementById('dataViewerContent').textContent = jsonStr;
+            document.getElementById('dataViewerModal').style.display = 'block';
+          } catch (e) {
+            alert('Error loading data: ' + e.message);
+          }
+        }
+
+        function closeDataViewer() {
+          document.getElementById('dataViewerModal').style.display = 'none';
+        }
+
+        function copyDataToClipboard() {
+          const content = document.getElementById('dataViewerContent').textContent;
+          navigator.clipboard.writeText(content).then(() => {
+            alert('Data copied to clipboard!');
+          }).catch(() => {
+            const textarea = document.createElement('textarea');
+            textarea.value = content;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            alert('Data copied to clipboard!');
+          });
+        }
+
+        function downloadDataAsFile() {
+          try {
+            const content = document.getElementById('dataViewerContent').textContent;
+            const blob = new Blob([content], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `brain-grain-data-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            alert('Data downloaded!');
+          } catch (e) {
+            alert('Download failed: ' + e.message);
+          }
+        }
     </script>
     <script src="registration.js"></script>
     <script src="admin.js"></script>

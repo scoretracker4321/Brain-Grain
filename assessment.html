@@ -96,11 +96,26 @@
       <div id="welcome-screen" class="welcome">
         <label class="small" for="user-name">Student name</label>
         <input id="user-name" class="form-input" placeholder="Student name">
+        <div id="draft-notice" style="display:none; padding:12px; background:#e3f2fd; border-radius:6px; border-left:4px solid #0b66d0; margin:12px 0; font-size:13px; color:#0b5ba3;">
+          💾 You have a saved draft. 
+          <button class="btn btn-primary" style="padding:4px 12px; font-size:12px; margin-left:8px;" onclick="startAssessment()">Continue</button>
+          <button class="btn btn-secondary" style="padding:4px 12px; font-size:12px; margin-left:4px;" onclick="clearDraftAndStart()">Start Fresh</button>
+        </div>
         <button id="start-assessment-btn" class="btn btn-primary" onclick="startAssessment()">Start assessment</button>
         <button class="btn btn-secondary" onclick="window.close()">Close</button>
       </div>
 
       <div id="assessment-screen" style="display:none;">
+        <!-- Header with Back Button -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <button class="btn btn-secondary" onclick="goBackFromAssessment()" style="padding:8px 16px">← Back</button>
+          <div style="flex:1;text-align:center">
+            <div id="student-name-display" style="font-size:28px;font-weight:800;color:var(--text)">Student</div>
+          </div>
+          <button class="btn btn-secondary" onclick="saveDraftAssessment()" style="padding:8px 16px">💾 Save Draft</button>
+        </div>
+
+        <!-- Progress and Score Info -->
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
           <div>
             <div id="progress-text" class="small">Question 1 of 15</div>
@@ -201,6 +216,53 @@
   <script src="utils.js"></script>
   <script src="assessment-app.js"></script>
   <script>
+    // Check if draft exists on page load
+    function checkForDraft() {
+      try {
+        const draft = localStorage.getItem('braingrain_assessment_draft');
+        if (draft) {
+          const draftObj = JSON.parse(draft);
+          const draftNotice = document.getElementById('draft-notice');
+          const userNameField = document.getElementById('user-name');
+          if (draftNotice) {
+            draftNotice.style.display = 'block';
+            if (userNameField && draftObj.userName) {
+              userNameField.value = draftObj.userName;
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Error checking for draft:', e);
+      }
+    }
+
+    // Clear draft and start fresh
+    function clearDraftAndStart() {
+      try {
+        localStorage.removeItem('braingrain_assessment_draft');
+        const draftNotice = document.getElementById('draft-notice');
+        if (draftNotice) {
+          draftNotice.style.display = 'none';
+        }
+        // Reset state
+        assessmentState.currentQuestionIndex = 0;
+        assessmentState.answers = [];
+        assessmentState.scores = { SEL: [], CriticalThinking: [], Leadership: [] };
+        assessmentState.totalScore = 0;
+        alert('📝 Draft cleared. Starting fresh!');
+      } catch (e) {
+        console.error('Error clearing draft:', e);
+      }
+    }
+
+    // Check for draft on load
+    document.addEventListener('DOMContentLoaded', checkForDraft);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', checkForDraft);
+    } else {
+      checkForDraft();
+    }
+
     // initialize from query param studentId
     (function(){
       const params = new URLSearchParams(location.search);

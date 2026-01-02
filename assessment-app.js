@@ -155,17 +155,98 @@ function startAssessment() {
   // Make total questions reflect the current question bank (supports removals)
   assessmentState.totalQuestions = questionBank.length;
 
-  // Reset state (fresh start)
-  assessmentState.currentQuestionIndex = 0;
-  assessmentState.answers = [];
-  assessmentState.scores = { SEL: [], CriticalThinking: [], Leadership: [] };
-  assessmentState.totalScore = 0;
+  // Try to load draft if exists
+  const draft = loadAssessmentDraft();
+  if (draft) {
+    assessmentState.currentQuestionIndex = draft.currentQuestionIndex || 0;
+    assessmentState.answers = draft.answers || [];
+    assessmentState.scores = draft.scores || { SEL: [], CriticalThinking: [], Leadership: [] };
+    assessmentState.totalScore = draft.totalScore || 0;
+    assessmentState.userName = draft.userName || assessmentState.userName;
+  } else {
+    // Reset state (fresh start)
+    assessmentState.currentQuestionIndex = 0;
+    assessmentState.answers = [];
+    assessmentState.scores = { SEL: [], CriticalThinking: [], Leadership: [] };
+    assessmentState.totalScore = 0;
+  }
 
   document.getElementById('welcome-screen').classList.remove('active');
   document.getElementById('welcome-screen').style.display = 'none';
   document.getElementById('assessment-screen').style.display = 'block';
   document.getElementById('current-score').textContent = '0';
+  
+  // Display student name prominently
+  const studentNameDisplay = document.getElementById('student-name-display');
+  if (studentNameDisplay) {
+    studentNameDisplay.textContent = assessmentState.userName;
+  }
+  
   loadQuestion();
+}
+
+// Go back from assessment
+function goBackFromAssessment() {
+  const confirmed = confirm('Are you sure you want to go back? Progress will be lost.');
+  if (confirmed) {
+    // Reset state
+    assessmentState.currentQuestionIndex = 0;
+    assessmentState.answers = [];
+    assessmentState.scores = { SEL: [], CriticalThinking: [], Leadership: [] };
+    assessmentState.totalScore = 0;
+    
+    // Show welcome screen
+    document.getElementById('assessment-screen').style.display = 'none';
+    document.getElementById('results-screen').style.display = 'none';
+    document.getElementById('welcome-screen').style.display = 'block';
+    document.getElementById('welcome-screen').classList.add('active');
+    
+    // Close if it was opened by admin
+    if (window.opener) {
+      window.close();
+    }
+  }
+}
+
+// Save assessment draft
+function saveDraftAssessment() {
+  try {
+    const draft = {
+      currentQuestionIndex: assessmentState.currentQuestionIndex,
+      answers: assessmentState.answers,
+      scores: assessmentState.scores,
+      totalScore: assessmentState.totalScore,
+      userName: assessmentState.userName,
+      timestamp: new Date().toISOString()
+    };
+    localStorage.setItem('braingrain_assessment_draft', JSON.stringify(draft));
+    alert('📝 Assessment draft saved! You can continue later.');
+  } catch (e) {
+    alert('Error saving draft. Please try again.');
+    console.error(e);
+  }
+}
+
+// Load assessment draft
+function loadAssessmentDraft() {
+  try {
+    const draft = localStorage.getItem('braingrain_assessment_draft');
+    if (draft) {
+      return JSON.parse(draft);
+    }
+  } catch (e) {
+    console.error('Error loading assessment draft:', e);
+  }
+  return null;
+}
+
+// Clear assessment draft
+function clearAssessmentDraft() {
+  try {
+    localStorage.removeItem('braingrain_assessment_draft');
+  } catch (e) {
+    console.error('Error clearing assessment draft:', e);
+  }
 }
 
 // Get current question
@@ -654,6 +735,9 @@ function createConfetti() {
 
 // Show Results
 function showResults() {
+  // Clear the draft since assessment is being completed
+  clearAssessmentDraft();
+  
   const forceShow = (function(){ try { const p = new URLSearchParams(window.location.search); return p.get('view') === 'report' || p.get('view') === 'full'; } catch(e){ return false; } })();
 
   // If opened directly by a student (no opener) and not forced, persist results but show short thank-you only
