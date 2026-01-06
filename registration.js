@@ -230,7 +230,24 @@
       adminDashboard.classList.add('active');
       adminDashboard.style.display = '';
     }
-    try { initializeStudents(); loadStudents(); } catch (e) { /* ignore if not available */ }
+    // Force load students after a small delay to ensure DOM is ready
+    setTimeout(() => {
+      try { 
+        console.log('Calling loadStudents from switchToDashboard');
+        if (typeof window.loadStudents === 'function') {
+          window.loadStudents(); 
+        } else {
+          console.error('window.loadStudents is not a function! Type:', typeof window.loadStudents);
+          // Try to load directly from StorageHelper
+          const students = StorageHelper.loadStudents();
+          console.log('Loaded', students.length, 'students from StorageHelper');
+          alert(`Loaded ${students.length} students. Check if they appear in the table.`);
+        }
+      } catch (e) { 
+        console.error('loadStudents error:', e);
+        alert('Error loading students: ' + e.message); 
+      }
+    }, 200);
   }
 
   function handleNextTab(tabName) {
@@ -575,8 +592,7 @@
 
     const saved = StorageHelper.saveStudent(window.currentStudentData);
     if (!saved) { alert('Failed to save registration; please try again.'); return; }
-    initializeStudents();
-    loadStudents();
+    if (typeof loadStudents === 'function') loadStudents();
 
     document.getElementById('successMessage').classList.add('show');
     const successMsg = '✓ Registration successful!\nStudent ID: ' + saved.id + '\n\nYour data has been saved to our system.';

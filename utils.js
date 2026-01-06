@@ -25,17 +25,24 @@
   function loadStudents() {
     try {
       const storage = _getStorage();
-      if (!storage) return [];
-      return safeParse(storage.getItem('braingrain_students'));
-    } catch (e) { console.error('loadStudents failed', e); return []; }
+      console.log('loadStudents: storage =', storage);
+      if (!storage) {
+        console.error('loadStudents: no storage available');
+        return [];
+      }
+      const raw = storage.getItem('braingrain_students');
+      console.log('loadStudents: raw data =', raw ? raw.substring(0, 100) + '...' : 'null');
+      const parsed = safeParse(raw);
+      console.log('loadStudents: parsed count =', parsed.length);
+      return parsed;
+    } catch (e) { 
+      console.error('loadStudents failed', e); 
+      return []; 
+    }
   }
 
   function saveStudents(arr) {
     try {
-      // debug: ensure storage available
-      if (typeof console !== 'undefined' && console && console.log) {
-        try { console.log('_getStorage debug:', typeof window !== 'undefined', !!(typeof window !== 'undefined' && window.localStorage), !!(typeof global !== 'undefined' && global.localStorage)); } catch(e){}
-      }
       const storage = _getStorage();
       if (!storage) return false;
       storage.setItem('braingrain_students', JSON.stringify(arr));
@@ -53,6 +60,35 @@
           storage.setItem('braingrain_students_backups', JSON.stringify(backups));
         }
       } catch(e) { /* ignore backup failures */ }
+
+      // Update last save timestamp
+      try {
+        storage.setItem('braingrain_last_save', new Date().toISOString());
+      } catch(e) {}
+
+      // Sync to cloud if enabled
+      if (typeof window !== 'undefined' && window.CloudStorage && window.CloudStorage.isEnabled() && window.CloudStorage.isAutoSyncEnabled()) {
+        window.CloudStorage.syncToCloud(arr).then(result => {
+          if (result.success) {
+            console.log('✓ Auto-synced to cloud');
+          }
+        }).catch(e => console.warn('Cloud sync skipped:', e));
+      }
+
+      // Remind user to download backup if hasn't done so in 7 days
+      try {
+        const lastExport = storage.getItem('braingrain_last_file_export');
+        if (!lastExport) {
+          // First time - show reminder
+          storage.setItem('braingrain_last_file_export', new Date().toISOString());
+        } else {
+          const daysSinceExport = (Date.now() - new Date(lastExport).getTime()) / (1000 * 60 * 60 * 24);
+          if (daysSinceExport > 7) {
+            // Show reminder (will be picked up by UI)
+            storage.setItem('braingrain_needs_export_reminder', 'true');
+          }
+        }
+      } catch(e) {}
 
       return true;
     } catch (e) { console.error('saveStudents failed', e); return false; }
@@ -75,9 +111,80 @@
   function restoreLatestBackup() { return restoreBackupByIndex(-1); }
 
   function restoreDemoData() {
+    const today = new Date().toISOString();
     const demo = [
-      { firstName: 'Demo', lastName: 'Student', grade: '8', phone: '9876500000', id: 'DEMO_1', registeredAt: new Date().toISOString() },
-      { firstName: 'Sample', lastName: 'User', grade: '6', phone: '9876500001', id: 'DEMO_2', registeredAt: new Date().toISOString() }
+      {
+        id: 'ALICE_LOW',
+        firstName: 'Alice', lastName: 'Kumar', grade: '6', school: 'Sunrise Public School',
+        phone: '9876500100', registeredAt: today,
+        dob: '2013-05-21',
+        doorNo: '12A', street: 'Lake Road', area: 'Shanthi Nagar', city: 'Chennai', pincode: '600042',
+        parentName: 'Ravi Kumar', parentRelation: 'Father', parentPhone: '9876500199', parentEmail: 'ravi@example.com',
+        childGoodAt: 'Drawing and storytelling', wishForChild: 'Improve confidence in maths', source: 'Friend',
+        examType: 'midterm', customExamName: '', maxMarks: 60,
+        english: 22, maths: 18, tamil: 26, science: 24, social: 25,
+        behaviour: 'Calm, needs encouragement to ask doubts',
+        supportNeeds: ['extra-practice', 'one-on-one', 'study-plan'],
+        supportOther: 'Focus on fundamentals in arithmetic',
+        enjoyDoing: 'Reading comics', findDifficult: 'Word problems',
+        assessmentScore: 12,
+        assessmentBreakdown: { selPercent: 20, ctPercent: 40, leadPercent: 40 },
+        assessmentStatus: 'Completed', assessmentComments: 'Requires foundational support; responds well to positive feedback.'
+      },
+      {
+        id: 'BOB_DEVELOPING',
+        firstName: 'Bob', lastName: 'Sharma', grade: '7', school: 'Green Valley School',
+        phone: '9876500200', registeredAt: today,
+        dob: '2012-08-15',
+        doorNo: '44', street: 'MG Road', area: 'Indiranagar', city: 'Bengaluru', pincode: '560038',
+        parentName: 'Neha Sharma', parentRelation: 'Mother', parentPhone: '9876500299', parentEmail: 'neha@example.com',
+        childGoodAt: 'Sports, teamwork', wishForChild: 'Better study habits', source: 'Facebook',
+        examType: 'midterm', maxMarks: 60,
+        english: 32, maths: 28, tamil: 30, science: 34, social: 29,
+        behaviour: 'Active, occasional distractibility; benefits from structure',
+        supportNeeds: ['extra-practice', 'mock-tests', 'study-plan'],
+        supportOther: 'Weekly goal-setting and review',
+        enjoyDoing: 'Football', findDifficult: 'Long-form writing',
+        assessmentScore: 28,
+        assessmentBreakdown: { selPercent: 35, ctPercent: 45, leadPercent: 20 },
+        assessmentStatus: 'Completed', assessmentComments: 'Developing skills; practice tests improve performance.'
+      },
+      {
+        id: 'CHARLIE_PROGRESSING',
+        firstName: 'Charlie', lastName: 'Patel', grade: '8', school: 'Riverdale High',
+        phone: '9876500300', registeredAt: today,
+        dob: '2011-01-30',
+        doorNo: '7/2', street: 'Station Road', area: 'RK Puram', city: 'New Delhi', pincode: '110022',
+        parentName: 'Anil Patel', parentRelation: 'Father', parentPhone: '9876500399', parentEmail: 'anil@example.com',
+        childGoodAt: 'Problem solving, presentations', wishForChild: 'Balanced academics', source: 'WhatsApp',
+        examType: 'midterm', maxMarks: 60,
+        english: 38, maths: 36, tamil: 34, science: 40, social: 35,
+        behaviour: 'Responsible and collaborative; seeks feedback',
+        supportNeeds: ['mock-tests', 'doubt-clearing'],
+        supportOther: 'Target weak topics via weekly reviews',
+        enjoyDoing: 'Science experiments', findDifficult: 'Memorizing dates in Social',
+        assessmentScore: 42,
+        assessmentBreakdown: { selPercent: 40, ctPercent: 40, leadPercent: 20 },
+        assessmentStatus: 'Completed', assessmentComments: 'Consistent progress; ready for advanced practice sets.'
+      },
+      {
+        id: 'DANA_ADVANCED',
+        firstName: 'Dana', lastName: 'Iyer', grade: '8', school: 'Blue Ridge Academy',
+        phone: '9876500400', registeredAt: today,
+        dob: '2011-11-12',
+        doorNo: '88B', street: 'Park Street', area: 'Alwarpet', city: 'Chennai', pincode: '600018',
+        parentName: 'Sanjay Iyer', parentRelation: 'Father', parentPhone: '9876500499', parentEmail: 'sanjay@example.com',
+        childGoodAt: 'Logical reasoning, reading comprehension', wishForChild: 'Olympiad preparation', source: 'Website',
+        examType: 'midterm', maxMarks: 60,
+        english: 52, maths: 50, tamil: 48, science: 54, social: 49,
+        behaviour: 'Self-driven and focused; mentors peers',
+        supportNeeds: ['mock-tests', 'study-plan'],
+        supportOther: 'Advanced worksheets and timed practice',
+        enjoyDoing: 'Chess', findDifficult: 'Maintaining neat notes',
+        assessmentScore: 56,
+        assessmentBreakdown: { selPercent: 45, ctPercent: 35, leadPercent: 20 },
+        assessmentStatus: 'Completed', assessmentComments: 'High performer; challenge with olympiad-level material.'
+      }
     ];
     return saveStudents(demo);
   }
@@ -140,6 +247,113 @@
     } catch (e) { console.error('deleteStudent failed', e); return false; }
   }
 
+  function exportStudentsToFile() {
+    try {
+      const students = loadStudents();
+      const backups = getBackups();
+      const exportData = {
+        students: students,
+        backups: backups,
+        exportDate: new Date().toISOString(),
+        version: '1.0'
+      };
+      const json = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `braingrain-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      markExported();
+      return true;
+    } catch (e) { console.error('exportStudentsToFile failed', e); return false; }
+  }
+
+  function importStudentsFromFile(fileContent, replaceExisting = false) {
+    try {
+      const importData = JSON.parse(fileContent);
+      if (!importData.students || !Array.isArray(importData.students)) {
+        throw new Error('Invalid file format');
+      }
+      let students = importData.students;
+      if (!replaceExisting) {
+        const existing = loadStudents();
+        const existingIds = existing.map(s => s.id);
+        students = students.filter(s => !existingIds.includes(s.id));
+        students = existing.concat(students);
+      }
+      const success = saveStudents(students);
+      if (success && importData.backups && Array.isArray(importData.backups)) {
+        try {
+          const storage = _getStorage();
+          if (storage) {
+            storage.setItem('braingrain_students_backups', JSON.stringify(importData.backups));
+          }
+        } catch (e) { /* ignore backup restore failure */ }
+      }
+      return success;
+    } catch (e) { console.error('importStudentsFromFile failed', e); return false; }
+  }
+
+  function triggerFileImport(replaceExisting = false) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const success = importStudentsFromFile(event.target.result, replaceExisting);
+        if (success) {
+          alert('Data imported successfully! Refreshing...');
+          if (typeof window.loadStudents === 'function') window.loadStudents();
+          location.reload();
+        } else {
+          alert('Failed to import data. Please check the file format.');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
+  function getLastSaveTime() {
+    try {
+      const storage = _getStorage();
+      if (!storage) return null;
+      const ts = storage.getItem('braingrain_last_save');
+      return ts ? new Date(ts) : null;
+    } catch(e) { return null; }
+  }
+
+  function getLastExportTime() {
+    try {
+      const storage = _getStorage();
+      if (!storage) return null;
+      const ts = storage.getItem('braingrain_last_file_export');
+      return ts ? new Date(ts) : null;
+    } catch(e) { return null; }
+  }
+
+  function needsExportReminder() {
+    try {
+      const storage = _getStorage();
+      if (!storage) return false;
+      return storage.getItem('braingrain_needs_export_reminder') === 'true';
+    } catch(e) { return false; }
+  }
+
+  function markExported() {
+    try {
+      const storage = _getStorage();
+      if (!storage) return;
+      storage.setItem('braingrain_last_file_export', new Date().toISOString());
+      storage.removeItem('braingrain_needs_export_reminder');
+    } catch(e) {}
+  }
+
   window.StorageHelper = {
     loadStudents,
     saveStudents,
@@ -152,7 +366,14 @@
     restoreLatestBackup,
     restoreDemoData,
     isAutoBackupEnabled,
-    setAutoBackup
+    setAutoBackup,
+    exportStudentsToFile,
+    importStudentsFromFile,
+    triggerFileImport,
+    getLastSaveTime,
+    getLastExportTime,
+    needsExportReminder,
+    markExported
   };
   window.DOM = { getEl, setText, setHTML, show, hide };
 })();

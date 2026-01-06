@@ -461,6 +461,13 @@
             font-weight: 600;
         }
     </style>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  
+  <!-- App scripts -->
+  <script src="firebase-config.js"></script>
   <script src="utils.js"></script>
 </head>
 <body>
@@ -946,18 +953,23 @@
         <div id="adminScreen" class="tab-content">
 
             <!-- List view -->
-            <div id="adminListView">
-                <div class="admin-header" style="justify-content: flex-end;">
-                    <p style="color: var(--color-text-secondary); margin: var(--spacing-8) 0 0 0; font-size:18px;">Total: <span id="studentCount">0</span></p>
-                    <div style="display:flex; align-items:center; gap:12px; margin-left:auto;">
-                        <label style="display:flex; align-items:center; gap:8px; color: var(--color-text-secondary);">
+            <div id="adminListView" data-init="false">
+                <div class="admin-header" style="justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <p style="color: var(--color-text-secondary); margin: 0; font-size:18px;">Total: <span id="studentCount">0</span></p>
+                        <div id="backupStatusDiv" style="display: flex; align-items: center; gap: 12px;"></div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <label style="display:flex; align-items:center; gap:8px; color: var(--color-text-secondary); font-size: 14px;">
                             <input type="checkbox" id="showArchived" onchange="loadStudents()"> Show archived
                         </label>
-                        <div style="display:flex; align-items:center; gap:8px; color: var(--color-success); font-weight:600;">
-                            <span style="font-size:18px;">💾</span> Data is always saved
-                        </div>
-                        <button type="button" class="btn btn-secondary" onclick="exportStudents()">Export</button>
-                        <button type="button" class="btn btn-secondary" onclick="viewStoredData()">📊 View Data</button>
+                        <div style="width: 1px; height: 24px; background: var(--color-border);"></div>
+                        <button type="button" class="btn btn-secondary" onclick="exportStudents()" title="Export student data as CSV">📊 Export CSV</button>
+                        <button type="button" class="btn btn-secondary" onclick="viewStoredData()" title="View raw data">🔍 View Data</button>
+                        <div style="width: 1px; height: 24px; background: var(--color-border);"></div>
+                        <button type="button" class="btn btn-primary" onclick="showUserProfile()" title="User profile and cloud sync" style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 18px;">👤</span> Profile
+                        </button>
                         <button type="button" class="btn btn-secondary" onclick="switchToLogin()">Logout</button>
                     </div>
                 </div>
