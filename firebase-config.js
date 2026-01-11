@@ -72,7 +72,7 @@
   }
 
   // Cloud sync functions
-  async function syncToCloud(students) {
+  async function syncToCloud(students, pods) {
     if (!isFirebaseEnabled || !db) {
       return { success: false, reason: 'Firebase not enabled' };
     }
@@ -82,10 +82,52 @@
       const userId = (auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : 'default';
       const timestamp = new Date().toISOString();
       
-      await db.ref(`brain_grain/${userId}/students`).set({
-        data: students,
+      // Collect all pod-related metadata (plans, execution, feedback)
+      const podMetadata = {};
+      if (Array.isArray(pods)) {
+        pods.forEach(pod => {
+          const podId = pod.id;
+          const metadata = {
+            plan: null,
+            execution: null,
+            feedback: null
+          };
+          
+          // Get accepted plan
+          try {
+            const planKey = `braingrain_pod_plan_${podId}`;
+            const planData = localStorage.getItem(planKey);
+            if (planData) metadata.plan = JSON.parse(planData);
+          } catch (e) {}
+          
+          // Get execution status
+          try {
+            const execKey = `braingrain_pod_exec_${podId}`;
+            const execData = localStorage.getItem(execKey);
+            if (execData) metadata.execution = JSON.parse(execData);
+          } catch (e) {}
+          
+          // Get session feedback
+          try {
+            const feedbackKey = `braingrain_session_feedback_${podId}`;
+            const feedbackData = localStorage.getItem(feedbackKey);
+            if (feedbackData) metadata.feedback = JSON.parse(feedbackData);
+          } catch (e) {}
+          
+          // Only include if there's any metadata
+          if (metadata.plan || metadata.execution || metadata.feedback) {
+            podMetadata[podId] = metadata;
+          }
+        });
+      }
+      
+      // Sync students, pods, and all pod metadata
+      await db.ref(`brain_grain/${userId}/data`).set({
+        students: students,
+        pods: pods || [],
+        podMetadata: podMetadata,
         lastSync: timestamp,
-        version: '1.0'
+        version: '1.2'
       });
 
       // Update last sync time in localStorage
@@ -93,7 +135,7 @@
         localStorage.setItem('braingrain_last_cloud_sync', timestamp);
       } catch (e) {}
 
-      console.log('✓ Data synced to cloud');
+      console.log('✓ Data synced to cloud (students, pods, and all pod metadata)');
         try {
           localStorage.setItem('braingrain_last_sync_error', '');
         } catch (e) {}
@@ -123,7 +165,49 @@
     try {
       // Use authenticated user ID if available, otherwise use 'default' for shared access
       const userId = (auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : 'default';
-      const snapshot = await db.ref(`brain_grain/${userId}/students`).once('value');
+      
+      // Try new format first (v1.2 with pods and metadata)
+      let snapshot = await db.ref(`brain_grain/${userId}/data`).once('value');
+      
+      if (snapshot.exists()) {
+        const cloudData = snapshot.val();
+        const students = cloudData.students || [];
+        const pods = cloudData.pods || [];
+        const podMetadata = cloudData.podMetadata || {};
+        const lastSync = cloudData.lastSync;
+        
+        // Restore pod metadata to localStorage
+        Object.keys(podMetadata).forEach(podId => {
+          const metadata = podMetadata[podId];
+          
+          // Restore plan
+          if (metadata.plan) {
+            try {
+              localStorage.setItem(`braingrain_pod_plan_${podId}`, JSON.stringify(metadata.plan));
+            } catch (e) {}
+          }
+          
+          // Restore execution status
+          if (metadata.execution) {
+            try {
+              localStorage.setItem(`braingrain_pod_exec_${podId}`, JSON.stringify(metadata.execution));
+            } catch (e) {}
+          }
+          
+          // Restore feedback
+          if (metadata.feedback) {
+            try {
+              localStorage.setItem(`braingrain_session_feedback_${podId}`, JSON.stringify(metadata.feedback));
+            } catch (e) {}
+          }
+        });
+        
+        console.log(`✓ Loaded ${students.length} students, ${pods.length} pods, and metadata for ${Object.keys(podMetadata).length} pods from cloud (last sync: ${lastSync})`);
+        return { success: true, students, pods, lastSync };
+      }
+      
+      // Fallback to old format (v1.0 without pods)
+      snapshot = await db.ref(`brain_grain/${userId}/students`).once('value');
       
       if (!snapshot.exists()) {
         return { success: false, reason: 'No cloud data found' };
@@ -133,8 +217,8 @@
       const students = cloudData.data || [];
       const lastSync = cloudData.lastSync;
 
-      console.log(`✓ Loaded ${students.length} students from cloud (last sync: ${lastSync})`);
-      return { success: true, students, lastSync };
+      console.log(`✓ Loaded ${students.length} students from cloud (old format, last sync: ${lastSync})`);
+      return { success: true, students, pods: [], lastSync };
     } catch (error) {
       console.error('Load from cloud failed:', error);
       return { success: false, error: error.message };
@@ -166,9 +250,10 @@
   function isAutoSyncEnabled() {
     try {
       const val = localStorage.getItem('braingrain_auto_cloud_sync');
-      return val === 'true';
+      // Default to true if not set (enable auto-sync by default)
+      return val !== 'false';
     } catch (e) {
-      return false;
+      return true; // Default to enabled
     }
   }
 
@@ -178,6 +263,93 @@
       return ts ? new Date(ts) : null;
     } catch (e) {
       return null;
+    }
+  }
+
+  // AI Configuration Management
+  async function saveAIConfig(config) {
+    if (!isFirebaseEnabled || !db) {
+      return { success: false, reason: 'Firebase not enabled' };
+    }
+
+    try {
+      const userId = (auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : 'default';
+      
+      await db.ref(`brain_grain/${userId}/ai_config`).set({
+        endpoint: config.endpoint || '',
+        apiKey: config.apiKey || '',
+        model: config.model || 'gemini-1.5-flash',
+        updatedAt: new Date().toISOString()
+      });
+
+      // Cache locally
+      try {
+        localStorage.setItem('braingrain_ai_config', JSON.stringify(config));
+      } catch (e) {}
+
+      console.log('✓ AI config saved to Firebase');
+      
+      // Notify backend of new config
+      try {
+        await fetch(window.location.origin + '/api/ai-config/set', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(config)
+        });
+      } catch (e) {
+        console.log('Backend config update skipped:', e.message);
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Save AI config failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async function loadAIConfig() {
+    if (!isFirebaseEnabled || !db) {
+      // Try local cache
+      try {
+        const cached = localStorage.getItem('braingrain_ai_config');
+        if (cached) {
+          return { success: true, config: JSON.parse(cached), source: 'local-cache' };
+        }
+      } catch (e) {}
+      return { success: false, reason: 'Firebase not enabled' };
+    }
+
+    try {
+      const userId = (auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : 'default';
+      const snapshot = await db.ref(`brain_grain/${userId}/ai_config`).once('value');
+      
+      if (!snapshot.exists()) {
+        return { success: false, reason: 'No AI config found in Firebase' };
+      }
+
+      const config = snapshot.val();
+      
+      // Cache locally
+      try {
+        localStorage.setItem('braingrain_ai_config', JSON.stringify(config));
+      } catch (e) {}
+      
+      // Update backend
+      try {
+        await fetch(window.location.origin + '/api/ai-config/set', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(config)
+        });
+      } catch (e) {
+        console.log('Backend config update skipped:', e.message);
+      }
+
+      console.log('✓ AI config loaded from Firebase');
+      return { success: true, config, source: 'firebase' };
+    } catch (error) {
+      console.error('Load AI config failed:', error);
+      return { success: false, error: error.message };
     }
   }
 
@@ -191,13 +363,84 @@
     isAutoSyncEnabled,
     getLastCloudSync,
     getLastSyncError,
+    saveAIConfig,
+    loadAIConfig,
     isEnabled: () => isFirebaseEnabled
   };
 
+  // Auto-restore from cloud on first load
+  async function autoRestoreFromCloud() {
+    if (!isFirebaseEnabled) return;
+
+    try {
+      const hasLocalData = localStorage.getItem('braingrain_students');
+      const hasRestoredBefore = localStorage.getItem('braingrain_cloud_restored');
+      
+      // If no local data and haven't restored before, try cloud restore
+      if (!hasLocalData && !hasRestoredBefore) {
+        console.log('🔄 Attempting auto-restore from Firebase...');
+        const result = await loadFromCloud();
+        
+        if (result.success && result.students.length > 0) {
+          localStorage.setItem('braingrain_students', JSON.stringify(result.students));
+          // Also restore pods if available
+          if (result.pods && result.pods.length > 0) {
+            localStorage.setItem('braingrain_pods', JSON.stringify(result.pods));
+            console.log(`✅ Auto-restored ${result.students.length} students and ${result.pods.length} pods from Firebase`);
+          } else {
+            console.log(`✅ Auto-restored ${result.students.length} students from Firebase`);
+          }
+          localStorage.setItem('braingrain_cloud_restored', 'true');
+          
+          // Reload page to refresh UI with restored data
+          setTimeout(() => location.reload(), 100);
+        } else {
+          console.log('ℹ️ No cloud data to restore');
+        }
+      }
+    } catch (error) {
+      console.log('Auto-restore skipped:', error.message);
+    }
+  }
+
+  // Auto-load AI config from Firebase
+  async function autoLoadAIConfig() {
+    if (!isFirebaseEnabled) return;
+
+    try {
+      console.log('🤖 Loading AI config from Firebase...');
+      const result = await loadAIConfig();
+      
+      if (result.success) {
+        console.log(`✅ AI configured: ${result.config.model} (${result.source})`);
+      } else {
+        console.log('ℹ️ No AI config in Firebase - configure in User Profile');
+      }
+    } catch (error) {
+      console.log('AI config load skipped:', error.message);
+    }
+  }
+
   // Auto-initialize on load
   if (typeof window !== 'undefined') {
-    window.addEventListener('DOMContentLoaded', () => {
-      initializeFirebase();
+    window.addEventListener('DOMContentLoaded', async () => {
+      const initialized = initializeFirebase();
+      
+      if (initialized) {
+        // Enable auto-sync by default
+        const autoSyncPref = localStorage.getItem('braingrain_auto_cloud_sync');
+        if (autoSyncPref === null) {
+          // First time - enable auto-sync by default
+          await enableAutoSync();
+          console.log('✅ Auto-sync enabled by default');
+        }
+        
+        // Auto-restore from cloud if no local data
+        await autoRestoreFromCloud();
+        
+        // Auto-load AI config from Firebase
+        await autoLoadAIConfig();
+      }
     });
   }
 })();

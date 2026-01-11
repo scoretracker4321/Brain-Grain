@@ -68,9 +68,14 @@
 
       // Sync to cloud if enabled
       if (typeof window !== 'undefined' && window.CloudStorage && window.CloudStorage.isEnabled() && window.CloudStorage.isAutoSyncEnabled()) {
-        window.CloudStorage.syncToCloud(arr).then(result => {
+        const pods = loadPods();
+        window.CloudStorage.syncToCloud(arr, pods).then(result => {
           if (result.success) {
             console.log('✓ Auto-synced to cloud');
+            // Refresh the status indicator if the function is available
+            if (typeof window !== 'undefined' && window.showBackupStatus) {
+              setTimeout(() => window.showBackupStatus(), 100);
+            }
           }
         }).catch(e => console.warn('Cloud sync skipped:', e));
       }
@@ -186,7 +191,11 @@
         assessmentStatus: 'Completed', assessmentComments: 'High performer; challenge with olympiad-level material.'
       }
     ];
-    return saveStudents(demo);
+    const ok = saveStudents(demo);
+    if (ok) {
+      try { savePods([]); } catch (e) { /* ignore */ }
+    }
+    return ok;
   }
 
   function isAutoBackupEnabled() { try { const s = _getStorage(); if (!s) return true; return s.getItem('braingrain_auto_backup') !== 'false'; } catch(e) { return true; } }
@@ -247,15 +256,108 @@
     } catch (e) { console.error('deleteStudent failed', e); return false; }
   }
 
+  function loadPods() {
+    try {
+      const storage = _getStorage();
+      if (!storage) return [];
+      const raw = storage.getItem('braingrain_pods');
+      const parsed = safeParse(raw);
+      const pods = Array.isArray(parsed) ? parsed : [];
+      console.log(`Loaded ${pods.length} pods from localStorage`);
+      return pods;
+    } catch (e) {
+      console.error('loadPods failed', e);
+      return [];
+    }
+  }
+
+  function savePods(arr) {
+    try {
+      const storage = _getStorage();
+      if (!storage) return false;
+      const normalized = Array.isArray(arr) ? arr : [];
+      storage.setItem('braingrain_pods', JSON.stringify(normalized));
+      console.log(`✓ Saved ${normalized.length} pods to localStorage`);
+      
+      // Auto-sync to cloud if enabled
+      if (typeof window !== 'undefined' && window.CloudStorage && window.CloudStorage.isEnabled() && window.CloudStorage.isAutoSyncEnabled()) {
+        const students = loadStudents();
+        console.log(`🔄 Syncing ${students.length} students and ${normalized.length} pods to cloud...`);
+        window.CloudStorage.syncToCloud(students, normalized).then(result => {
+          if (result.success) {
+            console.log('✓ Pods auto-synced to cloud successfully');
+            // Refresh the status indicator if the function is available
+            if (typeof window !== 'undefined' && window.showBackupStatus) {
+              setTimeout(() => window.showBackupStatus(), 100);
+            }
+          }
+        }).catch(err => console.error('Pod cloud sync error:', err));
+      }
+      
+      return true;
+    } catch (e) {
+      console.error('savePods failed', e);
+      return false;
+    }
+  }
+
+  function getPodById(id) {
+    if (!id) return null;
+    const pods = loadPods();
+    return pods.find(p => p.id === id) || null;
+  }
+
+  function savePod(pod) {
+    try {
+      if (!pod || typeof pod !== 'object') return false;
+      const pods = loadPods();
+      const payload = Object.assign({}, pod);
+      payload.name = (payload.name || '').trim();
+      payload.studentIds = Array.from(new Set(payload.studentIds || [])).filter(Boolean);
+      if (!payload.id) payload.id = 'POD_' + Date.now();
+      const idx = pods.findIndex(p => p.id === payload.id);
+      const existing = idx >= 0 ? pods[idx] : null;
+      const now = new Date().toISOString();
+      if (!payload.createdAt && existing && existing.createdAt) payload.createdAt = existing.createdAt;
+      if (!payload.createdAt) payload.createdAt = now;
+      payload.updatedAt = now;
+      if (idx >= 0) {
+        pods[idx] = Object.assign({}, pods[idx], payload);
+      } else {
+        pods.push(payload);
+      }
+
+      const ok = savePods(pods);
+      if (!ok) return false;
+      return getPodById(payload.id);
+    } catch (e) {
+      console.error('savePod failed', e);
+      return false;
+    }
+  }
+
+  function deletePod(id) {
+    try {
+      if (!id) return false;
+      const pods = loadPods().filter(p => p.id !== id);
+      return savePods(pods);
+    } catch (e) {
+      console.error('deletePod failed', e);
+      return false;
+    }
+  }
+
   function exportStudentsToFile() {
     try {
       const students = loadStudents();
+      const pods = loadPods();
       const backups = getBackups();
       const exportData = {
         students: students,
+        pods: pods,
         backups: backups,
         exportDate: new Date().toISOString(),
-        version: '1.0'
+        version: '1.1'
       };
       const json = JSON.stringify(exportData, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
@@ -276,6 +378,7 @@
       if (!importData.students || !Array.isArray(importData.students)) {
         throw new Error('Invalid file format');
       }
+      const pods = Array.isArray(importData.pods) ? importData.pods : null;
       let students = importData.students;
       if (!replaceExisting) {
         const existing = loadStudents();
@@ -284,6 +387,9 @@
         students = existing.concat(students);
       }
       const success = saveStudents(students);
+      if (success && pods) {
+        try { savePods(pods); } catch (e) { console.warn('savePods skipped during import', e); }
+      }
       if (success && importData.backups && Array.isArray(importData.backups)) {
         try {
           const storage = _getStorage();
@@ -373,7 +479,12 @@
     getLastSaveTime,
     getLastExportTime,
     needsExportReminder,
-    markExported
+    markExported,
+    loadPods,
+    savePods,
+    savePod,
+    deletePod,
+    getPodById
   };
   window.DOM = { getEl, setText, setHTML, show, hide };
 })();

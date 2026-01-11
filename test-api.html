@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>Brain Grain API Test</h1>
+    <button onclick="testHealth()">Test /api/health</button>
+    <button onclick="testGenerate()">Test /api/generate-pod-plan</button>
+    <pre id="output"></pre>
+
+    <script>
+        async function testHealth() {
+            const output = document.getElementById('output');
+            try {
+                output.textContent = 'Testing /api/health...';
+                const response = await fetch('http://localhost:3000/api/health');
+                const data = await response.json();
+                output.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                output.textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testGenerate() {
+            const output = document.getElementById('output');
+            try {
+                output.textContent = 'Testing /api/generate-pod-plan...';
+                const response = await fetch('http://localhost:3000/api/generate-pod-plan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        podSummary: 'Test pod with 2 students',
+                        prompt: 'Create a simple hello world response'
+                    })
+                });
+                const data = await response.json();
+                output.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                output.textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
