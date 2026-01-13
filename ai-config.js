@@ -219,11 +219,26 @@ Your role is to unlock confidence, thinking habits, and leadership.
       '- No worksheets',
       '- No long written tasks',
       '- Instructions must be deliverable orally',
-      '- Use peer roles and collaboration',
+      'MANDATORY ROLES REQUIREMENT:',
+      '- You MUST create a section titled exactly: "ROLES FOR TODAY".',
+      '- You MUST assign exactly ONE role to EACH student.',
+      '- You MUST use the exact student names from POD DATA.',
+      '- You MUST show roles in this format:',
+      '  Student Name (Role Name)',
+      '- Roles MUST guarantee participation without requiring speaking or writing.',
+      '- Roles MUST appear BEFORE the first session activity.',
       '- Diagnostics must be observational, oral, or activity-based (not written tests)',
       '',
       'MENTOR-FRIENDLY STYLE:',
       mentorStyle,
+      '',
+      'MANDATORY ROLE INSTRUCTION:',
+      '- You MUST assign ONE role to EACH student.',
+      '- Use the exact student names provided in POD DATA.',
+      '- Include roles ONLY inside facilitator_card.roles_for_today.',
+      '- Role format MUST be: Student Name + Role Name.',
+      '- Roles MUST be visible to the facilitator.',
+      '- Roles MUST guarantee participation without speaking or writing.',
       '',
       'POD DATA:',
       JSON.stringify(structuredData, null, 2),
@@ -239,8 +254,15 @@ Your role is to unlock confidence, thinking habits, and leadership.
       '    "duration_minutes": 45,',
       '    "goal": "Safety first. Thinking second.",',
       '    "materials": ["cloth/mat", "6–8 sticks", "one simple picture card", "4 blank papers + pencils (optional)"],',
+      '    "roles_for_today": [',
+      '      "Alice Kumar (Material Mover)",',
+      '      "Bob Sharma (Pattern Watcher)",',
+      '      "Charlie Patel (Calm Keeper)",',
+      '      "Dana Iyer (Idea Listener)"',
+      '    ],',
       '    "sections": [',
-      '      {"title":"ENTRY","time_minutes":2, "say":["Come in. Sit anywhere you feel comfortable."], "place":[], "watch":["Who hesitates", "Who settles fast"]},',
+      '      {"title":"ROLES FOR TODAY","time_minutes":3, "say":["Assign roles now using the list above.", "Each role helps the team. No writing needed."], "place":[], "watch":["Who hesitates", "Who seems eager"]},',
+      '      {"title":"ENTRY","time_minutes":2, "say":["Invite the material mover to place the cloth.", "Ask the pattern watcher to stand where they can see everyone."], "place":[], "watch":["Who stays calm when starting", "Who invites a peer"]},',
       '      {"title":"SAFETY FIRST","time_minutes":5, "say":["Nobody laughs at mistakes.", "Nobody is forced to read or write.", "You can talk or just listen."], "place":[], "watch":[]},',
       '      {"title":"THINKING TASK","time_minutes":15, "say":["This is not a test.", "There is no one right answer.", "You don\u2019t have to write."], "place":["Cloth", "Sticks", "Picture card"], "watch":["What do you notice?", "What did you try first?", "Is there another way?"]},',
       '      {"title":"PAUSE","time_minutes":5, "say":["Let\u2019s pause.", "I can take one small step."], "place":[], "watch":[]},',
@@ -249,51 +271,98 @@ Your role is to unlock confidence, thinking habits, and leadership.
       '    ]',
       '  },',
       '  "system_notes": {',
-      '    "differentiation": ["Per student strategies; may include names"],',
-      '    "observation_signals": ["Engagement, confidence, language access, leadership"],',
-      '    "student_mapping": [],',
+      '    "differentiation": [',
+      '      "Alice Kumar: needs gentle pace; use tactile prompts",',
+      '      "Bob Sharma: give visual pattern first; avoid rapid switches",',
+      '      "Charlie Patel: pair with breathing cue; limit overstimulation",',
+      '      "Dana Iyer: invite summaries; prevent over-leading"
+      '    ],',
+      '    "observation_signals": [',
+      '      "Alice: shoulders loosen, stays engaged with materials",',
+      '      "Bob: tracks sequences without freezing",',
+      '      "Charlie: steady breathing, steady eye contact",',
+      '      "Dana: invites peers, does not dominate"
+      '    ],',
+      '    "student_mapping": [',
+      '      "Alice Kumar → Material Mover (low confidence, safe entry role)",',
+      '      "Bob Sharma → Pattern Watcher (focus + observation)",',
+      '      "Charlie Patel → Calm Keeper (self-regulation)",',
+      '      "Dana Iyer → Idea Listener (leadership without dominance)"',
+      '    ],',
       '    "ai_logic": "Why each step unlocks safety and thinking; how prompts adapt for BLOCKED/SUPPORTED language access."',
       '  }',
       '}',
       '',
       '===============================',
-      'BRAIN GRAIN – PLAN GENERATION RULES (V2)',
-      'Facilitator-Friendly Architecture',
+      'BRAIN GRAIN – PLAN GENERATION RULES (V3)',
+      'Facilitator-Friendly + Role-Based Participation',
       '===============================',
-      '',
+
       'STRICT_RULES:',
-      '',
-      'FACILITATOR_CARD_RULES:',
-      '- facilitator_card MUST be readable and executable in under 2 minutes.',
-      '- facilitator_card MUST fit on one page (max 250–300 words).',
-      '- facilitator_card MUST NOT include student names, student tags, academic levels, or individual differentiation.',
-      '- facilitator_card MUST be written in simple spoken language, as exact phrases the mentor can say aloud.',
-      '- facilitator_card MUST be structured into short phases, each containing:',
-      '  * TIME',
-      '  * SAY (exact words to speak)',
-      '  * DO (physical actions or materials)',
-      '  * WATCH (1–2 emotional or behavioural cues only).',
-      '- facilitator_card MUST limit each phase to:',
-      '  * maximum 2 SAY items,',
-      '  * maximum 2 DO items,',
-      '  * maximum 2 WATCH items.',
-      '- facilitator_card MUST prioritise emotional safety over task completion.',
-      '',
-      'SYSTEM_NOTES_RULES:',
-      '- system_notes MUST include student differentiation, learning levels, SEL patterns, leadership signals, and observation markers.',
-      '- system_notes MUST translate last-session feedback into safety adjustments, prompt tweaks, and role opportunities.',
-      '- system_notes MUST NEVER surface directly in the facilitator_card.',
-      '- system_notes MAY be verbose and analytical.',
-      '',
-      'SESSION_CONTINUITY_RULE:',
-      '- Last session feedback MUST be used ONLY to adjust prompts, pacing, proximity, and safety supports.',
-      '- Task difficulty MUST NOT increase unless emotional safety signals improved in the previous session.',
-      '',
-      'OUTPUT_RULE:',
-      '- Output MUST be a single JSON object with exactly two keys: facilitator_card and system_notes',
-      '- facilitator_card MUST be plain-text and human-readable.',
-      '- system_notes MAY contain structured data and internal logic.',
-      '- Output MUST be valid JSON only.'
+
+      '- FACILITATOR_CARD_RULES:',
+      '  - facilitator_card MUST be readable and executable in under 2 minutes.',
+      '  - facilitator_card MUST fit on one page (max 250–300 words).',
+      '  - facilitator_card MUST NOT include student names, student tags, academic levels, or individual differentiation EXCEPT inside roles_for_today.',
+      '  - facilitator_card MUST include a section titled exactly "ROLES FOR TODAY" before any activity sections.',
+      '  - facilitator_card MUST be written in simple spoken language, as exact phrases the mentor can say aloud.',
+      '  - facilitator_card MUST be structured into short phases, each containing:',
+      '    - TIME',
+      '    - SAY (exact words to speak)',
+      '    - DO (physical actions or materials)',
+      '    - WATCH (1–2 emotional or behavioural cues only).',
+      '  - facilitator_card MUST limit each phase to:',
+      '    - maximum 2 SAY items,',
+      '    - maximum 2 DO items,',
+      '    - maximum 2 WATCH items.',
+      '  - facilitator_card MUST prioritise emotional safety over task completion.',
+
+      '- ROLE_DISTRIBUTION_RULES:',
+      '  - EACH session MUST include clearly defined student roles.',
+      '  - EVERY student in the pod MUST be assigned exactly one role.',
+      '  - Roles MUST guarantee participation without requiring speaking or writing.',
+      '  - Roles MUST be simple, neutral, and non-hierarchical.',
+      '  - Roles MUST rotate across sessions to avoid fixed identity or labelling.',
+      '  - facilitator_card MUST include:',
+      '    - a short list of roles,',
+      '    - one simple instruction per role,',
+      '    - wording that allows the mentor to assign roles verbally on the spot.',
+      '  - Roles MUST support regulation, observation, connection, or task movement, not academic performance.',
+
+      '- SYSTEM_NOTES_RULES:',
+      '  - system_notes MUST include:',
+      '    - student differentiation,',
+      '    - learning levels,',
+      '    - SEL patterns,',
+      '    - leadership signals,',
+      '    - observation markers.',
+      '  - system_notes MUST map students to roles internally based on:',
+      '    - safety needs,',
+      '    - confidence levels,',
+      '    - energy regulation needs.',
+      '  - system_notes MUST translate last-session feedback into:',
+      '    - role adjustments,',
+      '    - safety scaffolds,',
+      '    - prompt modifications.',
+      '  - system_notes MUST NEVER surface directly in the facilitator_card.',
+      '  - system_notes MAY be verbose and analytical.',
+
+      '- SESSION_CONTINUITY_RULE:',
+      '  - Last session feedback MUST be used ONLY to adjust:',
+      '    - prompts,',
+      '    - pacing,',
+      '    - proximity,',
+      '    - role selection,',
+      '    - safety supports.',
+      '  - Task difficulty MUST NOT increase unless emotional safety signals improved in the previous session.',
+
+      '- OUTPUT_RULE:',
+      '  - Output MUST be a single JSON object with exactly two keys:',
+      '    - facilitator_card',
+      '    - system_notes',
+      '  - facilitator_card MUST be plain-text and human-readable.',
+      '  - system_notes MAY contain structured data and internal logic.',
+      '  - Output MUST be valid JSON only.'
     ].filter(Boolean).join('\n');
   }
 
@@ -352,27 +421,48 @@ Your role is to unlock confidence, thinking habits, and leadership.
 
   // Fallback plan template (when AI is not configured)
   function buildFallbackPlan(summary) {
+  const studentCount = summary.studentCount || 3;
+  const roles = ["Time Keeper", "Materials Helper", "Observer", "Anchor", "Bridge"];
+  const roleSubset = roles.slice(0, studentCount);
+  
   return `
 Day 1 Brain Grain Pod Session – ${summary.podName}
 
 Objective:
 Build safety, observe thinking habits, and encourage participation.
 
+👥 STUDENT ROLES (Assign verbally at start):
+${roleSubset.map((role, idx) => `  ${idx + 1}. ${role} - ${getRoleInstruction(role)}`).join('\n')}
+🔄 Rotate these roles in future sessions to avoid fixed labels.
+
 1) Welcome & Feelings Check (10 min)
 Students share name + feeling using words, gestures, or emojis.
+(Time Keeper watches the clock, Observer notices who shares what)
 
 2) Thinking Without Writing (15 min)
 Mentor presents a simple visual puzzle.
 Students respond orally, by pointing, or by explaining to a peer.
+(Materials Helper distributes puzzle cards, Anchor starts first)
 
-3) Pod Roles Activity (10 min)
-Assign Calm Leader, Observer, Language Buddy, Connector.
-Students practice roles during a group task.
+3) Group Activity with Roles (10 min)
+Students practice their assigned roles during a collaborative task.
+Mentor supports students in understanding their role's purpose.
 
 4) Reflection & Close (10 min)
 Students share one thing they tried or noticed.
 Mentor notes confidence, language access, and engagement.
 `;
+}
+
+function getRoleInstruction(role) {
+  const instructions = {
+    "Time Keeper": "Watches the timer and lets the group know when time is up",
+    "Materials Helper": "Hands out materials and collects them at the end",
+    "Observer": "Notices group energy and shares what they see",
+    "Anchor": "Starts each new activity first to set the pace",
+    "Bridge": "Connects ideas between activities by summarizing"
+  };
+  return instructions[role] || "Supports the session flow";
 }
 
 
@@ -394,6 +484,31 @@ Mentor notes confidence, language access, and engagement.
       html += `<div style="margin-top: 12px; color: #718096; font-size: 14px;">⏱️ Total Duration: <strong>${plan.duration_minutes} minutes</strong></div>`;
     }
     html += `</div>`;
+    
+    // Student Roles Section
+    if (plan.student_roles) {
+      html += `<div style="margin-bottom: 28px; padding: 20px; background: #fef5e7; border-radius: 12px; border: 2px solid #f39c12;">`;
+      html += `<h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: 700; color: #d68910;">👥 Student Roles (Assign on the spot)</h3>`;
+      
+      if (plan.student_roles.role_list && plan.student_roles.instructions) {
+        html += `<div style="background: white; padding: 16px; border-radius: 8px; margin-bottom: 12px;">`;
+        plan.student_roles.role_list.forEach((role, idx) => {
+          const instruction = plan.student_roles.instructions[idx] || 'Supports the session';
+          html += `<div style="margin-bottom: 12px; padding: 12px; background: #fef9f2; border-left: 4px solid #f39c12; border-radius: 6px;">`;
+          html += `<div style="font-weight: 700; color: #c77200; margin-bottom: 4px;">🎭 ${role}</div>`;
+          html += `<div style="color: #6c5a00; font-size: 14px;">${instruction}</div>`;
+          html += `</div>`;
+        });
+        html += `</div>`;
+      }
+      
+      if (plan.student_roles.rotation_note) {
+        html += `<div style="padding: 10px 14px; background: #fff3cd; border-radius: 6px; border-left: 3px solid #f39c12; color: #856404; font-size: 13px;">`;
+        html += `🔄 <strong>Remember:</strong> ${plan.student_roles.rotation_note}`;
+        html += `</div>`;
+      }
+      html += `</div>`;
+    }
     
     // Activities
     if (plan.activities && Array.isArray(plan.activities)) {
@@ -470,6 +585,19 @@ Mentor notes confidence, language access, and engagement.
       htmlParts.push(`<div style="font-weight:700;">🧰 Materials (Put in one tray)</div>`);
       htmlParts.push(`<ul style="margin:8px 0 0 18px; color:#4a5568;">${card.materials.map(m=>`<li>${m}</li>`).join('')}</ul>`);
       htmlParts.push(`</div>`);
+    }
+    // Render Roles (Student Name + Role)
+    const rolesForToday = Array.isArray(card.roles_for_today)
+      ? card.roles_for_today
+      : (Array.isArray(card.roles) ? card.roles.map(r => (r && r.student && r.role ? `${r.student} (${r.role})` : '')).filter(Boolean) : []);
+    if (rolesForToday.length) {
+      htmlParts.push(`<div style="margin-bottom: 16px; padding:12px; background:#fff7ed; border:1px solid #fed7aa; border-radius:8px;">`);
+      htmlParts.push(`<div style="font-weight:700;">🎭 Roles for Today</div>`);
+      htmlParts.push(`<ul style="margin:8px 0 0 18px; color:#7c2d12;">`);
+      rolesForToday.forEach(r => {
+        htmlParts.push(`<li>${r}</li>`);
+      });
+      htmlParts.push(`</ul></div>`);
     }
     if (Array.isArray(card.sections)) {
       card.sections.forEach((sec, idx) => {
@@ -583,6 +711,15 @@ Mentor notes confidence, language access, and engagement.
       }
 
       if (parsed && parsed.facilitator_card) {
+        if (
+          !parsed.facilitator_card.roles_for_today ||
+          parsed.facilitator_card.roles_for_today.length !== summary.studentCount
+        ) {
+          throw new Error('Invalid plan: missing or incomplete roles_for_today');
+        }
+        if (!Array.isArray(parsed.facilitator_card.sections) || parsed.facilitator_card.sections.length === 0 || parsed.facilitator_card.sections[0].title !== 'ROLES FOR TODAY') {
+          throw new Error('Invalid plan: ROLES FOR TODAY section missing or misplaced');
+        }
         facilitatorHtml = formatFacilitatorExecutionCard(parsed.facilitator_card);
         systemNotesHtml = formatSystemNotes(parsed.system_notes || {});
       } else {

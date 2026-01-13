@@ -73,6 +73,11 @@ CRITICAL INSTRUCTIONS:
   "session_title": "string (catchy, relevant title)",
   "objective": "string (main goal of the session)",
   "duration_minutes": 45,
+  "student_roles": {
+    "role_list": ["Role 1", "Role 2", "Role 3", ...],
+    "instructions": ["Simple instruction for Role 1", "Simple instruction for Role 2", ...],
+    "rotation_note": "string (reminder about rotating roles)"
+  },
   "activities": [
     {
       "activity_title": "string",
@@ -83,6 +88,19 @@ CRITICAL INSTRUCTIONS:
     }
   ]
 }
+
+ROLE_DISTRIBUTION_RULES (MANDATORY):
+- EACH session MUST include clearly defined student roles.
+- EVERY student in the pod MUST be assigned exactly one role.
+- Roles MUST guarantee participation without requiring speaking or writing.
+- Roles MUST be simple, neutral, and non-hierarchical.
+- Roles MUST rotate across sessions to avoid fixed identity or labelling.
+- The student_roles section MUST include:
+  - a short list of roles (matching the number of students in the pod),
+  - one simple instruction per role,
+  - wording that allows the mentor to assign roles verbally on the spot.
+- Roles MUST support regulation, observation, connection, or task movement, NOT academic performance.
+- Examples of good roles: "Time Keeper" (watches timer), "Materials Helper" (hands out items), "Observer" (notices group energy), "Anchor" (starts each activity), "Bridge" (connects ideas between activities).
 
 Generate the complete Day 1 session plan now:`;
 

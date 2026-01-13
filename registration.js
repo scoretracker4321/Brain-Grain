@@ -238,14 +238,24 @@
           window.loadStudents(); 
         } else {
           console.error('window.loadStudents is not a function! Type:', typeof window.loadStudents);
-          // Try to load directly from StorageHelper
-          const students = StorageHelper.loadStudents();
-          console.log('Loaded', students.length, 'students from StorageHelper');
-          alert(`Loaded ${students.length} students. Check if they appear in the table.`);
+          // Fallback: Try to load directly from StorageHelper global
+          if (typeof window.StorageHelper !== 'undefined' && window.StorageHelper.loadStudents) {
+            const students = window.StorageHelper.loadStudents();
+            if (typeof window.allStudents !== 'undefined') {
+              window.allStudents = students;
+            }
+            console.log('Loaded', students.length, 'students from StorageHelper');
+            // Try to manually update the table
+            if (typeof window.renderStudentTable === 'function') {
+              window.renderStudentTable();
+            }
+          } else {
+            console.error('StorageHelper is not available yet');
+          }
         }
       } catch (e) { 
         console.error('loadStudents error:', e);
-        alert('Error loading students: ' + e.message); 
+        console.warn('Admin functions may not be loaded yet. Refresh the page if data is missing.');
       }
     }, 200);
   }

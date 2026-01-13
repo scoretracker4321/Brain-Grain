@@ -279,17 +279,43 @@
       storage.setItem('braingrain_pods', JSON.stringify(normalized));
       console.log(`✓ Saved ${normalized.length} pods to localStorage`);
       
-      // Auto-sync to cloud if enabled
+      // CRITICAL: Auto-sync to cloud with verification
       if (typeof window !== 'undefined' && window.CloudStorage && window.CloudStorage.isEnabled() && window.CloudStorage.isAutoSyncEnabled()) {
         const students = loadStudents();
         console.log(`🔄 Syncing ${students.length} students and ${normalized.length} pods to cloud...`);
-        window.CloudStorage.syncToCloud(students, normalized).then(result => {
+        
+        window.CloudStorage.syncToCloud(students, normalized).then(async result => {
           if (result.success) {
             console.log('✓ Pods auto-synced to cloud successfully');
+            
+            // VERIFY the sync was successful
+            if (window.CloudStorage.verifySyncSuccess) {
+              try {
+                const verification = await window.CloudStorage.verifySyncSuccess(students.length, normalized.length);
+                if (!verification.verified) {
+                  console.error('⚠️ SYNC VERIFICATION FAILED - Retrying...');
+                  // Retry once
+                  setTimeout(() => {
+                    window.CloudStorage.syncToCloud(students, normalized).then(retry => {
+                      if (retry.success) {
+                        console.log('✓ Retry sync successful');
+                      } else {
+                        console.error('❌ Retry sync failed:', retry.error);
+                      }
+                    });
+                  }, 1000);
+                }
+              } catch (verifyErr) {
+                console.warn('Verification check failed:', verifyErr);
+              }
+            }
+            
             // Refresh the status indicator if the function is available
             if (typeof window !== 'undefined' && window.showBackupStatus) {
               setTimeout(() => window.showBackupStatus(), 100);
             }
+          } else {
+            console.error('❌ Pod cloud sync failed:', result.error || result.reason);
           }
         }).catch(err => console.error('Pod cloud sync error:', err));
       }

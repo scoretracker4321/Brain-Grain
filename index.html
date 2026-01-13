@@ -1010,6 +1010,7 @@
                     <div style="display: flex; align-items: center; gap: 16px;">
                         <p style="color: var(--color-text-secondary); margin: 0; font-size:18px;">Total: <span id="studentCount">0</span></p>
                         <div id="backupStatusDiv" style="display: flex; align-items: center; gap: 12px;"></div>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="manualRecoveryFromCloud()" title="Restore lost data from cloud backup" style="background: #10b981; color: white; border-color: #10b981;">🔄 Recover Data</button>
                     </div>
                     <div style="display:flex; align-items:center; gap:12px;">
                         <label style="display:flex; align-items:center; gap:8px; color: var(--color-text-secondary); font-size: 14px;">
@@ -1245,42 +1246,88 @@
         </div>
 
         <div id="sessionFeedbackModal" class="modal-overlay" style="display:none;">
-            <div class="modal-card" style="max-width:520px;">
+            <div class="modal-card" style="max-width:600px; max-height:90vh; overflow-y:auto;">
                 <header>
-                    <h3>Quick Feedback</h3>
+                    <h3>Session Feedback</h3>
                     <button class="icon-btn" aria-label="Close session feedback" onclick="closeSessionFeedback()" style="font-size:22px;">×</button>
                 </header>
-                <div class="info-box" style="margin-bottom:12px; font-size:13px;">3-click feedback. Select emoji + needs.</div>
+                <div class="info-box" style="margin-bottom:12px; font-size:13px;">Record observations per student. Select emoji + add notes.</div>
                 <div class="form-group">
                     <label class="form-label form-required">Student</label>
                     <select id="feedbackStudentSelect" class="form-input"></select>
                 </div>
+
+                <!-- Behaviour -->
                 <div class="form-group">
-                    <label class="form-label">How was the session for this student?</label>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                        <label class="emoji-option"><input type="radio" name="fbOverall" value="Great 😊 Engaged & confident"><span>😊 Great</span></label>
-                        <label class="emoji-option"><input type="radio" name="fbOverall" value="Good 🙂 Participated well"><span>🙂 Good</span></label>
-                        <label class="emoji-option"><input type="radio" name="fbOverall" value="OK 😐 Some hesitation"><span>😐 OK</span></label>
-                        <label class="emoji-option"><input type="radio" name="fbOverall" value="Struggled 😟 Needed support"><span>😟 Struggled</span></label>
-                        <label class="emoji-option"><input type="radio" name="fbOverall" value="Withdrawn 😔 Minimal engagement"><span>😔 Withdrawn</span></label>
+                    <label class="form-label">Behaviour</label>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+                        <label class="emoji-option"><input type="radio" name="fbBehaviour" value="😊"><span>😊 Calm</span></label>
+                        <label class="emoji-option"><input type="radio" name="fbBehaviour" value="🙂"><span>🙂 Focused</span></label>
+                        <label class="emoji-option"><input type="radio" name="fbBehaviour" value="😐"><span>😐 Restless</span></label>
+                        <label class="emoji-option"><input type="radio" name="fbBehaviour" value="😟"><span>😟 Distracted</span></label>
+                        <label class="emoji-option"><input type="radio" name="fbBehaviour" value="😔"><span>😔 Withdrawn</span></label>
                     </div>
+                    <textarea id="fbBehaviourNote" class="form-textarea" rows="1" placeholder="Add specific observations..."></textarea>
                 </div>
+
+                <!-- Participation -->
                 <div class="form-group">
-                    <label class="form-label">Needs for next session (optional)</label>
-                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
-                        <label class="need-tag"><input type="checkbox" class="fbNeedsCb" value="More encouragement">✨ Encouragement</label>
-                        <label class="need-tag"><input type="checkbox" class="fbNeedsCb" value="Simpler prompts">💬 Simpler prompts</label>
-                        <label class="need-tag"><input type="checkbox" class="fbNeedsCb" value="Peer buddy">👥 Peer buddy</label>
-                        <label class="need-tag"><input type="checkbox" class="fbNeedsCb" value="1:1 check-in">🤝 1:1 check-in</label>
-                        <label class="need-tag"><input type="checkbox" class="fbNeedsCb" value="Visual aids">🖼️ Visual aids</label>
-                        <label class="need-tag"><input type="checkbox" class="fbNeedsCb" value="More time">⏱️ More time</label>
+                    <label class="form-label">Participation</label>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+                        <label class="emoji-option"><input type="radio" name="fbParticipation" value="🙌"><span>🙌 Active</span></label>
+                        <label class="emoji-option"><input type="radio" name="fbParticipation" value="✋"><span>✋ Engaged</span></label>
+                        <label class="emoji-option"><input type="radio" name="fbParticipation" value="🤔"><span>🤔 Hesitant</span></label>
+                        <label class="emoji-option"><input type="radio" name="fbParticipation" value="🤐"><span>🤐 Silent</span></label>
+                        <label class="emoji-option"><input type="radio" name="fbParticipation" value="😶"><span>😶 Passive</span></label>
                     </div>
+                    <textarea id="fbParticipationNote" class="form-textarea" rows="1" placeholder="Add specific observations..."></textarea>
                 </div>
+
+                <!-- Interest -->
                 <div class="form-group">
-                    <label class="form-label">Quick note (optional)</label>
-                    <textarea id="fbQuickNote" class="form-textarea" rows="2" placeholder="E.g., Loves hands-on tasks, struggles with verbal instructions"></textarea>
+                    <label class="form-label">Interest</label>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+                        <label class="emoji-option"><input type="radio" name="fbInterest" value="🤩"><span>🤩 Excited</span></label>
+                        <label class="emoji-option"><input type="radio" name="fbInterest" value="😊"><span>😊 Curious</span></label>
+                        <label class="emoji-option"><input type="radio" name="fbInterest" value="😐"><span>😐 Neutral</span></label>
+                        <label class="emoji-option"><input type="radio" name="fbInterest" value="😑"><span>😑 Bored</span></label>
+                        <label class="emoji-option"><input type="radio" name="fbInterest" value="😴"><span>😴 Disengaged</span></label>
+                    </div>
+                    <textarea id="fbInterestNote" class="form-textarea" rows="1" placeholder="Add specific observations..."></textarea>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:12px;">
+
+                <!-- Emotional Signals -->
+                <div class="form-group">
+                    <label class="form-label">Emotional Signals</label>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+                        <label class="emoji-option"><input type="radio" name="fbEmotional" value="😄"><span>😄 Happy</span></label>
+                        <label class="emoji-option"><input type="radio" name="fbEmotional" value="😌"><span>😌 Relaxed</span></label>
+                        <label class="emoji-option"><input type="radio" name="fbEmotional" value="😬"><span>😬 Anxious</span></label>
+                        <label class="emoji-option"><input type="radio" name="fbEmotional" value="😠"><span>😠 Frustrated</span></label>
+                        <label class="emoji-option"><input type="radio" name="fbEmotional" value="😢"><span>😢 Upset</span></label>
+                    </div>
+                    <textarea id="fbEmotionalNote" class="form-textarea" rows="1" placeholder="Add specific observations..."></textarea>
+                </div>
+
+                <!-- Strengths Observed -->
+                <div class="form-group">
+                    <label class="form-label">Strengths Observed</label>
+                    <textarea id="fbStrengths" class="form-textarea" rows="2" placeholder="What did this student do well?"></textarea>
+                </div>
+
+                <!-- Needs Identified -->
+                <div class="form-group">
+                    <label class="form-label">Needs Identified</label>
+                    <textarea id="fbNeeds" class="form-textarea" rows="2" placeholder="What support does this student need?"></textarea>
+                </div>
+
+                <!-- Implication for Next Session -->
+                <div class="form-group">
+                    <label class="form-label">Implication for Next Session</label>
+                    <textarea id="fbNextSession" class="form-textarea" rows="2" placeholder="What should we plan differently or focus on?"></textarea>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:16px;">
                     <button class="btn btn-secondary btn-small" onclick="clearFeedbackForm()">Clear</button>
                     <div style="display:flex; gap:8px;">
                         <button class="btn btn-secondary" onclick="closeSessionFeedback()">Close</button>

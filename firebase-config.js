@@ -266,6 +266,105 @@
     }
   }
 
+  // AUTO-RECOVERY: Check for data loss and restore from cloud
+  async function autoRecoverFromCloud() {
+    if (!isFirebaseEnabled || !db) {
+      console.log('Auto-recovery: Firebase not enabled, skipping');
+      return { recovered: false, reason: 'Firebase not enabled' };
+    }
+
+    try {
+      // Check if local data exists
+      let localStudents = [];
+      let localPods = [];
+      try {
+        const studentsRaw = localStorage.getItem('braingrain_students');
+        localStudents = studentsRaw ? JSON.parse(studentsRaw) : [];
+        const podsRaw = localStorage.getItem('braingrain_pods');
+        localPods = podsRaw ? JSON.parse(podsRaw) : [];
+      } catch (e) {
+        console.error('Error reading local storage:', e);
+      }
+
+      // Load from cloud
+      const cloudResult = await loadFromCloud();
+      
+      if (!cloudResult.success) {
+        console.log('Auto-recovery: No cloud backup available');
+        return { recovered: false, reason: 'No cloud backup' };
+      }
+
+      const cloudStudents = cloudResult.students || [];
+      const cloudPods = cloudResult.pods || [];
+
+      // Check if cloud has more recent or more complete data
+      const shouldRecover = (
+        (localPods.length === 0 && cloudPods.length > 0) ||
+        (localStudents.length < cloudStudents.length) ||
+        (cloudResult.lastSync && getLastCloudSync() && new Date(cloudResult.lastSync) > getLastCloudSync())
+      );
+
+      if (shouldRecover) {
+        console.log(`🔄 AUTO-RECOVERY: Restoring data from cloud...`);
+        console.log(`   Local: ${localStudents.length} students, ${localPods.length} pods`);
+        console.log(`   Cloud: ${cloudStudents.length} students, ${cloudPods.length} pods`);
+        
+        // Save cloud data to localStorage
+        try {
+          localStorage.setItem('braingrain_students', JSON.stringify(cloudStudents));
+          localStorage.setItem('braingrain_pods', JSON.stringify(cloudPods));
+          console.log(`✓ AUTO-RECOVERY COMPLETE: Restored ${cloudStudents.length} students and ${cloudPods.length} pods`);
+          return { 
+            recovered: true, 
+            studentsRestored: cloudStudents.length,
+            podsRestored: cloudPods.length,
+            metadataRestored: Object.keys(cloudResult.podMetadata || {}).length
+          };
+        } catch (e) {
+          console.error('Auto-recovery save failed:', e);
+          return { recovered: false, reason: 'Failed to save restored data' };
+        }
+      } else {
+        console.log('Auto-recovery: Local data is up-to-date');
+        return { recovered: false, reason: 'Local data is current' };
+      }
+    } catch (error) {
+      console.error('Auto-recovery failed:', error);
+      return { recovered: false, error: error.message };
+    }
+  }
+
+  // Verify sync was successful by checking cloud
+  async function verifySyncSuccess(expectedStudentCount, expectedPodCount) {
+    if (!isFirebaseEnabled || !db) return { verified: false, reason: 'Firebase not enabled' };
+
+    try {
+      const userId = (auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : 'default';
+      const snapshot = await db.ref(`brain_grain/${userId}/data`).once('value');
+      
+      if (!snapshot.exists()) {
+        return { verified: false, reason: 'No data in cloud' };
+      }
+
+      const cloudData = snapshot.val();
+      const cloudStudents = (cloudData.students || []).length;
+      const cloudPods = (cloudData.pods || []).length;
+
+      const verified = cloudStudents === expectedStudentCount && cloudPods === expectedPodCount;
+      
+      if (verified) {
+        console.log(`✓ VERIFIED: Cloud has ${cloudStudents} students and ${cloudPods} pods`);
+      } else {
+        console.warn(`⚠️ VERIFICATION FAILED: Expected ${expectedStudentCount} students and ${expectedPodCount} pods, but cloud has ${cloudStudents} students and ${cloudPods} pods`);
+      }
+
+      return { verified, cloudStudents, cloudPods };
+    } catch (error) {
+      console.error('Verification failed:', error);
+      return { verified: false, error: error.message };
+    }
+  }
+
   // AI Configuration Management
   async function saveAIConfig(config) {
     if (!isFirebaseEnabled || !db) {
@@ -365,7 +464,9 @@
     getLastSyncError,
     saveAIConfig,
     loadAIConfig,
-    isEnabled: () => isFirebaseEnabled
+    isEnabled: () => isFirebaseEnabled,
+    autoRecoverFromCloud,
+    verifySyncSuccess
   };
 
   // Auto-restore from cloud on first load

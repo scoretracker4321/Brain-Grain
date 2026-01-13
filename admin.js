@@ -79,12 +79,31 @@
   let editingPodId = null;
   let currentPodPlanId = null;
 
-  function loadStudents() {
+  async function loadStudents() {
     try { 
       const loaded = StorageHelper.loadStudents();
       allStudents = loaded;
       if (typeof window.allStudents !== 'undefined') window.allStudents = loaded;
       console.log('Admin loadStudents: loaded', loaded.length, 'students');
+
+      // AUTO-RECOVERY: Check cloud for missing data
+      if (window.CloudStorage && window.CloudStorage.autoRecoverFromCloud) {
+        try {
+          const recovery = await window.CloudStorage.autoRecoverFromCloud();
+          if (recovery.recovered) {
+            console.log(`🔄 DATA RECOVERED FROM CLOUD: ${recovery.studentsRestored} students, ${recovery.podsRestored} pods, ${recovery.metadataRestored} pod metadata`);
+            // Reload after recovery
+            const reloaded = StorageHelper.loadStudents();
+            allStudents = reloaded;
+            if (typeof window.allStudents !== 'undefined') window.allStudents = reloaded;
+            
+            // Show recovery notification
+            alert(`✓ Data recovered from cloud backup!\n\n${recovery.studentsRestored} students\n${recovery.podsRestored} pods\n${recovery.metadataRestored} plans/executions restored`);
+          }
+        } catch (e) {
+          console.warn('Auto-recovery check failed:', e);
+        }
+      }
 
       // If no data, auto-restore rich demo dataset for meaningful summaries/reports
       if (!loaded || loaded.length === 0) {
@@ -1098,10 +1117,14 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
         ts: data.ts,
         summary: data.summary
       }));
-      setPlanModalState({ statusText: 'Accepted and saved', contentText: data.facilitatorHtml || data.html, showSpinner: false });
+      console.log(`✓ Plan accepted and saved for pod ${window.currentPodPlanId}`);
+      
+      // CRITICAL: Immediately sync to cloud after accepting plan
+      triggerCloudSync();
+      
+      setPlanModalState({ statusText: 'Accepted and saved ✓ Syncing to cloud...', contentText: data.facilitatorHtml || data.html, showSpinner: false });
       alert('Plan accepted and saved for this pod.');
       renderPods(); // Refresh to show View Plan button
-      triggerCloudSync(); // Auto-sync to cloud
     } catch (e) {
       alert('Could not save the plan locally.');
     }
@@ -1170,31 +1193,46 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
     if (modal) modal.style.display = 'none';
   }
   function clearFeedbackForm() {
-    // Reset overall radio buttons
-    const overallRadios = document.querySelectorAll('input[name="fbOverall"]');
-    overallRadios.forEach(r => r.checked = false);
-    // Uncheck needs checkboxes
-    document.querySelectorAll('.fbNeedsCb').forEach(cb => cb.checked = false);
-    // Clear quick note
-    const quickNote = document.getElementById('fbQuickNote');
-    if (quickNote) quickNote.value = '';
+    // Reset all radio buttons
+    ['fbBehaviour', 'fbParticipation', 'fbInterest', 'fbEmotional'].forEach(name => {
+      document.querySelectorAll(`input[name="${name}"]`).forEach(r => r.checked = false);
+    });
+    // Clear all text areas
+    ['fbBehaviourNote', 'fbParticipationNote', 'fbInterestNote', 'fbEmotionalNote', 'fbStrengths', 'fbNeeds', 'fbNextSession'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
   }
   function fillFeedbackForm(entry) {
-    // Check matching overall radio
-    if (entry.overall) {
-      const overallRadios = document.querySelectorAll('input[name="fbOverall"]');
-      overallRadios.forEach(r => {
-        if (r.value === entry.overall) r.checked = true;
-      });
-    }
-    // Check matching needs checkboxes
-    const needs = Array.isArray(entry.needs) ? entry.needs : (typeof entry.needs === 'string' ? entry.needs.split(',').map(s=>s.trim()) : []);
-    document.querySelectorAll('.fbNeedsCb').forEach(cb => {
-      cb.checked = needs.includes(cb.value);
+    // Fill emoji selections
+    const radioFields = {
+      behaviour: 'fbBehaviour',
+      participation: 'fbParticipation',
+      interest: 'fbInterest',
+      emotional: 'fbEmotional'
+    };
+    Object.keys(radioFields).forEach(key => {
+      if (entry[key]) {
+        const radios = document.querySelectorAll(`input[name="${radioFields[key]}"]`);
+        radios.forEach(r => {
+          if (r.value === entry[key]) r.checked = true;
+        });
+      }
     });
-    // Fill quick note
-    const quickNote = document.getElementById('fbQuickNote');
-    if (quickNote && entry.quickNote) quickNote.value = entry.quickNote;
+    // Fill text notes
+    const textFields = {
+      behaviourNote: 'fbBehaviourNote',
+      participationNote: 'fbParticipationNote',
+      interestNote: 'fbInterestNote',
+      emotionalNote: 'fbEmotionalNote',
+      strengths: 'fbStrengths',
+      needs: 'fbNeeds',
+      nextSession: 'fbNextSession'
+    };
+    Object.keys(textFields).forEach(key => {
+      const el = document.getElementById(textFields[key]);
+      if (el && entry[key]) el.value = entry[key];
+    });
   }
   // When student changes, prefill
   document.addEventListener('change', function(e){
@@ -1212,24 +1250,33 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
     const studentId = document.getElementById('feedbackStudentSelect').value;
     const student = allStudents.find(s => s.id === studentId);
     
-    // Get overall emoji selection
-    const overallRadio = document.querySelector('input[name="fbOverall"]:checked');
-    const overall = overallRadio ? overallRadio.value : '';
+    // Get emoji selections
+    const getRadioValue = (name) => {
+      const radio = document.querySelector(`input[name="${name}"]:checked`);
+      return radio ? radio.value : '';
+    };
     
-    // Collect needs from checkboxes only
-    const needs = Array.from(document.querySelectorAll('.fbNeedsCb:checked')).map(cb => cb.value);
-    
-    // Get quick note
-    const quickNote = document.getElementById('fbQuickNote');
-    const quickNoteText = quickNote ? quickNote.value.trim() : '';
+    // Get text values
+    const getTextValue = (id) => {
+      const el = document.getElementById(id);
+      return el ? el.value.trim() : '';
+    };
     
     const entry = {
       studentId,
       studentName: `${student?.firstName || ''} ${student?.lastName || ''}`.trim() || student?.phone || studentId,
       ts: Date.now(),
-      overall,
-      needs,
-      quickNote: quickNoteText
+      behaviour: getRadioValue('fbBehaviour'),
+      behaviourNote: getTextValue('fbBehaviourNote'),
+      participation: getRadioValue('fbParticipation'),
+      participationNote: getTextValue('fbParticipationNote'),
+      interest: getRadioValue('fbInterest'),
+      interestNote: getTextValue('fbInterestNote'),
+      emotional: getRadioValue('fbEmotional'),
+      emotionalNote: getTextValue('fbEmotionalNote'),
+      strengths: getTextValue('fbStrengths'),
+      needs: getTextValue('fbNeeds'),
+      nextSession: getTextValue('fbNextSession')
     };
     const entries = loadSessionFeedback(podId);
     // Replace last entry for this student or append
@@ -1243,9 +1290,10 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
       const execData = JSON.parse(localStorage.getItem(execKey) || '{}');
       execData.feedbackComplete = true;
       localStorage.setItem(execKey, JSON.stringify(execData));
+      console.log(`✓ Execution marked complete for pod ${podId}`);
     } catch {}
     
-    // Trigger cloud sync after feedback save
+    // CRITICAL: Immediately sync to cloud after marking execution
     triggerCloudSync();
     
     // Auto-advance to next student if available
@@ -1339,15 +1387,55 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
     };
     try {
       localStorage.setItem(execKey, JSON.stringify(execData));
+      console.log(`✓ Plan marked as EXECUTED for pod ${podId} at ${new Date(execData.executedAt).toISOString()}`);
       alert('Plan marked as executed! Now you can record session feedback.');
       renderPods(); // Refresh to show execution badge
       // Remove Execute button from modal
       const btn = document.getElementById('executePlanBtn');
       if (btn) btn.remove();
-      setPlanModalState({ statusText: 'Executed \u2713 - Record feedback now', showSpinner: false });
-      triggerCloudSync(); // Auto-sync to cloud
-    } catch {
+      setPlanModalState({ statusText: 'Executed ✓ - Syncing to cloud...', showSpinner: true });
+      
+      // CRITICAL: Immediately sync to cloud after marking as executed
+      triggerCloudSync().then(() => {
+        setPlanModalState({ statusText: 'Executed ✓ - Synced to cloud! Record feedback now', showSpinner: false });
+      }).catch(() => {
+        setPlanModalState({ statusText: 'Executed ✓ - Record feedback now', showSpinner: false });
+      });
+    } catch (e) {
+      console.error('Failed to save execution status:', e);
       alert('Could not save execution status.');
+    }
+  }
+
+  // Manual recovery function for the UI button
+  async function manualRecoveryFromCloud() {
+    if (!window.CloudStorage || !window.CloudStorage.isEnabled()) {
+      alert('Firebase cloud storage is not enabled. Please configure Firebase first.');
+      return;
+    }
+
+    if (!confirm('This will restore all data from your cloud backup.\\n\\nPods, plans, and execution status will be recovered.\\n\\nContinue?')) {
+      return;
+    }
+
+    try {
+      const recovery = await window.CloudStorage.autoRecoverFromCloud();
+      
+      if (recovery.recovered) {
+        alert(`✓ DATA RECOVERED FROM CLOUD!\\n\\nRestored:\\n• ${recovery.studentsRestored} students\\n• ${recovery.podsRestored} pods\\n• ${recovery.metadataRestored} plans/executions\\n\\nRefreshing page...`);
+        window.location.reload();
+      } else {
+        if (recovery.reason === 'No cloud backup') {
+          alert('No cloud backup found. Make sure you have synced data to cloud before.');
+        } else if (recovery.reason === 'Local data is current') {
+          alert('Your local data is already up-to-date with the cloud backup.\\n\\nNo recovery needed.');
+        } else {
+          alert(`Recovery not needed: ${recovery.reason}`);
+        }
+      }
+    } catch (error) {
+      console.error('Manual recovery failed:', error);
+      alert(`Recovery failed: ${error.message}`);
     }
   }
 
@@ -1371,6 +1459,7 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
   window.showUserProfile = showUserProfile;
   window.replaceWithDemoDataNow = replaceWithDemoDataNow;
   window.toggleAutoCloudSync = toggleAutoCloudSync;
+  window.manualRecoveryFromCloud = manualRecoveryFromCloud;
   window.renderPods = renderPods;
   window.openPodModal = openPodModal;
   window.closePodModal = closePodModal;
