@@ -50,8 +50,8 @@
       }
       
       try {
-        const students = loadStudents();
-        const pods = loadPods();
+        const students = StorageHelper.loadStudents();
+        const pods = StorageHelper.loadPods();
         const result = await window.CloudStorage.syncToCloud(students, pods);
         if (result.success) {
           console.log('✓ Cloud synced after action');
