@@ -1031,20 +1031,28 @@
   }
 
   function generatePodPlan(podId) {
+    console.log('🔵 generatePodPlan called with podId:', podId);
+    
     const pod = StorageHelper.getPodById(podId);
+    console.log('🔵 Pod retrieved:', pod ? pod.name : 'NULL');
+    
     if (!pod) {
       alert('Pod not found');
       return;
     }
 
     // Ensure allStudents is loaded
+    console.log('🔵 allStudents count:', allStudents.length);
     if (!allStudents || allStudents.length === 0) {
       console.log('⚠️ allStudents is empty, reloading from storage...');
       allStudents = StorageHelper.loadStudents();
       if (typeof window.allStudents !== 'undefined') window.allStudents = allStudents;
+      console.log('🔵 After reload, allStudents count:', allStudents.length);
     }
 
     const members = (pod.studentIds || []).map(id => allStudents.find(s => s.id === id)).filter(Boolean);
+    console.log('🔵 Members found:', members.length);
+    
     if (members.length === 0) {
       alert('This pod has no active students.');
       return;
@@ -1058,8 +1066,12 @@
       summary: window.buildPodSummary(pod, members, calculateAcademicAverage)
     };
     window.currentPodForPlanGeneration.summary.sessionFeedback = getLastFeedbackForPodStudents(podId);
+    
+    console.log('🔵 window.currentPodForPlanGeneration set:', !!window.currentPodForPlanGeneration);
+    console.log('🔵 Pod data:', window.currentPodForPlanGeneration.pod.name);
 
     // Show session type selector modal
+    console.log('🔵 Opening session type modal...');
     openSessionTypeModal();
   }
 
@@ -1300,13 +1312,19 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
 
   // --- Session Type Modal ---
   function openSessionTypeModal() {
+    console.log('🟢 openSessionTypeModal called');
+    console.log('🟢 currentPodForPlanGeneration exists:', !!window.currentPodForPlanGeneration);
+    
     const modal = document.getElementById('sessionTypeModal');
     if (modal) {
       modal.style.display = 'flex';
+      console.log('🟢 Modal display set to flex');
       // Reset form
       const form = document.getElementById('sessionTypeForm');
       if (form) form.reset();
       document.getElementById('customReasonInput').style.display = 'none';
+    } else {
+      console.error('❌ Session type modal not found!');
     }
   }
 
@@ -1332,13 +1350,18 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
       const reasonInput = document.getElementById('sessionCustomReason');
       customReason = reasonInput ? reasonInput.value.trim() : '';
       if (!customReason) {
-        alert('Please describe the reason for this session');
-        return;
-      }
-      window.__customSessionReason = customReason;
+    console.log('🟡 handleSessionTypeSubmit - checking pod data...');
+    console.log('🟡 window.currentPodForPlanGeneration:', window.currentPodForPlanGeneration);
+    
+    // Check pod data BEFORE closing modal (closeSessionTypeModal sets it to null)
+    if (!window.currentPodForPlanGeneration) {
+      console.error('❌ Pod data not found!');
+      alert('Pod data not found');
+      return;
     }
 
-    // Check pod data BEFORE closing modal (closeSessionTypeModal sets it to null)
+    const podData = window.currentPodForPlanGeneration;
+    console.log('🟡 Pod data retrieved successfully:', podData.pod.name)onTypeModal sets it to null)
     if (!window.currentPodForPlanGeneration) {
       alert('Pod data not found');
       return;
