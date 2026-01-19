@@ -23,7 +23,7 @@ app.use(express.static('.')); // Serve static files from current directory
 // AI Configuration - reads from .env or can be fetched from Firebase
 let AI_CONFIG = {
   endpoint: process.env.AI_ENDPOINT || 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
-  apiKey: process.env.AI_API_KEY || '',
+  apiKey: process.env.GEMINI_API_KEY || process.env.AI_API_KEY || '',
   model: process.env.AI_MODEL || 'gemini-1.5-flash',
   source: 'env' // 'env' or 'firebase'
 };
