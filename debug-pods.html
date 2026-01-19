@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Pods</title>
+</head>
+<body>
+    <h1>Pod Data Debug</h1>
+    <button onclick="checkPods()">Check Pods</button>
+    <button onclick="checkPlans()">Check Plans</button>
+    <button onclick="fixPods()">Fix Pods</button>
+    <pre id="output"></pre>
+    
+    <script>
+        function log(msg) {
+            document.getElementById('output').textContent += msg + '\n';
+        }
+        
+        function checkPods() {
+            document.getElementById('output').textContent = '';
+            log('=== POD DATA DEBUG ===\n');
+            
+            // Check localStorage
+            const podsRaw = localStorage.getItem('braingrain_pods');
+            log('Raw pods data: ' + (podsRaw ? podsRaw.substring(0, 200) + '...' : 'NULL'));
+            
+            if (podsRaw) {
+                try {
+                    const pods = JSON.parse(podsRaw);
+                    log('\nPods count: ' + pods.length);
+                    
+                    if (pods.length > 0) {
+                        log('\nPod details:');
+                        pods.forEach((pod, idx) => {
+                            log(`\nPod ${idx + 1}:`);
+                            log(`  ID: ${pod.id}`);
+                            log(`  Name: ${pod.name}`);
+                            log(`  Students: ${pod.studentIds ? pod.studentIds.length : 0}`);
+                            log(`  Created: ${pod.createdAt}`);
+                        });
+                    } else {
+                        log('\n⚠️ Pods array is empty!');
+                    }
+                } catch (e) {
+                    log('\n❌ Error parsing pods: ' + e.message);
+                }
+            } else {
+                log('\n❌ No pods found in localStorage!');
+            }
+            
+            // Check students
+            const studentsRaw = localStorage.getItem('braingrain_students');
+            if (studentsRaw) {
+                const students = JSON.parse(studentsRaw);
+                log(`\n✓ Students count: ${students.length}`);
+            }
+        }
+        
+        function checkPlans() {
+            document.getElementById('output').textContent = '';
+            log('=== PLAN DATA DEBUG ===\n');
+            
+            const podsRaw = localStorage.getItem('braingrain_pods');
+            if (!podsRaw) {
+                log('❌ No pods found');
+                return;
+            }
+            
+            const pods = JSON.parse(podsRaw);
+            pods.forEach(pod => {
+                log(`\nPod: ${pod.name} (${pod.id})`);
+                
+                // Check current plan
+                const planKey = `braingrain_pod_plan_${pod.id}`;
+                const planRaw = localStorage.getItem(planKey);
+                if (planRaw) {
+                    try {
+                        const plan = JSON.parse(planRaw);
+                        log(`  ✓ Current plan: ${new Date(plan.acceptedAt).toLocaleString()}`);
+                    } catch (e) {
+                        log(`  ❌ Error parsing plan: ${e.message}`);
+                    }
+                } else {
+                    log(`  ⚠️ No current plan`);
+                }
+                
+                // Check plan history
+                const historyKey = `braingrain_pod_plans_${pod.id}`;
+                const historyRaw = localStorage.getItem(historyKey);
+                if (historyRaw) {
+                    try {
+                        const history = JSON.parse(historyRaw);
+                        log(`  ✓ Plan history: ${history.length} plans`);
+                        history.forEach((p, idx) => {
+                            log(`    ${idx + 1}. ${p.status} - ${p.sessionType || 'unknown'}`);
+                        });
+                    } catch (e) {
+                        log(`  ❌ Error parsing history: ${e.message}`);
+                    }
+                } else {
+                    log(`  ⚠️ No plan history`);
+                }
+            });
+        }
+        
+        function fixPods() {
+            document.getElementById('output').textContent = '';
+            log('=== FIXING PODS ===\n');
+            
+            const podsRaw = localStorage.getItem('braingrain_pods');
+            if (!podsRaw) {
+                log('❌ No pods to fix');
+                return;
+            }
+            
+            try {
+                const pods = JSON.parse(podsRaw);
+                log(`Found ${pods.length} pods`);
+                
+                // Ensure all pods have required fields
+                let fixed = 0;
+                pods.forEach(pod => {
+                    let changed = false;
+                    
+                    if (!pod.id) {
+                        pod.id = Date.now().toString() + Math.random();
+                        changed = true;
+                    }
+                    if (!pod.name) {
+                        pod.name = 'Unnamed Pod';
+                        changed = true;
+                    }
+                    if (!pod.studentIds) {
+                        pod.studentIds = [];
+                        changed = true;
+                    }
+                    if (!pod.createdAt) {
+                        pod.createdAt = new Date().toISOString();
+                        changed = true;
+                    }
+                    
+                    if (changed) {
+                        fixed++;
+                        log(`✓ Fixed pod: ${pod.name}`);
+                    }
+                });
+                
+                if (fixed > 0) {
+                    localStorage.setItem('braingrain_pods', JSON.stringify(pods));
+                    log(`\n✅ Fixed ${fixed} pods. Refresh the page.`);
+                } else {
+                    log('\n✓ All pods are valid');
+                }
+                
+            } catch (e) {
+                log('❌ Error: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>
