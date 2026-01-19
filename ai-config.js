@@ -805,7 +805,7 @@ function getRoleInstruction(role) {
       backendUrl = window.location.origin + '/api/generate-pod-plan';
     } else if (window.location.hostname.includes('github.io')) {
       // GitHub Pages - use deployed backend on Vercel
-      backendUrl = 'https://brain-grain-iwzoen3ml-scoretracker4321s-projects.vercel.app/api/generate-pod-plan';
+      backendUrl = 'https://brain-grain.vercel.app/api/generate-pod-plan';
     } else {
       // Default to same origin
       backendUrl = window.location.origin + '/api/generate-pod-plan';
