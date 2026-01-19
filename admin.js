@@ -1350,6 +1350,12 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
       const reasonInput = document.getElementById('sessionCustomReason');
       customReason = reasonInput ? reasonInput.value.trim() : '';
       if (!customReason) {
+        alert('Please describe the reason for this session');
+        return;
+      }
+      window.__customSessionReason = customReason;
+    }
+
     console.log('🟡 handleSessionTypeSubmit - checking pod data...');
     console.log('🟡 window.currentPodForPlanGeneration:', window.currentPodForPlanGeneration);
     
@@ -1361,13 +1367,7 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
     }
 
     const podData = window.currentPodForPlanGeneration;
-    console.log('🟡 Pod data retrieved successfully:', podData.pod.name)onTypeModal sets it to null)
-    if (!window.currentPodForPlanGeneration) {
-      alert('Pod data not found');
-      return;
-    }
-
-    const podData = window.currentPodForPlanGeneration;
+    console.log('🟡 Pod data retrieved successfully:', podData.pod.name);
 
     // Close modal after retrieving pod data
     closeSessionTypeModal();
