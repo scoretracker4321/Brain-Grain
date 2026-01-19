@@ -797,7 +797,20 @@ function getRoleInstruction(role) {
     const { userEdits = '', previousPlan = '', sessionType = 'followup' } = options;
     const prompt = buildPodPrompt(summary, userEdits, previousPlan, sessionType);
     const structuredData = buildStructuredStudentsData(summary);
-    const backendUrl = window.location.origin + '/api/generate-pod-plan';
+    
+    // Auto-detect backend URL based on environment
+    let backendUrl;
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      // Local development
+      backendUrl = window.location.origin + '/api/generate-pod-plan';
+    } else if (window.location.hostname.includes('github.io')) {
+      // GitHub Pages - use deployed backend
+      // TODO: Replace with your actual Vercel deployment URL after deploying
+      backendUrl = 'https://YOUR-PROJECT-NAME.vercel.app/api/generate-pod-plan';
+    } else {
+      // Default to same origin
+      backendUrl = window.location.origin + '/api/generate-pod-plan';
+    }
 
     setPlanModalState({ statusText: 'Sending to AI...', showSpinner: true });
 
