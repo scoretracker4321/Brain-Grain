@@ -1037,6 +1037,13 @@
       return;
     }
 
+    // Ensure allStudents is loaded
+    if (!allStudents || allStudents.length === 0) {
+      console.log('⚠️ allStudents is empty, reloading from storage...');
+      allStudents = StorageHelper.loadStudents();
+      if (typeof window.allStudents !== 'undefined') window.allStudents = allStudents;
+    }
+
     const members = (pod.studentIds || []).map(id => allStudents.find(s => s.id === id)).filter(Boolean);
     if (members.length === 0) {
       alert('This pod has no active students.');
