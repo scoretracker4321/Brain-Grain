@@ -831,8 +831,12 @@ function getRoleInstruction(role) {
 
       if (!resp.ok) {
         if (data.useFallback || resp.status === 503) {
+          let errorMsg = data.error || 'Backend not configured. Using fallback template.';
+          if (resp.status === 503) {
+            errorMsg = '⚠️ AI service temporarily overloaded.\n\nUsing fallback template below.\nPlease try again in 30-60 seconds for AI-generated plan.';
+          }
           setPlanModalState({
-            statusText: data.error || 'Backend not configured. Using fallback template.',
+            statusText: errorMsg,
             contentText: buildFallbackPlan(summary),
             isError: true,
             showSpinner: false

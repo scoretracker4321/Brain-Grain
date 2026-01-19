@@ -149,7 +149,19 @@ Generate the complete Day 1 session plan now:`;
     if (aiResponse.status === 429) {
       return res.status(429).json({
         success: false,
-        error: 'Too many requests (429). Please wait 1 minute before trying again.'
+        error: 'AI service rate limit reached (429). Please wait 1 minute before trying again.',
+        useFallback: true
+      });
+    }
+
+    if (aiResponse.status === 503) {
+      const errorText = await aiResponse.text();
+      console.error('AI API overloaded:', errorText);
+      return res.status(503).json({
+        success: false,
+        error: 'AI service temporarily overloaded. Please try again in a few moments.',
+        details: errorText,
+        useFallback: true
       });
     }
 
@@ -159,7 +171,8 @@ Generate the complete Day 1 session plan now:`;
       return res.status(aiResponse.status).json({
         success: false,
         error: `AI request failed: ${aiResponse.status}`,
-        details: errorText
+        details: errorText,
+        useFallback: true
       });
     }
 
