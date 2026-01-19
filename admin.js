@@ -1338,16 +1338,16 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
       window.__customSessionReason = customReason;
     }
 
-    // Close modal
-    closeSessionTypeModal();
-
-    // Prepare pod data and generate plan
+    // Check pod data BEFORE closing modal (closeSessionTypeModal sets it to null)
     if (!window.currentPodForPlanGeneration) {
       alert('Pod data not found');
       return;
     }
 
     const podData = window.currentPodForPlanGeneration;
+
+    // Close modal after retrieving pod data
+    closeSessionTypeModal();
     window.currentPodPlanId = podData.podId;
     
     window.setPlanModalState({
