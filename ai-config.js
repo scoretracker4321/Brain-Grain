@@ -4,6 +4,22 @@
 (function() {
   'use strict';
 
+  // Brain Grain roles by session phase - roles rotate and vary by phase
+  const SIMPLE_ROLES_BY_PHASE = {
+    FOUNDATION: ["Listener", "Looker", "Doer", "Helper"],
+    BRIDGE: ["Listener", "Speaker", "Writer", "Helper"],
+    STRETCH: ["Reader", "Speaker", "Writer", "Checker"]
+  };
+
+  // Assign rotating roles based on session index and phase
+  function assignRotatingRoles(students, sessionIndex = 0, phase = 'FOUNDATION') {
+    const roles = SIMPLE_ROLES_BY_PHASE[phase] || SIMPLE_ROLES_BY_PHASE.FOUNDATION;
+    return students.map((st, idx) => ({
+      student: st.name,
+      role: roles[(idx + sessionIndex) % roles.length]
+    }));
+  }
+
   // Get AI configuration from localStorage
   function getAIConfig() {
     try {
@@ -58,6 +74,8 @@
     return {
       podName: pod.name,
       studentCount: members.length,
+      sessionIndex: pod.sessionIndex || 0,
+      sessionPhase: pod.sessionPhase || 'FOUNDATION',
       students: members.map(st => ({
         id: st.id,
         name: `${st.firstName || ''} ${st.lastName || ''}`.trim() || st.phone || st.id,
@@ -176,9 +194,21 @@ Your role is NOT to teach syllabus content.
 Your role is to unlock confidence, thinking habits, and leadership.
 `;
 
-  function buildPodPrompt(summary, userEdits = '', previousPlan = '') {
+  function buildPodPrompt(summary, userEdits = '', previousPlan = '', sessionType = 'followup') {
     const structuredData = buildStructuredStudentsData(summary);
     const SESSION_PHASE = summary.sessionPhase || 'FOUNDATION';
+
+    // Map session type to guidance
+    const sessionTypeGuidance = {
+      welcome: 'This is a WELCOME SESSION where students are meeting the pod and facilitator for the first time. Prioritize: safety, comfort, establishing ground rules, ice-breakers, and peer connection. Keep the tone light, warm, and pressure-free.',
+      first: 'This is the FIRST FULL SESSION after students know each other. They have basic comfort with the group. Introduce academic/SEL content gradually with confidence-building activities. Balance exploration with structure.',
+      followup: 'This is a FOLLOW-UP SESSION. Students are familiar with the pod and each other. You can increase cognitive challenge while maintaining emotional safety. Reference previous activities to show progression.',
+      custom: '' // Will be filled with user input
+    };
+
+    const sessionTypeContext = sessionType === 'custom' ? 
+      (window.__customSessionReason || 'Regular session') : 
+      sessionTypeGuidance[sessionType] || sessionTypeGuidance.followup;
 
     const mentorStyle = [
       '- Write in facilitator-friendly language with exact phrases a mentor can say',
@@ -201,7 +231,11 @@ Your role is to unlock confidence, thinking habits, and leadership.
     return [
       SYSTEM_RULES,
       '',
-      `Create a Day 1 Brain Grain pod session for "${summary.podName}" with TWO clear outputs:`,
+      `Create a Brain Grain pod session for "${summary.podName}" with TWO clear outputs:`,
+      '',
+      'SESSION TYPE & CONTEXT:',
+      `Session Type: ${sessionType.charAt(0).toUpperCase() + sessionType.slice(1).replace(/([A-Z])/g, ' $1')}`,
+      `Guidance: ${sessionTypeContext}`,
       '',
       'SESSION CONTEXT:',
       '- Duration: 45 minutes',
@@ -220,28 +254,44 @@ Your role is to unlock confidence, thinking habits, and leadership.
       '- No long written tasks',
       '- Instructions must be deliverable orally',
       'MANDATORY ROLES REQUIREMENT:',
-      '- You MUST create a section titled exactly: "ROLES FOR TODAY".',
       '- You MUST assign exactly ONE role to EACH student.',
       '- You MUST use the exact student names from POD DATA.',
-      '- You MUST show roles in this format:',
-      '  Student Name (Role Name)',
+      '- Roles MUST be stored in facilitator_card.roles_for_today as an array.',
+      '- DO NOT create a separate activity section for roles.',
+      '- Format roles as: "Student Name (Role Name)"',
       '- Roles MUST guarantee participation without requiring speaking or writing.',
-      '- Roles MUST appear BEFORE the first session activity.',
       '- Diagnostics must be observational, oral, or activity-based (not written tests)',
       '',
       'MENTOR-FRIENDLY STYLE:',
       mentorStyle,
       '',
       'MANDATORY ROLE INSTRUCTION:',
-      '- You MUST assign ONE role to EACH student.',
+      '- Assign exactly ONE role to EACH student.',
       '- Use the exact student names provided in POD DATA.',
-      '- Include roles ONLY inside facilitator_card.roles_for_today.',
-      '- Role format MUST be: Student Name + Role Name.',
-      '- Roles MUST be visible to the facilitator.',
+      '- Store roles ONLY inside facilitator_card.roles_for_today (do NOT create a roles section).',
+      '- Role format: "Student Name (Role Name)"',
+      '- Roles must appear in roles_for_today array, not in sections array.',
       '- Roles MUST guarantee participation without speaking or writing.',
       '',
       'POD DATA:',
       JSON.stringify(structuredData, null, 2),
+      '',
+      'ROLES FOR TODAY (MANDATORY):',
+      JSON.stringify(assignRotatingRoles(summary.students, summary.sessionIndex, SESSION_PHASE), null, 2),
+      '',
+      'ROLE RULES:',
+      '- Use ONLY the role names allowed for the CURRENT SESSION PHASE.',
+      '- Use the exact student names provided.',
+      '- Store all roles in facilitator_card.roles_for_today array.',
+      '- Do NOT add roles as an activity section.',
+      '- Refer to students as: Student Name (Role) inside activity instructions.',
+      '- Roles can be referenced in "say" instructions but must be defined only in roles_for_today.',
+      '',
+      'PHASE-BASED ROLES (use only these for current phase):',
+      `- FOUNDATION phase: Listener, Looker, Doer, Helper`,
+      `- BRIDGE phase: Listener, Speaker, Writer, Helper`,
+      `- STRETCH phase: Reader, Speaker, Writer, Checker`,
+      `- Current phase: ${SESSION_PHASE}`,
       '',
       'LAST SESSION FEEDBACK (per student, if any):',
       JSON.stringify(summary.sessionFeedback || {}, null, 2),
@@ -253,44 +303,19 @@ Your role is to unlock confidence, thinking habits, and leadership.
       '  "facilitator_card": {',
       '    "duration_minutes": 45,',
       '    "goal": "Safety first. Thinking second.",',
-      '    "materials": ["cloth/mat", "6–8 sticks", "one simple picture card", "4 blank papers + pencils (optional)"],',
-      '    "roles_for_today": [',
-      '      "Alice Kumar (Material Mover)",',
-      '      "Bob Sharma (Pattern Watcher)",',
-      '      "Charlie Patel (Calm Keeper)",',
-      '      "Dana Iyer (Idea Listener)"',
-      '    ],',
-      '    "sections": [',
-      '      {"title":"ROLES FOR TODAY","time_minutes":3, "say":["Assign roles now using the list above.", "Each role helps the team. No writing needed."], "place":[], "watch":["Who hesitates", "Who seems eager"]},',
-      '      {"title":"ENTRY","time_minutes":2, "say":["Invite the material mover to place the cloth.", "Ask the pattern watcher to stand where they can see everyone."], "place":[], "watch":["Who stays calm when starting", "Who invites a peer"]},',
-      '      {"title":"SAFETY FIRST","time_minutes":5, "say":["Nobody laughs at mistakes.", "Nobody is forced to read or write.", "You can talk or just listen."], "place":[], "watch":[]},',
-      '      {"title":"THINKING TASK","time_minutes":15, "say":["This is not a test.", "There is no one right answer.", "You don\u2019t have to write."], "place":["Cloth", "Sticks", "Picture card"], "watch":["What do you notice?", "What did you try first?", "Is there another way?"]},',
-      '      {"title":"PAUSE","time_minutes":5, "say":["Let\u2019s pause.", "I can take one small step."], "place":[], "watch":[]},',
-      '      {"title":"TRY AGAIN","time_minutes":15, "say":["Try again.", "You may sit closer to one person.", "You can whisper, point, or draw.", "Thinking slowly is allowed."], "place":["Paper & pencils"], "watch":[]},',
-      '      {"title":"CLOSE","time_minutes":3, "say":["One small thing before we finish.", "Something you tried", "Something you noticed", "Or just \'I listened\'", "Brain Grain is about trying, not being the best."], "place":[], "watch":[]}',
-      '    ]',
+      '    "materials": [],',
+      '    "roles_for_today": [],',
+      '    "sections": []',
       '  },',
-      '  "system_notes": {',
-      '    "differentiation": [',
-      '      "Alice Kumar: needs gentle pace; use tactile prompts",',
-      '      "Bob Sharma: give visual pattern first; avoid rapid switches",',
-      '      "Charlie Patel: pair with breathing cue; limit overstimulation",',
-      '      "Dana Iyer: invite summaries; prevent over-leading"
-      '    ],',
-      '    "observation_signals": [',
-      '      "Alice: shoulders loosen, stays engaged with materials",',
-      '      "Bob: tracks sequences without freezing",',
-      '      "Charlie: steady breathing, steady eye contact",',
-      '      "Dana: invites peers, does not dominate"
-      '    ],',
-      '    "student_mapping": [',
-      '      "Alice Kumar → Material Mover (low confidence, safe entry role)",',
-      '      "Bob Sharma → Pattern Watcher (focus + observation)",',
-      '      "Charlie Patel → Calm Keeper (self-regulation)",',
-      '      "Dana Iyer → Idea Listener (leadership without dominance)"',
-      '    ],',
-      '    "ai_logic": "Why each step unlocks safety and thinking; how prompts adapt for BLOCKED/SUPPORTED language access."',
-      '  }',
+      '  "quick_view": {',
+      '    "one_line_purpose": "STRING",',
+      '    "before_session": ["STRING"],',
+      '    "session_feel": ["STRING"],',
+      '    "flow": ["STRING"],',
+      '    "if_things_go_wrong": ["STRING"],',
+      '    "success_check": ["STRING"]',
+      '  },',
+      '  "system_notes": { ... }',
       '}',
       '',
       '===============================',
@@ -304,17 +329,27 @@ Your role is to unlock confidence, thinking habits, and leadership.
       '  - facilitator_card MUST be readable and executable in under 2 minutes.',
       '  - facilitator_card MUST fit on one page (max 250–300 words).',
       '  - facilitator_card MUST NOT include student names, student tags, academic levels, or individual differentiation EXCEPT inside roles_for_today.',
-      '  - facilitator_card MUST include a section titled exactly "ROLES FOR TODAY" before any activity sections.',
       '  - facilitator_card MUST be written in simple spoken language, as exact phrases the mentor can say aloud.',
-      '  - facilitator_card MUST be structured into short phases, each containing:',
-      '    - TIME',
-      '    - SAY (exact words to speak)',
-      '    - DO (physical actions or materials)',
-      '    - WATCH (1–2 emotional or behavioural cues only).',
-      '  - facilitator_card MUST limit each phase to:',
-      '    - maximum 2 SAY items,',
-      '    - maximum 2 DO items,',
-      '    - maximum 2 WATCH items.',
+      '  - facilitator_card MUST be structured as an array in facilitator_card.sections',
+      '',
+      'MANDATORY SECTION SCHEMA:',
+      '  - facilitator_card.sections MUST be an array of objects',
+      '  - EACH section object MUST contain ALL of the following keys:',
+      '',
+      '  {',
+      '    "title": "STRING",',
+      '    "time_minutes": NUMBER,',
+      '    "say": ["STRING", "STRING"],',
+      '    "place": ["STRING"],',
+      '    "watch": ["STRING", "STRING"]',
+      '  }',
+      '',
+      '  - NONE of these keys may be omitted',
+      '  - Empty arrays are NOT allowed',
+      '  - "say" MUST contain 2 items (exact spoken phrases)',
+      '  - "place" MUST contain at least 1 item (materials to put in centre)',
+      '  - "watch" MUST contain 2 items (observation signals)',
+      '  - Use simple spoken language inside "say"',
       '  - facilitator_card MUST prioritise emotional safety over task completion.',
 
       '- ROLE_DISTRIBUTION_RULES:',
@@ -328,6 +363,13 @@ Your role is to unlock confidence, thinking habits, and leadership.
       '    - one simple instruction per role,',
       '    - wording that allows the mentor to assign roles verbally on the spot.',
       '  - Roles MUST support regulation, observation, connection, or task movement, not academic performance.',
+
+      '- QUICK_VIEW_RULES:',
+      '  - quick_view MUST always be generated.',
+      '  - quick_view MUST be readable in under 60 seconds.',
+      '  - quick_view MUST describe what the FACILITATOR does, not students.',
+      '  - quick_view MUST NOT include student names.',
+      '  - quick_view MUST be derived from facilitator_card (not new activities).',
 
       '- SYSTEM_NOTES_RULES:',
       '  - system_notes MUST include:',
@@ -510,8 +552,57 @@ function getRoleInstruction(role) {
       html += `</div>`;
     }
     
-    // Activities
+    // FACILITATOR FRIENDLY EXECUTION PLAN
     if (plan.activities && Array.isArray(plan.activities)) {
+      html += `<div style="margin-bottom: 28px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; border: 2px solid #5568d3;">`;
+      html += `<h3 style="margin: 0 0 16px 0; font-size: 20px; font-weight: 700; color: white;">📋 Facilitator Execution Plan (No Names)</h3>`;
+      html += `<div style="color: #e9ecef; font-size: 13px; margin-bottom: 16px;">Quick reference guide - activities without student differentiation</div>`;
+      
+      let totalTime = 0;
+      plan.activities.forEach((activity, idx) => {
+        const duration = activity.duration_minutes || 0;
+        totalTime += duration;
+        
+        html += `<div style="margin-bottom: 16px; padding: 14px; background: rgba(255,255,255,0.95); border-radius: 8px; border-left: 4px solid #667eea;">`;
+        
+        // Quick header
+        html += `<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">`;
+        html += `<div style="background: #667eea; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">${idx + 1}</div>`;
+        html += `<div style="flex: 1;">`;
+        html += `<div style="font-weight: 700; color: #2d3748;">${activity.activity_title}</div>`;
+        html += `<div style="color: #718096; font-size: 12px;">⏱️ ${duration} min</div>`;
+        html += `</div>`;
+        html += `</div>`;
+        
+        // Execution steps (description simplified)
+        if (activity.description) {
+          html += `<div style="margin-bottom: 8px; color: #4a5568; font-size: 13px; line-height: 1.6;">`;
+          html += `${activity.description}`;
+          html += `</div>`;
+        }
+        
+        // Quick signals
+        if (activity.signals) {
+          html += `<div style="padding: 8px 12px; background: #fff3cd; border-radius: 6px; border-left: 2px solid #f39c12; font-size: 12px; color: #744210;">`;
+          html += `<strong>🎯 Watch for:</strong> ${activity.signals}`;
+          html += `</div>`;
+        }
+        
+        html += `</div>`;
+      });
+      
+      html += `<div style="padding: 12px; background: rgba(255,255,255,0.9); border-radius: 8px; color: #2d3748; font-weight: 700; text-align: center;">`;
+      html += `⏱️ Total Session Time: ${totalTime} minutes`;
+      html += `</div>`;
+      
+      html += `</div>`;
+    }
+    
+    // Activities (Detailed with Differentiation)
+    if (plan.activities && Array.isArray(plan.activities)) {
+      html += `<div style="margin-bottom: 24px;">`;
+      html += `<h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 700; color: #2d3748;">📝 Detailed Activity Plans (with Student Differentiation)</h3>`;
+      
       plan.activities.forEach((activity, index) => {
         html += `<div style="margin-bottom: 28px; padding: 20px; background: #f7fafc; border-radius: 12px; border: 1px solid #e2e8f0;">`;
         
@@ -561,6 +652,7 @@ function getRoleInstruction(role) {
         
         html += `</div>`;
       });
+      html += `</div>`; // Close detailed activities section
     }
     
     html += `</div>`;
@@ -571,19 +663,19 @@ function getRoleInstruction(role) {
   function formatFacilitatorExecutionCard(card) {
     if (!card) return 'No facilitator card available.';
     const htmlParts = [];
-    htmlParts.push(`<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #2d3748;">`);
-    htmlParts.push(`<div style="margin-bottom: 16px;">`);
+    htmlParts.push(`<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #2d3748;">`);
+    htmlParts.push(`<div style="margin-bottom: 10px;">`);
     if (card.duration_minutes) {
-      htmlParts.push(`<div style="color:#718096;">⏱️ ${card.duration_minutes} minutes</div>`);
+      htmlParts.push(`<div style="color:#718096; font-size:13px;">⏱️ ${card.duration_minutes} minutes</div>`);
     }
     if (card.goal) {
-      htmlParts.push(`<div style="font-weight:700;">🎯 Goal: <span style="font-weight:500;">${card.goal}</span></div>`);
+      htmlParts.push(`<div style="font-weight:600; font-size:14px;">🎯 Goal: <span style="font-weight:400;">${card.goal}</span></div>`);
     }
     htmlParts.push(`</div>`);
     if (Array.isArray(card.materials) && card.materials.length) {
-      htmlParts.push(`<div style="margin-bottom: 16px;">`);
-      htmlParts.push(`<div style="font-weight:700;">🧰 Materials (Put in one tray)</div>`);
-      htmlParts.push(`<ul style="margin:8px 0 0 18px; color:#4a5568;">${card.materials.map(m=>`<li>${m}</li>`).join('')}</ul>`);
+      htmlParts.push(`<div style="margin-bottom: 10px;">`);
+      htmlParts.push(`<div style="font-weight:600; font-size:13px; margin-bottom:4px;">🧰 Materials</div>`);
+      htmlParts.push(`<ul style="margin:4px 0 0 18px; color:#4a5568; font-size:13px;">${card.materials.map(m=>`<li>${m}</li>`).join('')}</ul>`);
       htmlParts.push(`</div>`);
     }
     // Render Roles (Student Name + Role)
@@ -591,9 +683,9 @@ function getRoleInstruction(role) {
       ? card.roles_for_today
       : (Array.isArray(card.roles) ? card.roles.map(r => (r && r.student && r.role ? `${r.student} (${r.role})` : '')).filter(Boolean) : []);
     if (rolesForToday.length) {
-      htmlParts.push(`<div style="margin-bottom: 16px; padding:12px; background:#fff7ed; border:1px solid #fed7aa; border-radius:8px;">`);
-      htmlParts.push(`<div style="font-weight:700;">🎭 Roles for Today</div>`);
-      htmlParts.push(`<ul style="margin:8px 0 0 18px; color:#7c2d12;">`);
+      htmlParts.push(`<div style="margin-bottom: 10px; padding:8px; background:#fff7ed; border:1px solid #fed7aa; border-radius:6px;">`);
+      htmlParts.push(`<div style="font-weight:600; font-size:13px; margin-bottom:4px;">🎭 Roles for Today</div>`);
+      htmlParts.push(`<ul style="margin:4px 0 0 18px; color:#7c2d12; font-size:13px;">`);
       rolesForToday.forEach(r => {
         htmlParts.push(`<li>${r}</li>`);
       });
@@ -601,22 +693,22 @@ function getRoleInstruction(role) {
     }
     if (Array.isArray(card.sections)) {
       card.sections.forEach((sec, idx) => {
-        htmlParts.push(`<div style="margin-bottom: 16px; padding: 12px; background:#f7fafc; border:1px solid #e2e8f0; border-radius:8px;">`);
+        htmlParts.push(`<div style="margin-bottom: 10px; padding: 8px; background:#f7fafc; border:1px solid #e2e8f0; border-radius:6px;">`);
         htmlParts.push(`<div style="display:flex; justify-content:space-between; align-items:center;">`);
-        htmlParts.push(`<div style="font-weight:700;">${idx+1}️⃣ ${sec.title || 'Step'}</div>`);
-        if (sec.time_minutes) htmlParts.push(`<div style="color:#718096;">${sec.time_minutes} min</div>`);
+        htmlParts.push(`<div style="font-weight:600; font-size:13px;">${idx+1}️⃣ ${sec.title || 'Step'}</div>`);
+        if (sec.time_minutes) htmlParts.push(`<div style="color:#718096; font-size:12px;">${sec.time_minutes} min</div>`);
         htmlParts.push(`</div>`);
         if (Array.isArray(sec.say) && sec.say.length) {
-          htmlParts.push(`<div style="margin-top:8px; font-weight:700;">Say:</div>`);
-          htmlParts.push(`<ul style="margin:6px 0 0 18px; color:#4a5568;">${sec.say.map(s=>`<li>${s}</li>`).join('')}</ul>`);
+          htmlParts.push(`<div style="margin-top:6px; font-weight:600; font-size:12px;">Say:</div>`);
+          htmlParts.push(`<ul style="margin:4px 0 0 18px; color:#4a5568; font-size:13px;">${sec.say.map(s=>`<li>${s}</li>`).join('')}</ul>`);
         }
         if (Array.isArray(sec.place) && sec.place.length) {
-          htmlParts.push(`<div style="margin-top:8px; font-weight:700;">Place in centre:</div>`);
-          htmlParts.push(`<ul style="margin:6px 0 0 18px; color:#4a5568;">${sec.place.map(p=>`<li>${p}</li>`).join('')}</ul>`);
+          htmlParts.push(`<div style="margin-top:6px; font-weight:600; font-size:12px;">Place:</div>`);
+          htmlParts.push(`<ul style="margin:4px 0 0 18px; color:#4a5568; font-size:13px;">${sec.place.map(p=>`<li>${p}</li>`).join('')}</ul>`);
         }
         if (Array.isArray(sec.watch) && sec.watch.length) {
-          htmlParts.push(`<div style="margin-top:8px; font-weight:700;">Watch:</div>`);
-          htmlParts.push(`<ul style="margin:6px 0 0 18px; color:#4a5568;">${sec.watch.map(w=>`<li>${w}</li>`).join('')}</ul>`);
+          htmlParts.push(`<div style="margin-top:6px; font-weight:600; font-size:12px;">Watch:</div>`);
+          htmlParts.push(`<ul style="margin:4px 0 0 18px; color:#4a5568; font-size:13px;">${sec.watch.map(w=>`<li>${w}</li>`).join('')}</ul>`);
         }
         htmlParts.push(`</div>`);
       });
@@ -624,33 +716,76 @@ function getRoleInstruction(role) {
     htmlParts.push(`</div>`);
     return htmlParts.join('');
   }
+  // Generate fallback quick_view from facilitator_card if AI omits it
+  function fallbackQuickView(card) {
+    if (!card) return null;
+    return {
+      one_line_purpose: card.goal || "Create safety before thinking",
+      before_session: ["Prepare materials", "Review roles"],
+      session_feel: ["Calm", "Inclusive"],
+      flow: (card.sections || []).map(s => s.title || 'Activity'),
+      if_things_go_wrong: ["Pause", "Breathe", "Restart"],
+      success_check: ["Students engaged", "Safe atmosphere"]
+    };
+  }
 
+  // Format Quick View (facilitator-focused one-page reference)
+  function formatQuickView(qv) {
+    if (!qv) return '';
+    return `<div style="padding:10px; background:#f0f9ff; border:1px solid #38bdf8; border-radius:6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#2d3748; font-size:13px;">
+      <h3 style="margin:0 0 8px 0; color:#0369a1; font-size:14px;">⚡ Facilitator Quick View</h3>
+      <div style="margin-bottom:8px;">
+        <strong style="color:#2c5282; font-size:12px;">Purpose:</strong>
+        <div style="margin-top:2px; color:#4a5568;">${qv.one_line_purpose || ''}</div>
+      </div>
+      <div style="margin-bottom:8px;">
+        <strong style="color:#2c5282; font-size:12px;">Before session:</strong>
+        <ul style="margin:2px 0 0 18px; color:#4a5568;">${(qv.before_session || []).map(i => `<li>${i}</li>`).join('')}</ul>
+      </div>
+      <div style="margin-bottom:8px;">
+        <strong style="color:#2c5282; font-size:12px;">Session feel:</strong>
+        <ul style="margin:2px 0 0 18px; color:#4a5568;">${(qv.session_feel || []).map(i => `<li>${i}</li>`).join('')}</ul>
+      </div>
+      <div style="margin-bottom:8px;">
+        <strong style="color:#2c5282; font-size:12px;">Flow:</strong>
+        <ul style="margin:2px 0 0 18px; color:#4a5568;">${(qv.flow || []).map(i => `<li>${i}</li>`).join('')}</ul>
+      </div>
+      <div style="margin-bottom:8px;">
+        <strong style="color:#2c5282; font-size:12px;">If things go off:</strong>
+        <ul style="margin:2px 0 0 18px; color:#4a5568;">${(qv.if_things_go_wrong || []).map(i => `<li>${i}</li>`).join('')}</ul>
+      </div>
+      <div>
+        <strong style="color:#2c5282; font-size:12px;">Success check:</strong>
+        <ul style="margin:2px 0 0 18px; color:#4a5568;">${(qv.success_check || []).map(i => `<li>${i}</li>`).join('')}</ul>
+      </div>
+    </div>`;
+  }
   // Format System Notes (differentiation, observation signals, student mapping, AI logic)
   function formatSystemNotes(notes) {
-    if (!notes) return '<div style="color:#718096;">No system notes available.</div>';
-    let html = `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height:1.7; color:#2d3748;">`;
+    if (!notes) return '<div style="color:#718096; font-size:13px;">No system notes available.</div>';
+    let html = `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height:1.6; color:#2d3748; font-size:13px;">`;
     if (Array.isArray(notes.differentiation) && notes.differentiation.length) {
-      html += `<div style="margin-bottom:12px;">`;
-      html += `<div style="font-weight:700; color:#2c5282;">Differentiation</div>`;
-      html += `<ul style="margin:6px 0 0 18px; color:#4a5568;">${notes.differentiation.map(d=>`<li>${d}</li>`).join('')}</ul>`;
+      html += `<div style="margin-bottom:10px;">`;
+      html += `<div style="font-weight:600; color:#2c5282; font-size:13px; margin-bottom:4px;">Differentiation</div>`;
+      html += `<ul style="margin:4px 0 0 18px; color:#4a5568;">${notes.differentiation.map(d=>`<li>${d}</li>`).join('')}</ul>`;
       html += `</div>`;
     }
     if (Array.isArray(notes.observation_signals) && notes.observation_signals.length) {
-      html += `<div style="margin-bottom:12px;">`;
-      html += `<div style="font-weight:700; color:#2c5282;">Observation Signals</div>`;
-      html += `<ul style="margin:6px 0 0 18px; color:#4a5568;">${notes.observation_signals.map(s=>`<li>${s}</li>`).join('')}</ul>`;
+      html += `<div style="margin-bottom:10px;">`;
+      html += `<div style="font-weight:600; color:#2c5282; font-size:13px; margin-bottom:4px;">Observation Signals</div>`;
+      html += `<ul style="margin:4px 0 0 18px; color:#4a5568;">${notes.observation_signals.map(s=>`<li>${s}</li>`).join('')}</ul>`;
       html += `</div>`;
     }
     if (Array.isArray(notes.student_mapping) && notes.student_mapping.length) {
-      html += `<div style="margin-bottom:12px;">`;
-      html += `<div style="font-weight:700; color:#2c5282;">Student Mapping</div>`;
-      html += `<ul style="margin:6px 0 0 18px; color:#4a5568;">${notes.student_mapping.map(s=>`<li>${s}</li>`).join('')}</ul>`;
+      html += `<div style="margin-bottom:10px;">`;
+      html += `<div style="font-weight:600; color:#2c5282; font-size:13px; margin-bottom:4px;">Student Mapping</div>`;
+      html += `<ul style="margin:4px 0 0 18px; color:#4a5568;">${notes.student_mapping.map(s=>`<li>${s}</li>`).join('')}</ul>`;
       html += `</div>`;
     }
     if (notes.ai_logic) {
-      html += `<div style="margin-bottom:12px;">`;
-      html += `<div style="font-weight:700; color:#2c5282;">AI Logic</div>`;
-      html += `<div style="margin-top:6px; color:#4a5568;">${notes.ai_logic}</div>`;
+      html += `<div style="margin-bottom:10px;">`;
+      html += `<div style="font-weight:600; color:#2c5282; font-size:13px; margin-bottom:4px;">AI Logic</div>`;
+      html += `<div style="margin-top:4px; color:#4a5568;">${notes.ai_logic}</div>`;
       html += `</div>`;
     }
     html += `</div>`;
@@ -659,8 +794,8 @@ function getRoleInstruction(role) {
 
   // Request pod plan from backend AI service
   async function requestPodPlan(summary, options = {}) {
-    const { userEdits = '', previousPlan = '' } = options;
-    const prompt = buildPodPrompt(summary, userEdits, previousPlan);
+    const { userEdits = '', previousPlan = '', sessionType = 'followup' } = options;
+    const prompt = buildPodPrompt(summary, userEdits, previousPlan, sessionType);
     const structuredData = buildStructuredStudentsData(summary);
     const backendUrl = window.location.origin + '/api/generate-pod-plan';
 
@@ -675,7 +810,8 @@ function getRoleInstruction(role) {
           prompt: prompt,
           studentsData: JSON.stringify(structuredData, null, 2),
           userEdits,
-          previousPlan
+          previousPlan,
+          sessionType
         })
       });
 
@@ -717,25 +853,53 @@ function getRoleInstruction(role) {
         ) {
           throw new Error('Invalid plan: missing or incomplete roles_for_today');
         }
-        if (!Array.isArray(parsed.facilitator_card.sections) || parsed.facilitator_card.sections.length === 0 || parsed.facilitator_card.sections[0].title !== 'ROLES FOR TODAY') {
-          throw new Error('Invalid plan: ROLES FOR TODAY section missing or misplaced');
+        
+        // Validate sections structure
+        if (
+          !parsed.facilitator_card.sections ||
+          parsed.facilitator_card.sections.length === 0 ||
+          parsed.facilitator_card.sections.some(sec =>
+            sec.say?.length !== 2 ||
+            sec.watch?.length !== 2 ||
+            !sec.place || sec.place.length < 1 ||
+            !sec.time_minutes
+          )
+        ) {
+          throw new Error('Invalid plan: facilitator_card.sections must have exactly 2 say, 2 watch, at least 1 place, and time_minutes');
         }
+        
+        // Note: ROLES FOR TODAY section check removed - roles are now in roles_for_today array
         facilitatorHtml = formatFacilitatorExecutionCard(parsed.facilitator_card);
         systemNotesHtml = formatSystemNotes(parsed.system_notes || {});
+      } else if (parsed && (parsed.session_title || parsed.activities)) {
+        // Full session plan format (has session_title or activities)
+        facilitatorHtml = formatSessionPlanAsDocument(parsed);
+        systemNotesHtml = '<div style="color:#718096;">No system notes (full plan mode).</div>';
       } else {
         // Legacy formatting if not dual-output
         facilitatorHtml = formatSessionPlanAsDocument(parsed || { session_title: 'Session Plan', objective: rawText });
         systemNotesHtml = '<div style="color:#718096;">No system notes provided.</div>';
       }
 
+      // Store quick_view if present, otherwise generate fallback
+      let quickViewHtml = '';
+      if (parsed.quick_view) {
+        quickViewHtml = formatQuickView(parsed.quick_view);
+      } else if (parsed.facilitator_card) {
+        const fallbackQv = fallbackQuickView(parsed.facilitator_card);
+        quickViewHtml = formatQuickView(fallbackQv);
+      }
+
       window.__lastPlanData = {
         raw: rawText,
         facilitatorHtml,
         systemNotesHtml,
+        quickViewHtml,
         provider: data.provider || 'AI',
         summary,
         ts: Date.now(),
-        userEdits
+        userEdits,
+        sessionType: sessionType || 'followup'
       };
 
       setPlanModalState({
@@ -744,6 +908,21 @@ function getRoleInstruction(role) {
         isError: !data.plan,
         showSpinner: false
       });
+
+      // Show Accept button for newly generated plans
+      const acceptBtn = document.querySelector('button[onclick="acceptCurrentPlan()"]');
+      if (acceptBtn) acceptBtn.style.display = '';
+
+      // Inject Quick View (always, if available)
+      const qvEl = document.getElementById('podQuickViewContent');
+      if (qvEl) {
+        if (quickViewHtml) {
+          qvEl.innerHTML = quickViewHtml;
+          qvEl.style.display = 'block';
+        } else {
+          qvEl.style.display = 'none';
+        }
+      }
 
       // Also inject System Notes if present
       const sysEl = document.getElementById('podSystemNotesContent');
@@ -774,6 +953,8 @@ function getRoleInstruction(role) {
   window.buildFallbackPlan = buildFallbackPlan;
   window.formatSessionPlanAsDocument = formatSessionPlanAsDocument;
   window.formatFacilitatorExecutionCard = formatFacilitatorExecutionCard;
+  window.fallbackQuickView = fallbackQuickView;
+  window.formatQuickView = formatQuickView;
   window.formatSystemNotes = formatSystemNotes;
   window.requestPodPlan = requestPodPlan;
 

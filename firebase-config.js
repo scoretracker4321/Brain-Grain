@@ -32,8 +32,13 @@
   let db = null;
   let auth = null;
   let isFirebaseEnabled = false;
+  
+  // SINGLE USER MODE: Use a fixed user ID for all data
+  // This ensures all data is stored in one place regardless of browser/device
+  // Change this if you want to separate data (e.g., per computer, per user)
+  const FIXED_USER_ID = 'primary_user';
 
-  function initializeFirebase() {
+  async function initializeFirebase() {
     try {
       // Check if Firebase SDK is loaded
       if (typeof firebase === 'undefined') {
@@ -51,18 +56,12 @@
       firebaseApp = firebase.initializeApp(firebaseConfig);
       db = firebase.database();
       auth = firebase.auth();
+      
       isFirebaseEnabled = true;
 
       console.log('✓ Firebase initialized successfully');
-
-      // Sign in anonymously for now (can upgrade to email/password later)
-      // Note: You need to enable Anonymous Authentication in Firebase Console
-      // Go to: Authentication → Sign-in method → Anonymous → Enable
-      auth.signInAnonymously().catch(err => {
-        console.warn('⚠️ Firebase anonymous auth not enabled. Cloud sync will work but use default user ID.');
-        console.warn('To enable: Firebase Console → Authentication → Sign-in method → Enable Anonymous');
-        console.warn('Error details:', err.code);
-      });
+      console.log(`✓ Using fixed user ID: "${FIXED_USER_ID}" for all data`);
+      console.log('  (All devices/browsers will share the same data)');
 
       return true;
     } catch (error) {
@@ -78,9 +77,17 @@
     }
 
     try {
-      // Use authenticated user ID if available, otherwise use 'default' for shared access
-      const userId = (auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : 'default';
+      // Use fixed user ID for consistent single-user data storage
+      const userId = FIXED_USER_ID;
       const timestamp = new Date().toISOString();
+      
+      // CRITICAL: Log what we're about to sync
+      console.log(`📤 syncToCloud called for user ${userId}:`);
+      console.log(`   Students: ${Array.isArray(students) ? students.length : 'NOT ARRAY'}`);
+      console.log(`   Pods: ${Array.isArray(pods) ? pods.length : 'NOT ARRAY'}`);
+      if (Array.isArray(pods) && pods.length > 0) {
+        console.log(`   Pod names: ${pods.map(p => p.name).join(', ')}`);
+      }
       
       // Collect all pod-related metadata (plans, execution, feedback)
       const podMetadata = {};
@@ -89,15 +96,23 @@
           const podId = pod.id;
           const metadata = {
             plan: null,
+            planHistory: null,
             execution: null,
             feedback: null
           };
           
-          // Get accepted plan
+          // Get accepted plan (current/latest - for backward compatibility)
           try {
             const planKey = `braingrain_pod_plan_${podId}`;
             const planData = localStorage.getItem(planKey);
             if (planData) metadata.plan = JSON.parse(planData);
+          } catch (e) {}
+          
+          // Get plan history (all accepted and executed plans)
+          try {
+            const historyKey = `braingrain_pod_plans_${podId}`;
+            const historyData = localStorage.getItem(historyKey);
+            if (historyData) metadata.planHistory = JSON.parse(historyData);
           } catch (e) {}
           
           // Get execution status
@@ -115,7 +130,7 @@
           } catch (e) {}
           
           // Only include if there's any metadata
-          if (metadata.plan || metadata.execution || metadata.feedback) {
+          if (metadata.plan || metadata.planHistory || metadata.execution || metadata.feedback) {
             podMetadata[podId] = metadata;
           }
         });
@@ -163,8 +178,8 @@
     }
 
     try {
-      // Use authenticated user ID if available, otherwise use 'default' for shared access
-      const userId = (auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : 'default';
+      // Use fixed user ID for consistent single-user data storage
+      const userId = FIXED_USER_ID;
       
       // Try new format first (v1.2 with pods and metadata)
       let snapshot = await db.ref(`brain_grain/${userId}/data`).once('value');
@@ -180,10 +195,17 @@
         Object.keys(podMetadata).forEach(podId => {
           const metadata = podMetadata[podId];
           
-          // Restore plan
+          // Restore plan (current/latest - for backward compatibility)
           if (metadata.plan) {
             try {
               localStorage.setItem(`braingrain_pod_plan_${podId}`, JSON.stringify(metadata.plan));
+            } catch (e) {}
+          }
+          
+          // Restore plan history (all accepted and executed plans)
+          if (metadata.planHistory) {
+            try {
+              localStorage.setItem(`braingrain_pod_plans_${podId}`, JSON.stringify(metadata.planHistory));
             } catch (e) {}
           }
           
@@ -298,18 +320,25 @@
       const cloudPods = cloudResult.pods || [];
 
       // Check if cloud has more recent or more complete data
-      const shouldRecover = (
-        (localPods.length === 0 && cloudPods.length > 0) ||
-        (localStudents.length < cloudStudents.length) ||
-        (cloudResult.lastSync && getLastCloudSync() && new Date(cloudResult.lastSync) > getLastCloudSync())
-      );
+      // CRITICAL: Always restore pods if they're missing locally, even if timestamp isn't newer
+      const missingPods = (localPods.length === 0 && cloudPods.length > 0);
+      const missingStudents = (localStudents.length < cloudStudents.length);
+      const newerCloudData = (cloudResult.lastSync && getLastCloudSync() && new Date(cloudResult.lastSync) > getLastCloudSync());
+      
+      const shouldRecover = missingPods || missingStudents || newerCloudData;
+      
+      if (missingPods) {
+        console.log(`⚠️ PODS MISSING LOCALLY: ${cloudPods.length} pods found in cloud backup`);
+      }
 
       if (shouldRecover) {
         console.log(`🔄 AUTO-RECOVERY: Restoring data from cloud...`);
+        console.log(`   Reason: ${missingPods ? 'PODS MISSING' : ''} ${missingStudents ? 'STUDENTS MISSING' : ''} ${newerCloudData ? 'NEWER CLOUD DATA' : ''}`);
         console.log(`   Local: ${localStudents.length} students, ${localPods.length} pods`);
         console.log(`   Cloud: ${cloudStudents.length} students, ${cloudPods.length} pods`);
         
         // Save cloud data to localStorage
+        // ALWAYS restore both students AND pods to keep them in sync
         try {
           localStorage.setItem('braingrain_students', JSON.stringify(cloudStudents));
           localStorage.setItem('braingrain_pods', JSON.stringify(cloudPods));
@@ -339,7 +368,7 @@
     if (!isFirebaseEnabled || !db) return { verified: false, reason: 'Firebase not enabled' };
 
     try {
-      const userId = (auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : 'default';
+      const userId = FIXED_USER_ID;
       const snapshot = await db.ref(`brain_grain/${userId}/data`).once('value');
       
       if (!snapshot.exists()) {
@@ -372,8 +401,8 @@
     }
 
     try {
-      const userId = (auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : 'default';
-      
+      const userId = FIXED_USER_ID;
+
       await db.ref(`brain_grain/${userId}/ai_config`).set({
         endpoint: config.endpoint || '',
         apiKey: config.apiKey || '',
@@ -419,7 +448,7 @@
     }
 
     try {
-      const userId = (auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : 'default';
+      const userId = FIXED_USER_ID;
       const snapshot = await db.ref(`brain_grain/${userId}/ai_config`).once('value');
       
       if (!snapshot.exists()) {
@@ -453,7 +482,7 @@
   }
 
   // Export to global
-  window.CloudStorage = {
+  const FirebaseConfig = {
     initializeFirebase,
     syncToCloud,
     loadFromCloud,
@@ -466,38 +495,82 @@
     loadAIConfig,
     isEnabled: () => isFirebaseEnabled,
     autoRecoverFromCloud,
-    verifySyncSuccess
+    verifySyncSuccess,
+    // Get the fixed user ID being used for all data
+    getCurrentUserId: () => FIXED_USER_ID
   };
+  
+  // Attach to window with both names for compatibility
+  window.FirebaseConfig = FirebaseConfig;
+  window.CloudStorage = FirebaseConfig;
 
-  // Auto-restore from cloud on first load
+  // Auto-restore from cloud on first load OR if pods are missing
   async function autoRestoreFromCloud() {
     if (!isFirebaseEnabled) return;
 
     try {
-      const hasLocalData = localStorage.getItem('braingrain_students');
+      const hasLocalStudents = localStorage.getItem('braingrain_students');
+      const hasLocalPods = localStorage.getItem('braingrain_pods');
       const hasRestoredBefore = localStorage.getItem('braingrain_cloud_restored');
       
-      // If no local data and haven't restored before, try cloud restore
-      if (!hasLocalData && !hasRestoredBefore) {
+      // Parse to check actual counts
+      let localStudentCount = 0;
+      let localPodCount = 0;
+      try {
+        if (hasLocalStudents) localStudentCount = JSON.parse(hasLocalStudents).length;
+        if (hasLocalPods) localPodCount = JSON.parse(hasLocalPods).length;
+      } catch (e) {}
+      
+      console.log(`📊 Local data check: ${localStudentCount} students, ${localPodCount} pods`);
+      
+      // CRITICAL: Restore if no local data OR if pods are missing but students exist
+      const needsRestore = !hasLocalStudents || (localStudentCount > 0 && localPodCount === 0);
+      
+      if (needsRestore || !hasRestoredBefore) {
         console.log('🔄 Attempting auto-restore from Firebase...');
+        if (localStudentCount > 0 && localPodCount === 0) {
+          console.warn('⚠️ PODS MISSING but students present - checking Firebase...');
+        }
+        
         const result = await loadFromCloud();
         
-        if (result.success && result.students.length > 0) {
-          localStorage.setItem('braingrain_students', JSON.stringify(result.students));
-          // Also restore pods if available
+        if (result.success && (result.students.length > 0 || result.pods.length > 0)) {
+          let restored = false;
+          
+          // Restore students if needed
+          if (result.students.length > 0) {
+            localStorage.setItem('braingrain_students', JSON.stringify(result.students));
+            restored = true;
+          }
+          
+          // Always restore pods if available in cloud
           if (result.pods && result.pods.length > 0) {
             localStorage.setItem('braingrain_pods', JSON.stringify(result.pods));
             console.log(`✅ Auto-restored ${result.students.length} students and ${result.pods.length} pods from Firebase`);
-          } else {
-            console.log(`✅ Auto-restored ${result.students.length} students from Firebase`);
+            restored = true;
+          } else if (result.pods && result.pods.length === 0 && result.students.length === 0) {
+            console.log(`⚠️ Cloud has no pods or students - initialization may be needed`);
+          } else if (result.students.length > 0) {
+            console.log(`✅ Auto-restored ${result.students.length} students from Firebase (no pods in cloud)`);
+            restored = true;
           }
-          localStorage.setItem('braingrain_cloud_restored', 'true');
           
-          // Reload page to refresh UI with restored data
-          setTimeout(() => location.reload(), 100);
+          if (restored) {
+            localStorage.setItem('braingrain_cloud_restored', 'true');
+            console.log('🔄 Reloading page to refresh UI with restored data...');
+            // Reload page to refresh UI with restored data
+            setTimeout(() => location.reload(), 100);
+          }
         } else {
           console.log('ℹ️ No cloud data to restore');
+          // Even if no restore needed, mark that we've checked to prevent infinite loops
+          if (localStudentCount > 0 && localPodCount === 0) {
+            localStorage.setItem('braingrain_cloud_restored', 'true');
+            console.log('✓ Cloud check complete: pods legitimately absent from cloud');
+          }
         }
+      } else {
+        console.log(`✓ Local data present: ${localStudentCount} students, ${localPodCount} pods - no restore needed`);
       }
     } catch (error) {
       console.log('Auto-restore skipped:', error.message);
@@ -525,7 +598,7 @@
   // Auto-initialize on load
   if (typeof window !== 'undefined') {
     window.addEventListener('DOMContentLoaded', async () => {
-      const initialized = initializeFirebase();
+      const initialized = await initializeFirebase();
       
       if (initialized) {
         // Enable auto-sync by default
@@ -544,4 +617,31 @@
       }
     });
   }
+  
+  // Diagnostic helper - available in browser console as: FirebaseConfig.diagnose()
+  FirebaseConfig.diagnose = function() {
+    console.log('=== Firebase Diagnostic ===');
+    console.log('Enabled:', isFirebaseEnabled);
+    console.log('User ID:', FIXED_USER_ID, '(FIXED - same for all browsers/devices)');
+    console.log('Mode: Single-user (all data shared across devices)');
+    
+    const localStudents = localStorage.getItem('braingrain_students');
+    const localPods = localStorage.getItem('braingrain_pods');
+    
+    try {
+      const students = localStudents ? JSON.parse(localStudents) : [];
+      const pods = localPods ? JSON.parse(localPods) : [];
+      console.log('Local students:', students.length);
+      console.log('Local pods:', pods.length);
+      if (pods.length > 0) {
+        console.log('Pod details:');
+        pods.forEach(p => console.log(`  - ${p.name} (ID: ${p.id}, Created: ${p.createdAt})`));
+      }
+    } catch (e) {
+      console.error('Error parsing local data:', e);
+    }
+    
+    console.log('Last sync:', localStorage.getItem('braingrain_last_cloud_sync') || 'never');
+    console.log('========================');
+  };
 })();

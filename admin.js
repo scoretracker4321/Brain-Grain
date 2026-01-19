@@ -18,6 +18,9 @@
       if (contentEl && contentText !== undefined) {
         if (typeof contentText === 'string' && contentText.trim().startsWith('<')) {
           contentEl.innerHTML = contentText;
+        } else if (typeof contentText === 'string') {
+          // Wrap plain text in HTML
+          contentEl.innerHTML = `<div style="padding: 16px; background: #f5f5f5; border-radius: 8px; white-space: pre-wrap; font-family: monospace;">${contentText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`;
         } else {
           contentEl.textContent = contentText;
         }
@@ -97,8 +100,19 @@
             allStudents = reloaded;
             if (typeof window.allStudents !== 'undefined') window.allStudents = reloaded;
             
+            // CRITICAL: Also reload pods to refresh UI
+            if (typeof loadPods === 'function') {
+              console.log('🔄 Reloading pods after recovery...');
+              loadPods();
+            }
+            
             // Show recovery notification
             alert(`✓ Data recovered from cloud backup!\n\n${recovery.studentsRestored} students\n${recovery.podsRestored} pods\n${recovery.metadataRestored} plans/executions restored`);
+          } else {
+            // Even if no recovery triggered, verify pods are loaded
+            console.log('Auto-recovery: No recovery needed. Verifying pods loaded...');
+            const currentPods = StorageHelper.loadPods();
+            console.log(`Current pods in localStorage: ${currentPods.length}`);
           }
         } catch (e) {
           console.warn('Auto-recovery check failed:', e);
@@ -855,11 +869,17 @@
               <div class="pod-name">${pod.name || 'Untitled pod'}${execStatus}</div>
               <div class="pod-meta">${studentCount} student${studentCount === 1 ? '' : 's'}${updated ? ' • Updated ' + updated : ''}</div>
             </div>
-            <div class="pod-actions">
+            <div class="pod-actions" style="display:flex; align-items:center; gap:8px;">
               <button class="btn btn-secondary btn-small" onclick="showPodSummary('${pod.id}')">Summary</button>
-              ${hasPlan ? `<button class="btn btn-primary btn-small" onclick="viewAcceptedPlan('${pod.id}')">View Plan</button>` : `<button class="btn btn-secondary btn-small" onclick="generatePodPlan('${pod.id}')">Generate Plan</button>`}
-              <button class="btn btn-secondary btn-small" onclick="openPodModal('${pod.id}')">Edit</button>
-              <button class="btn btn-secondary btn-small" style="border-color: var(--color-error); color: var(--color-error);" onclick="deletePod('${pod.id}')">Delete</button>
+              <button class="btn btn-secondary btn-small" onclick="openPlanHistoryModal('${pod.id}')">📋 Plans</button>
+              <button class="btn btn-primary btn-small" onclick="generatePodPlan('${pod.id}')">🎯 New Plan</button>
+              <div style="position:relative;">
+                <button class="btn btn-secondary btn-small" onclick="togglePodMenu('${pod.id}')" style="padding:6px 10px;">⋮</button>
+                <div id="podMenu_${pod.id}" style="display:none; position:absolute; right:0; top:100%; margin-top:4px; background:white; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.1); z-index:100; min-width:120px;">
+                  <button class="btn btn-secondary btn-small" onclick="openPodModal('${pod.id}'); togglePodMenu('${pod.id}')" style="width:100%; text-align:left; border:none; border-radius:0; border-bottom:1px solid #e2e8f0;">✎ Edit</button>
+                  <button class="btn btn-secondary btn-small" onclick="deletePod('${pod.id}'); togglePodMenu('${pod.id}')" style="width:100%; text-align:left; border:none; border-radius:0; color:#ef4444;">🗑 Delete</button>
+                </div>
+              </div>
             </div>
           </div>
           <div class="pod-members">${memberText}</div>
@@ -893,7 +913,7 @@
     editingPodId = null;
   }
 
-  function savePodFromModal(event) {
+  async function savePodFromModal(event) {
     if (event) event.preventDefault();
 
     const nameInput = document.getElementById('podNameInput');
@@ -911,11 +931,18 @@
     }
 
     const payload = { id: editingPodId, name: podName, studentIds: selectedIds };
+    console.log(`💾 Saving pod: ${podName} with ${selectedIds.length} students`);
+    
     const saved = StorageHelper.savePod(payload);
     if (!saved) {
       alert('Could not save pod. Please try again.');
       return;
     }
+    
+    console.log(`✓ Pod saved successfully: ${saved.name} (${saved.id})`);
+    
+    // Wait a moment for cloud sync to initiate
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     closePodModal();
     renderPods();
@@ -927,6 +954,26 @@
     const ok = StorageHelper.deletePod(podId);
     if (ok) renderPods(); else alert('Failed to delete pod.');
   }
+
+  function togglePodMenu(podId) {
+    const menu = document.getElementById(`podMenu_${podId}`);
+    if (!menu) return;
+    
+    // Close all other menus first
+    document.querySelectorAll('[id^="podMenu_"]').forEach(m => {
+      if (m.id !== `podMenu_${podId}`) m.style.display = 'none';
+    });
+    
+    // Toggle current menu
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  }
+
+  // Close menus when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.pod-actions')) {
+      document.querySelectorAll('[id^="podMenu_"]').forEach(m => m.style.display = 'none');
+    }
+  });
 
   function updatePodSyncStatus() {
     // This function can be called from renderPods() to show sync status
@@ -946,18 +993,31 @@
     const students = StorageHelper.loadStudents();
     const pods = StorageHelper.loadPods();
     
+    console.log(`📊 Pre-sync check: ${students.length} students, ${pods.length} pods in localStorage`);
+    
     if (pods.length === 0) {
-      alert('No pods to sync. Create a pod first!');
+      alert('⚠️ No pods found in localStorage!\n\nIf you just created a pod, please refresh the page and try again.');
       return;
     }
 
-    console.log(`🔄 Syncing ${students.length} students and ${pods.length} pods to Firebase...`);
+    console.log(`🔄 MANUAL SYNC: Syncing ${students.length} students and ${pods.length} pods to Firebase...`);
+    console.log(`  Pod details: ${pods.map(p => `${p.name} (${p.studentIds.length} students)`).join(', ')}`);
     
     const result = await window.CloudStorage.syncToCloud(students, pods);
     
     if (result.success) {
-      alert(`✅ Success!\n\nSynced ${pods.length} pod${pods.length === 1 ? '' : 's'} to Firebase.\n\nYour data is now accessible from any device.`);
-      console.log('✓ Pods synced successfully to Firebase');
+      // Verify the sync by loading back from cloud
+      const verification = await window.CloudStorage.loadFromCloud();
+      const cloudPodCount = verification.pods ? verification.pods.length : 0;
+      
+      if (cloudPodCount === pods.length) {
+        alert(`✅ SYNC VERIFIED!\n\n${pods.length} pod${pods.length === 1 ? '' : 's'} successfully synced to Firebase.\n${cloudPodCount} pod${cloudPodCount === 1 ? '' : 's'} verified in cloud.\n\nYour data is safe and accessible from any device!`);
+        console.log(`✓ SYNC VERIFIED: ${cloudPodCount} pods confirmed in cloud`);
+      } else {
+        alert(`⚠️ SYNC WARNING\n\nSynced ${pods.length} pods but only ${cloudPodCount} found in cloud.\n\nPlease try syncing again.`);
+        console.error(`⚠️ SYNC MISMATCH: Sent ${pods.length} pods, found ${cloudPodCount} in cloud`);
+      }
+      
       // Refresh the backup status indicator to show new sync time
       setTimeout(() => showBackupStatus(), 100);
     } else {
@@ -983,20 +1043,17 @@
       return;
     }
 
-    // Track current pod for accept/regenerate flows using a single global
-    window.currentPodPlanId = podId;
-    window.setPlanModalState({
-      title: pod.name || 'Pod plan',
-      statusText: 'Preparing pod data...',
-      contentText: '',
-      showSpinner: true
-    });
+    // Store pod info for session type modal handler
+    window.currentPodForPlanGeneration = {
+      podId: podId,
+      pod: pod,
+      members: members,
+      summary: window.buildPodSummary(pod, members, calculateAcademicAverage)
+    };
+    window.currentPodForPlanGeneration.summary.sessionFeedback = getLastFeedbackForPodStudents(podId);
 
-    const summary = window.buildPodSummary(pod, members, calculateAcademicAverage);
-    // Attach last feedback per student to summary for AI usage
-    summary.sessionFeedback = getLastFeedbackForPodStudents(podId);
-    window.__lastPodSummary = summary;
-    window.requestPodPlan(summary);
+    // Show session type selector modal
+    openSessionTypeModal();
   }
 
   // --- Pod summary view/copy ---
@@ -1030,24 +1087,73 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
       const ct = st.assessment.ctPercent != null ? `${st.assessment.ctPercent}%` : 'N/A';
       const lead = st.assessment.leadPercent != null ? `${st.assessment.leadPercent}%` : 'N/A';
       const tags = Array.isArray(st.supportNeeds) && st.supportNeeds.length ? st.supportNeeds.join(', ') : 'None';
+      
+      // Determine academic performance color
+      let avgColor = '#64748b';
+      if (typeof st.academic.averagePercent === 'number') {
+        if (st.academic.averagePercent >= 80) avgColor = '#10b981';
+        else if (st.academic.averagePercent >= 60) avgColor = '#3b82f6';
+        else if (st.academic.averagePercent >= 40) avgColor = '#f59e0b';
+        else avgColor = '#ef4444';
+      }
+      
       return `
-        <div style="padding:12px; border:1px solid var(--color-border); border-radius:8px; background: var(--color-surface); margin-bottom:8px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px;">
-            <div style="font-weight:700;">${st.name}</div>
-            <div style="font-size:12px; color: var(--color-text-secondary);">Grade ${st.grade || 'N/A'}</div>
+        <div style="padding:8px; border:1px solid #e2e8f0; border-radius:6px; background:#ffffff; margin-bottom:6px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:5px; margin-bottom:6px;">
+            <div style="display:flex; align-items:center; gap:5px;">
+              <div style="width:26px; height:26px; border-radius:50%; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:12px;">${st.name.charAt(0).toUpperCase()}</div>
+              <div>
+                <div style="font-weight:700; font-size:13px;">${st.name}</div>
+                <div style="font-size:11px; color: #64748b;">🎓 Grade ${st.grade || 'N/A'}</div>
+              </div>
+            </div>
+            <div style="padding:2px 8px; background:${avgColor}; color:white; border-radius:12px; font-size:11px; font-weight:600;">${avg}</div>
           </div>
-          <div style="font-size:13px; color: var(--color-text-secondary); margin-bottom:6px;">Academic avg: ${avg}</div>
-          <div style="font-size:13px; color: var(--color-text-secondary); margin-bottom:6px;">Support needs: ${tags}</div>
-          <div style="font-size:13px; color: var(--color-text-secondary);">Assessment: ${st.assessment.status || 'Pending'} | Score: ${score} | SEL: ${sel} | CT: ${ct} | Lead: ${lead}</div>
+          
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:6px;">
+            <div style="padding:6px; background:#f8fafc; border-radius:4px;">
+              <div style="font-size:10px; color:#64748b; margin-bottom:1px;">Status</div>
+              <div style="font-size:11px; font-weight:600; color:#334155;">${st.assessment.status || 'Pending'}</div>
+            </div>
+            <div style="padding:6px; background:#f8fafc; border-radius:4px;">
+              <div style="font-size:10px; color:#64748b; margin-bottom:1px;">Score</div>
+              <div style="font-size:11px; font-weight:600; color:#334155;">${score}</div>
+            </div>
+          </div>
+          
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-bottom:6px;">
+            <div style="text-align:center; padding:4px; background:#fef3c7; border-radius:4px;">
+              <div style="font-size:9px; color:#92400e; margin-bottom:1px;">SEL</div>
+              <div style="font-size:11px; font-weight:700; color:#92400e;">${sel}</div>
+            </div>
+            <div style="text-align:center; padding:4px; background:#dbeafe; border-radius:4px;">
+              <div style="font-size:9px; color:#1e40af; margin-bottom:1px;">CT</div>
+              <div style="font-size:11px; font-weight:700; color:#1e40af;">${ct}</div>
+            </div>
+            <div style="text-align:center; padding:4px; background:#dcfce7; border-radius:4px;">
+              <div style="font-size:9px; color:#166534; margin-bottom:1px;">Lead</div>
+              <div style="font-size:11px; font-weight:700; color:#166534;">${lead}</div>
+            </div>
+          </div>
+          
+          ${tags !== 'None' ? `<div style="padding:6px; background:#fef2f2; border-left:2px solid #ef4444; border-radius:4px;">
+            <div style="font-size:10px; color:#991b1b; margin-bottom:1px;">⚠️ Support Needs</div>
+            <div style="font-size:11px; color:#991b1b;">${tags}</div>
+          </div>` : '<div style="font-size:11px; color:#10b981; padding:6px; background:#f0fdf4; border-radius:4px;">✓ No special support needed</div>'}
         </div>`;
     }).join('');
 
     return `
-      <div style="padding:12px; border:1px solid var(--color-border); border-radius:8px; background:#f8fafc; margin-bottom:12px;">
-        <div style="font-weight:700;">Pod: ${summary.podName}</div>
-        <div style="font-size:13px; color: var(--color-text-secondary);">${summary.studentCount} student${summary.studentCount === 1 ? '' : 's'}</div>
+      <div style="padding:8px 10px; border:2px solid #3b82f6; border-radius:6px; background:linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); margin-bottom:10px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <div style="width:30px; height:30px; border-radius:6px; background:linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); display:flex; align-items:center; justify-content:center; color:white; font-size:16px; box-shadow: 0 1px 2px rgba(59,130,246,0.3);">👥</div>
+          <div>
+            <div style="font-weight:700; font-size:14px; color:#1e40af;">${summary.podName}</div>
+            <div style="font-size:11px; color:#1e3a8a;">${summary.studentCount} student${summary.studentCount === 1 ? '' : 's'} • ${summary.sessionPhase || 'FOUNDATION'}</div>
+          </div>
+        </div>
       </div>
-      <div>${studentCards || '<div style="color: var(--color-text-secondary);">No students in this pod.</div>'}</div>
+      <div style="max-height:60vh; overflow-y:auto; padding-right:6px;">${studentCards || '<div style="padding:20px; text-align:center; color: #94a3b8; font-size:12px;">📭 No students in this pod.</div>'}</div>
     `;
   }
 
@@ -1107,25 +1213,54 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
       alert('Generate a plan before accepting.');
       return;
     }
-    const key = `braingrain_pod_plan_${window.currentPodPlanId}`;
+    
     try {
-      localStorage.setItem(key, JSON.stringify({
+      // Get existing plan history or create new
+      const historyKey = `braingrain_pod_plans_${window.currentPodPlanId}`;
+      let planHistory = [];
+      try {
+        planHistory = JSON.parse(localStorage.getItem(historyKey) || '[]');
+      } catch { }
+      
+      // Create new plan entry
+      const planEntry = {
+        id: Date.now().toString(),
         plan: data.raw,
         facilitatorHtml: data.facilitatorHtml || data.html,
         systemNotesHtml: data.systemNotesHtml || '',
+        quickViewHtml: data.quickViewHtml || '',
         provider: data.provider,
-        ts: data.ts,
-        summary: data.summary
-      }));
+        ts: data.ts || Date.now(),
+        acceptedAt: Date.now(),
+        summary: data.summary,
+        sessionType: data.sessionType || 'followup',
+        userEdits: data.userEdits || '',
+        status: 'accepted'
+      };
+      
+      // Add to history
+      planHistory.unshift(planEntry);
+      localStorage.setItem(historyKey, JSON.stringify(planHistory));
+      
+      // Also set current plan (for backward compatibility)
+      const key = `braingrain_pod_plan_${window.currentPodPlanId}`;
+      localStorage.setItem(key, JSON.stringify(planEntry));
+      
       console.log(`✓ Plan accepted and saved for pod ${window.currentPodPlanId}`);
       
       // CRITICAL: Immediately sync to cloud after accepting plan
       triggerCloudSync();
       
       setPlanModalState({ statusText: 'Accepted and saved ✓ Syncing to cloud...', contentText: data.facilitatorHtml || data.html, showSpinner: false });
+      
+      // Hide Accept button after accepting
+      const acceptBtn = document.querySelector('button[onclick="acceptCurrentPlan()"]');
+      if (acceptBtn) acceptBtn.style.display = 'none';
+      
       alert('Plan accepted and saved for this pod.');
       renderPods(); // Refresh to show View Plan button
     } catch (e) {
+      console.error('Error saving plan:', e);
       alert('Could not save the plan locally.');
     }
   }
@@ -1154,6 +1289,69 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
     window.__lastPodSummary = summary;
     setPlanModalState({ statusText: 'Regenerating with your edits...', showSpinner: true });
     window.requestPodPlan(summary, { userEdits: feedback, previousPlan: (window.__lastPlanData && window.__lastPlanData.raw) || '' });
+  }
+
+  // --- Session Type Modal ---
+  function openSessionTypeModal() {
+    const modal = document.getElementById('sessionTypeModal');
+    if (modal) {
+      modal.style.display = 'flex';
+      // Reset form
+      const form = document.getElementById('sessionTypeForm');
+      if (form) form.reset();
+      document.getElementById('customReasonInput').style.display = 'none';
+    }
+  }
+
+  function closeSessionTypeModal() {
+    const modal = document.getElementById('sessionTypeModal');
+    if (modal) modal.style.display = 'none';
+    window.currentPodForPlanGeneration = null;
+  }
+
+  function handleSessionTypeSubmit(e) {
+    e.preventDefault();
+    
+    const sessionTypeInput = document.querySelector('input[name="sessionType"]:checked');
+    if (!sessionTypeInput) {
+      alert('Please select a session type');
+      return;
+    }
+
+    const sessionType = sessionTypeInput.value;
+    let customReason = '';
+    
+    if (sessionType === 'custom') {
+      const reasonInput = document.getElementById('sessionCustomReason');
+      customReason = reasonInput ? reasonInput.value.trim() : '';
+      if (!customReason) {
+        alert('Please describe the reason for this session');
+        return;
+      }
+      window.__customSessionReason = customReason;
+    }
+
+    // Close modal
+    closeSessionTypeModal();
+
+    // Prepare pod data and generate plan
+    if (!window.currentPodForPlanGeneration) {
+      alert('Pod data not found');
+      return;
+    }
+
+    const podData = window.currentPodForPlanGeneration;
+    window.currentPodPlanId = podData.podId;
+    
+    window.setPlanModalState({
+      title: podData.pod.name || 'Pod plan',
+      statusText: 'Preparing pod data...',
+      contentText: '',
+      showSpinner: true
+    });
+
+    window.__lastPodSummary = podData.summary;
+    window.requestPodPlan(podData.summary, { sessionType: sessionType });
   }
 
   // --- Session Feedback storage ---
@@ -1293,6 +1491,18 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
       console.log(`✓ Execution marked complete for pod ${podId}`);
     } catch {}
     
+    // Increment session index for role rotation
+    try {
+      const pod = StorageHelper.getPodById(podId);
+      if (pod) {
+        pod.sessionIndex = (pod.sessionIndex || 0) + 1;
+        StorageHelper.savePod(pod);
+        console.log(`✓ Session index incremented to ${pod.sessionIndex} for role rotation`);
+      }
+    } catch (e) {
+      console.warn('Failed to increment session index:', e);
+    }
+    
     // CRITICAL: Immediately sync to cloud after marking execution
     triggerCloudSync();
     
@@ -1335,18 +1545,58 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
     }
 
     window.currentPodPlanId = podId;
-    window.__lastPlanData = planData;
+    // Ensure __lastPlanData has all required fields including 'raw'
+    window.__lastPlanData = {
+      raw: planData.plan || planData.raw || '',
+      facilitatorHtml: planData.facilitatorHtml || planData.html || '',
+      systemNotesHtml: planData.systemNotesHtml || '',
+      quickViewHtml: planData.quickViewHtml || '',
+      provider: planData.provider || 'Stored',
+      summary: planData.summary || {},
+      ts: planData.ts || planData.acceptedAt || Date.now(),
+      userEdits: planData.userEdits || '',
+      sessionType: planData.sessionType || 'followup'
+    };
 
     setPlanModalState({
       title: `${pod.name || 'Pod'} - Accepted Plan`,
-      statusText: `Accepted ${new Date(planData.ts || Date.now()).toLocaleDateString()}`,
-      contentText: planData.facilitatorHtml || planData.html || 'No plan content',
+      statusText: `Accepted ${new Date(planData.acceptedAt || planData.ts || Date.now()).toLocaleDateString()}`,
+      contentText: window.__lastPlanData.facilitatorHtml || 'No plan content',
       showSpinner: false
     });
 
+    // Inject quick view if available
+    const qvEl = document.getElementById('podQuickViewContent');
+    if (qvEl) {
+      if (window.__lastPlanData.quickViewHtml) {
+        qvEl.innerHTML = window.__lastPlanData.quickViewHtml;
+        qvEl.style.display = 'none'; // Hidden by default, button toggles it
+      } else {
+        // Generate fallback quick view for old plans without quickViewHtml
+        const fallbackQv = {
+          one_line_purpose: 'Pod learning session',
+          before_session: ['Review student data', 'Prepare materials'],
+          session_feel: ['Safe', 'Engaging', 'Student-centered'],
+          flow: ['Welcome', 'Main Activity', 'Reflection'],
+          if_things_go_wrong: ['Pause and breathe', 'Check student comfort', 'Adjust pace'],
+          success_check: ['Students participated', 'Safe atmosphere maintained']
+        };
+        if (window.formatQuickView) {
+          qvEl.innerHTML = window.formatQuickView(fallbackQv);
+        } else {
+          qvEl.innerHTML = '<div style="padding:12px; color:#718096;">Quick view not available</div>';
+        }
+        qvEl.style.display = 'none';
+      }
+    }
+
     // Inject system notes if available
     const sysEl = document.getElementById('podSystemNotesContent');
-    if (sysEl && planData.systemNotesHtml) sysEl.innerHTML = planData.systemNotesHtml;
+    if (sysEl && window.__lastPlanData.systemNotesHtml) sysEl.innerHTML = window.__lastPlanData.systemNotesHtml;
+
+    // Hide Accept button since this is already an accepted plan
+    const acceptBtn = document.querySelector('button[onclick="acceptCurrentPlan()"]');
+    if (acceptBtn) acceptBtn.style.display = 'none';
 
     // Check execution status and show Execute button if not done
     const execKey = `braingrain_pod_exec_${podId}`;
@@ -1379,14 +1629,30 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
   }
 
   function markPlanAsExecuted(podId) {
-    const execKey = `braingrain_pod_exec_${podId}`;
-    const execData = {
-      executed: true,
-      executedAt: Date.now(),
-      feedbackComplete: false
-    };
     try {
+      // Get current plan from history
+      const historyKey = `braingrain_pod_plans_${podId}`;
+      let planHistory = [];
+      try {
+        planHistory = JSON.parse(localStorage.getItem(historyKey) || '[]');
+      } catch { }
+      
+      // Mark first (most recent) plan as executed
+      if (planHistory.length > 0) {
+        planHistory[0].status = 'executed';
+        planHistory[0].executedAt = Date.now();
+        localStorage.setItem(historyKey, JSON.stringify(planHistory));
+      }
+      
+      // Also update exec key for backward compatibility
+      const execKey = `braingrain_pod_exec_${podId}`;
+      const execData = {
+        executed: true,
+        executedAt: Date.now(),
+        feedbackComplete: false
+      };
       localStorage.setItem(execKey, JSON.stringify(execData));
+      
       console.log(`✓ Plan marked as EXECUTED for pod ${podId} at ${new Date(execData.executedAt).toISOString()}`);
       alert('Plan marked as executed! Now you can record session feedback.');
       renderPods(); // Refresh to show execution badge
@@ -1404,6 +1670,283 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
     } catch (e) {
       console.error('Failed to save execution status:', e);
       alert('Could not save execution status.');
+    }
+  }
+
+  // --- Plan History Management ---
+  function getPlanHistory(podId) {
+    const historyKey = `braingrain_pod_plans_${podId}`;
+    try {
+      return JSON.parse(localStorage.getItem(historyKey) || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  function openPlanHistoryModal(podId) {
+    const pod = StorageHelper.getPodById(podId);
+    if (!pod) {
+      alert('Pod not found');
+      return;
+    }
+
+    const planHistory = getPlanHistory(podId);
+    const acceptedPlans = planHistory.filter(p => p.status === 'accepted');
+    const executedPlans = planHistory.filter(p => p.status === 'executed');
+
+    const modal = document.getElementById('planHistoryModal');
+    if (!modal) return;
+
+    // Set title
+    const titleEl = document.getElementById('planHistoryTitle');
+    if (titleEl) titleEl.textContent = `${pod.name} - Plan History`;
+
+    // Render content with improved tabs
+    let html = '<div style="display: flex; gap: 6px; margin-bottom: 14px; background:#f1f5f9; padding:4px; border-radius:8px;">';
+    html += `<button class="btn btn-primary btn-small" onclick="switchPlanHistoryTab('accepted')" data-tab="accepted" style="flex:1; border-bottom: 2px solid #3b82f6; background:#ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.06); font-size:12px; padding:6px 10px;">📋 Accepted (${acceptedPlans.length})</button>`;
+    html += `<button class="btn btn-secondary btn-small" onclick="switchPlanHistoryTab('executed')" data-tab="executed" style="flex:1; font-size:12px; padding:6px 10px;">✅ Executed (${executedPlans.length})</button>`;
+    html += '</div>';
+
+    // Accepted Plans
+    html += `<div id="acceptedPlansTab" class="plan-history-tab" style="max-height:55vh; overflow-y:auto; padding-right:6px;">`;
+    if (acceptedPlans.length === 0) {
+      html += '<div style="padding: 40px 16px; text-align: center; color: #94a3b8; background:#f8fafc; border-radius:8px; border:2px dashed #cbd5e1;">📋 No accepted plans yet<br><span style="font-size:12px; margin-top:6px; display:block;">Generate a new plan to get started</span></div>';
+    } else {
+      acceptedPlans.forEach((plan, idx) => {
+        const date = new Date(plan.acceptedAt).toLocaleDateString();
+        const time = new Date(plan.acceptedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const sessionTypeEmoji = {welcome:'👋', first:'🚀', followup:'📌', custom:'🎯'}[plan.sessionType] || '📌';
+        const sessionTypeName = {welcome:'Welcome', first:'First', followup:'Follow-up', custom:'Custom'}[plan.sessionType] || 'Follow-up';
+        html += `
+          <div style="padding: 8px; margin-bottom: 6px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border: 1px solid #3b82f6; border-radius: 6px; box-shadow: 0 1px 2px rgba(59,130,246,0.1); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 2px 4px rgba(59,130,246,0.15)';" onmouseout="this.style.transform=''; this.style.boxShadow='0 1px 2px rgba(59,130,246,0.1)';">
+            <div style="display: flex; justify-content: space-between; align-items: start; gap:6px;">
+              <div style="flex:1;">
+                <div style="display:flex; align-items:center; gap:5px; margin-bottom:5px;">
+                  <div style="width:22px; height:22px; background:linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius:5px; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:10px; box-shadow: 0 1px 2px rgba(59,130,246,0.25);">#${acceptedPlans.length - idx}</div>
+                  <div>
+                    <div style="font-weight: 700; color: #1e40af; font-size:12px;">Plan ${acceptedPlans.length - idx}</div>
+                    <div style="font-size: 10px; color: #1e3a8a; display:flex; align-items:center; gap:3px;"><span>📅 ${date}</span> <span>• ⏰ ${time}</span></div>
+                  </div>
+                </div>
+                <div style="padding:2px 7px; background:white; border-radius:3px; display:inline-block; font-size:10px; font-weight:600; color:#1e40af;">${sessionTypeEmoji} ${sessionTypeName}</div>
+              </div>
+              <div style="display: flex; flex-direction:column; gap: 4px;">
+                <button class="btn btn-secondary btn-small" onclick="viewPlanHistoryItem('${podId}', '${plan.id}')" style="white-space:nowrap; font-size:11px; padding:4px 8px;">👁️ View</button>
+                <button class="btn btn-primary btn-small" onclick="executePlanFromHistory('${podId}', '${plan.id}')" style="white-space:nowrap; font-size:11px; padding:4px 8px;">▶️ Execute</button>
+                <button class="btn btn-secondary btn-small" style="border-color: #ef4444; color: #ef4444; white-space:nowrap; font-size:11px; padding:4px 8px;" onclick="deletePlanHistoryItem('${podId}', '${plan.id}')">🗑️ Delete</button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+    html += '</div>';
+
+    // Executed Plans
+    html += `<div id="executedPlansTab" class="plan-history-tab" style="display: none; max-height:55vh; overflow-y:auto; padding-right:6px;">`;
+    if (executedPlans.length === 0) {
+      html += '<div style="padding: 40px 16px; text-align: center; color: #94a3b8; background:#f8fafc; border-radius:8px; border:2px dashed #cbd5e1;">✅ No executed plans yet<br><span style="font-size:12px; margin-top:6px; display:block;">Execute a plan to see it here</span></div>';
+    } else {
+      executedPlans.forEach((plan, idx) => {
+        const date = new Date(plan.executedAt).toLocaleDateString();
+        const time = new Date(plan.executedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const sessionTypeEmoji = {welcome:'👋', first:'🚀', followup:'📌', custom:'🎯'}[plan.sessionType] || '📌';
+        const sessionTypeName = {welcome:'Welcome', first:'First', followup:'Follow-up', custom:'Custom'}[plan.sessionType] || 'Follow-up';
+        html += `
+          <div style="padding: 8px; margin-bottom: 6px; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border: 1px solid #10b981; border-radius: 6px; box-shadow: 0 1px 2px rgba(16,185,129,0.1); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 2px 4px rgba(16,185,129,0.15)';" onmouseout="this.style.transform=''; this.style.boxShadow='0 1px 2px rgba(16,185,129,0.1)';">
+            <div style="display: flex; justify-content: space-between; align-items: start; gap:6px;">
+              <div style="flex:1;">
+                <div style="display:flex; align-items:center; gap:5px; margin-bottom:5px;">
+                  <div style="width:22px; height:22px; background:linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius:5px; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:10px; box-shadow: 0 1px 2px rgba(16,185,129,0.25);">✓</div>
+                  <div>
+                    <div style="font-weight: 700; color: #065f46; font-size:12px;">Plan ${executedPlans.length - idx}</div>
+                    <div style="font-size: 10px; color: #064e3b; display:flex; align-items:center; gap:3px;"><span>📅 ${date}</span> <span>• ⏰ ${time}</span></div>
+                  </div>
+                </div>
+                <div style="padding:2px 7px; background:white; border-radius:3px; display:inline-block; font-size:10px; font-weight:600; color:#065f46;">${sessionTypeEmoji} ${sessionTypeName}</div>
+              </div>
+              <div style="display: flex; flex-direction:column; gap: 4px;">
+                <button class="btn btn-secondary btn-small" onclick="viewPlanHistoryItem('${podId}', '${plan.id}')" style="white-space:nowrap; font-size:11px; padding:4px 8px;">👁️ View</button>
+                <button class="btn btn-primary btn-small" onclick="openSessionFeedback()" style="white-space:nowrap; font-size:11px; padding:4px 8px;">💬 Feedback</button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+    html += '</div>';
+
+    const contentEl = document.getElementById('planHistoryContent');
+    if (contentEl) contentEl.innerHTML = html;
+
+    modal.style.display = 'flex';
+  }
+
+  function closePlanHistoryModal() {
+    const modal = document.getElementById('planHistoryModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function switchPlanHistoryTab(tab) {
+    const acceptedTab = document.getElementById('acceptedPlansTab');
+    const executedTab = document.getElementById('executedPlansTab');
+    const acceptedBtn = document.querySelector('[data-tab="accepted"]');
+    const executedBtn = document.querySelector('[data-tab="executed"]');
+
+    if (tab === 'accepted') {
+      if (acceptedTab) acceptedTab.style.display = 'block';
+      if (executedTab) executedTab.style.display = 'none';
+      if (acceptedBtn) {
+        acceptedBtn.classList.remove('btn-secondary');
+        acceptedBtn.classList.add('btn-primary');
+        acceptedBtn.style.borderBottom = '3px solid var(--color-primary)';
+      }
+      if (executedBtn) {
+        executedBtn.classList.remove('btn-primary');
+        executedBtn.classList.add('btn-secondary');
+        executedBtn.style.borderBottom = 'none';
+      }
+    } else {
+      if (acceptedTab) acceptedTab.style.display = 'none';
+      if (executedTab) executedTab.style.display = 'block';
+      if (acceptedBtn) {
+        acceptedBtn.classList.remove('btn-primary');
+        acceptedBtn.classList.add('btn-secondary');
+        acceptedBtn.style.borderBottom = 'none';
+      }
+      if (executedBtn) {
+        executedBtn.classList.remove('btn-secondary');
+        executedBtn.classList.add('btn-primary');
+        executedBtn.style.borderBottom = '3px solid var(--color-primary)';
+      }
+    }
+  }
+
+  function viewPlanHistoryItem(podId, planId) {
+    const planHistory = getPlanHistory(podId);
+    const plan = planHistory.find(p => p.id === planId);
+    if (!plan) {
+      alert('Plan not found');
+      return;
+    }
+
+    // Close plan history modal first
+    closePlanHistoryModal();
+    
+    // Restore complete __lastPlanData for Accept button to work
+    window.currentPodPlanId = podId;
+    window.__lastPlanData = {
+      raw: plan.plan || plan.raw || '',
+      facilitatorHtml: plan.facilitatorHtml || '',
+      systemNotesHtml: plan.systemNotesHtml || '',
+      quickViewHtml: plan.quickViewHtml || '',
+      provider: plan.provider || 'Stored',
+      summary: plan.summary || {},
+      ts: plan.ts || plan.acceptedAt || Date.now(),
+      userEdits: plan.userEdits || '',
+      sessionType: plan.sessionType || 'followup'
+    };
+
+    // Display in pod plan modal
+    window.setPlanModalState({
+      title: `Plan - ${new Date(plan.acceptedAt).toLocaleDateString()}`,
+      statusText: `${plan.status === 'executed' ? '✓ Executed' : 'Accepted'} - ${plan.sessionType || 'followup'}`,
+      contentText: plan.facilitatorHtml || plan.plan,
+      isError: false,
+      showSpinner: false
+    });
+
+    // Inject quick view if available
+    const qvEl = document.getElementById('podQuickViewContent');
+    if (qvEl) {
+      if (plan.quickViewHtml) {
+        qvEl.innerHTML = plan.quickViewHtml;
+        qvEl.style.display = 'none'; // Hidden by default
+      } else {
+        // Generate fallback quick view for old plans without quickViewHtml
+        const fallbackQv = {
+          one_line_purpose: 'Pod learning session',
+          before_session: ['Review student data', 'Prepare materials'],
+          session_feel: ['Safe', 'Engaging', 'Student-centered'],
+          flow: ['Welcome', 'Main Activity', 'Reflection'],
+          if_things_go_wrong: ['Pause and breathe', 'Check student comfort', 'Adjust pace'],
+          success_check: ['Students participated', 'Safe atmosphere maintained']
+        };
+        if (window.formatQuickView) {
+          qvEl.innerHTML = window.formatQuickView(fallbackQv);
+        } else {
+          qvEl.innerHTML = '<div style="padding:12px; color:#718096;">Quick view not available</div>';
+        }
+        qvEl.style.display = 'none';
+      }
+    }
+
+    // Inject system notes if available
+    const sysEl = document.getElementById('podSystemNotesContent');
+    if (sysEl && plan.systemNotesHtml) sysEl.innerHTML = plan.systemNotesHtml;
+
+    // Hide Accept button since this is already an accepted plan
+    const acceptBtn = document.querySelector('button[onclick="acceptCurrentPlan()"]');
+    if (acceptBtn) acceptBtn.style.display = 'none';
+    
+    // Hide execute button if already executed
+    const execBtn = document.getElementById('executePlanBtn');
+    if (execBtn && plan.status === 'executed') execBtn.style.display = 'none';
+  }
+
+  function executePlanFromHistory(podId, planId) {
+    if (!confirm('Mark this plan as executed?')) return;
+    
+    const planHistory = getPlanHistory(podId);
+    const plan = planHistory.find(p => p.id === planId);
+    if (!plan) {
+      alert('Plan not found');
+      return;
+    }
+
+    try {
+      plan.status = 'executed';
+      plan.executedAt = Date.now();
+      localStorage.setItem(`braingrain_pod_plans_${podId}`, JSON.stringify(planHistory));
+
+      // Update exec key
+      const execKey = `braingrain_pod_exec_${podId}`;
+      localStorage.setItem(execKey, JSON.stringify({
+        executed: true,
+        executedAt: Date.now(),
+        feedbackComplete: false
+      }));
+
+      alert('Plan marked as executed!');
+      
+      // CRITICAL: Trigger cloud sync after execution
+      triggerCloudSync();
+      
+      renderPods();
+      openPlanHistoryModal(podId); // Refresh modal
+    } catch (e) {
+      console.error('Error executing plan:', e);
+      alert('Could not mark plan as executed');
+    }
+  }
+
+  function deletePlanHistoryItem(podId, planId) {
+    if (!confirm('Delete this plan? This cannot be undone.')) return;
+    
+    try {
+      let planHistory = getPlanHistory(podId);
+      planHistory = planHistory.filter(p => p.id !== planId);
+      localStorage.setItem(`braingrain_pod_plans_${podId}`, JSON.stringify(planHistory));
+
+      alert('Plan deleted');
+      
+      // CRITICAL: Trigger cloud sync after deletion
+      triggerCloudSync();
+      
+      openPlanHistoryModal(podId); // Refresh modal
+    } catch (e) {
+      console.error('Error deleting plan:', e);
+      alert('Could not delete plan');
     }
   }
 
@@ -1465,6 +2008,7 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
   window.closePodModal = closePodModal;
   window.savePodFromModal = savePodFromModal;
   window.deletePod = deletePod;
+  window.togglePodMenu = togglePodMenu;
   window.syncPodsToCloud = syncPodsToCloud;
   window.generatePodPlan = generatePodPlan;
   window.showPodSummary = showPodSummary;
@@ -1473,12 +2017,21 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
   window.acceptCurrentPlan = acceptCurrentPlan;
   window.regeneratePlanWithFeedback = regeneratePlanWithFeedback;
   window.closePodPlanModal = closePodPlanModal;
-  window.copyPlanToClipboard = copyPlanToClipboard;
   window.saveAIConfigToFirebase = saveAIConfigToFirebase;
   window.openSessionFeedback = openSessionFeedback;
   window.closeSessionFeedback = closeSessionFeedback;
   window.saveSessionFeedbackEntry = saveSessionFeedbackEntry;
   window.viewAcceptedPlan = viewAcceptedPlan;
   window.markPlanAsExecuted = markPlanAsExecuted;
+  window.openSessionTypeModal = openSessionTypeModal;
+  window.closeSessionTypeModal = closeSessionTypeModal;
+  window.handleSessionTypeSubmit = handleSessionTypeSubmit;
+  window.getPlanHistory = getPlanHistory;
+  window.openPlanHistoryModal = openPlanHistoryModal;
+  window.closePlanHistoryModal = closePlanHistoryModal;
+  window.switchPlanHistoryTab = switchPlanHistoryTab;
+  window.viewPlanHistoryItem = viewPlanHistoryItem;
+  window.executePlanFromHistory = executePlanFromHistory;
+  window.deletePlanHistoryItem = deletePlanHistoryItem;
 
 })();

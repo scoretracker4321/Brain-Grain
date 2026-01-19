@@ -192,6 +192,36 @@
     document.getElementById('adminDashboard') && document.getElementById('adminDashboard').classList.remove('active');
     document.getElementById('adminLoginScreen').classList.remove('active');
     document.getElementById('adminScreen') && (document.getElementById('adminScreen').classList.remove('active'), document.getElementById('adminScreen').style.display = 'none');
+    
+    // Hide header actions when logging out
+    const headerActions = document.getElementById('headerActions');
+    if (headerActions) headerActions.style.display = 'none';
+  }
+
+  function toggleDataMenu() {
+    const menu = document.getElementById('dataMenu');
+    if (!menu) return;
+    
+    // Close menu when clicking outside
+    if (menu.style.display === 'none' || !menu.style.display) {
+      menu.style.display = 'block';
+      // Add click listener to close menu when clicking outside
+      setTimeout(() => {
+        document.addEventListener('click', closeDataMenuOnClickOutside);
+      }, 0);
+    } else {
+      menu.style.display = 'none';
+      document.removeEventListener('click', closeDataMenuOnClickOutside);
+    }
+  }
+
+  function closeDataMenuOnClickOutside(e) {
+    const menu = document.getElementById('dataMenu');
+    if (!menu) return;
+    if (!e.target.closest('#dataMenu') && !e.target.closest('button[onclick="toggleDataMenu()"]')) {
+      menu.style.display = 'none';
+      document.removeEventListener('click', closeDataMenuOnClickOutside);
+    }
   }
 
   function switchToAdmin() {
@@ -230,6 +260,11 @@
       adminDashboard.classList.add('active');
       adminDashboard.style.display = '';
     }
+    
+    // Show header actions for admin
+    const headerActions = document.getElementById('headerActions');
+    if (headerActions) headerActions.style.display = 'flex';
+    
     // Force load students after a small delay to ensure DOM is ready
     setTimeout(() => {
       try { 
@@ -668,6 +703,7 @@
   window.switchToStudent = switchToStudent;
   window.switchToLogin = switchToLogin;
   window.switchToAdmin = switchToAdmin;
+  window.toggleDataMenu = toggleDataMenu;
   window.switchToDashboard = switchToDashboard;
   window.handleNextTab = handleNextTab;
   window.prevStudentTab = prevStudentTab;

@@ -259,11 +259,17 @@
   function loadPods() {
     try {
       const storage = _getStorage();
-      if (!storage) return [];
+      if (!storage) {
+        console.error('loadPods: No storage available');
+        return [];
+      }
       const raw = storage.getItem('braingrain_pods');
       const parsed = safeParse(raw);
       const pods = Array.isArray(parsed) ? parsed : [];
-      console.log(`Loaded ${pods.length} pods from localStorage`);
+      console.log(`✓ Loaded ${pods.length} pods from localStorage`);
+      if (pods.length > 0) {
+        console.log(`  Pod names: ${pods.map(p => p.name).join(', ')}`);
+      }
       return pods;
     } catch (e) {
       console.error('loadPods failed', e);
@@ -274,15 +280,24 @@
   function savePods(arr) {
     try {
       const storage = _getStorage();
-      if (!storage) return false;
+      if (!storage) {
+        console.error('❌ savePods: No storage available!');
+        return false;
+      }
       const normalized = Array.isArray(arr) ? arr : [];
       storage.setItem('braingrain_pods', JSON.stringify(normalized));
       console.log(`✓ Saved ${normalized.length} pods to localStorage`);
       
+      // Log pod details for debugging
+      if (normalized.length > 0) {
+        console.log(`  Pod IDs: ${normalized.map(p => p.id).join(', ')}`);
+        console.log(`  Pod names: ${normalized.map(p => p.name).join(', ')}`);
+      }
+      
       // CRITICAL: Auto-sync to cloud with verification
       if (typeof window !== 'undefined' && window.CloudStorage && window.CloudStorage.isEnabled() && window.CloudStorage.isAutoSyncEnabled()) {
         const students = loadStudents();
-        console.log(`🔄 Syncing ${students.length} students and ${normalized.length} pods to cloud...`);
+        console.log(`🔄 INITIATING CLOUD SYNC: ${students.length} students and ${normalized.length} pods...`);
         
         window.CloudStorage.syncToCloud(students, normalized).then(async result => {
           if (result.success) {
@@ -335,8 +350,16 @@
 
   function savePod(pod) {
     try {
-      if (!pod || typeof pod !== 'object') return false;
+      if (!pod || typeof pod !== 'object') {
+        console.error('❌ savePod: Invalid pod object');
+        return false;
+      }
+      
+      console.log('💾 savePod called with:', pod.name, '| studentIds:', pod.studentIds?.length);
+      
       const pods = loadPods();
+      console.log(`  Current pods in storage BEFORE save: ${pods.length}`);
+      
       const payload = Object.assign({}, pod);
       payload.name = (payload.name || '').trim();
       payload.studentIds = Array.from(new Set(payload.studentIds || [])).filter(Boolean);
@@ -349,13 +372,28 @@
       payload.updatedAt = now;
       if (idx >= 0) {
         pods[idx] = Object.assign({}, pods[idx], payload);
+        console.log(`  Updating existing pod at index ${idx}`);
       } else {
         pods.push(payload);
+        console.log(`  Adding new pod. Total pods: ${pods.length}`);
       }
 
       const ok = savePods(pods);
-      if (!ok) return false;
-      return getPodById(payload.id);
+      if (!ok) {
+        console.error('❌ savePods returned false!');
+        return false;
+      }
+      
+      // VERIFY the pod was actually saved
+      const verification = loadPods();
+      console.log(`✓ VERIFICATION: ${verification.length} pods in storage after save`);
+      if (verification.length !== pods.length) {
+        console.error(`⚠️ MISMATCH: Expected ${pods.length} pods, found ${verification.length}!`);
+      }
+      
+      const result = getPodById(payload.id);
+      console.log(`✓ savePod complete: ${result ? result.name : 'NOT FOUND'} (${payload.id})`);
+      return result;
     } catch (e) {
       console.error('savePod failed', e);
       return false;
