@@ -867,6 +867,16 @@
         }
       } catch {}
 
+      // Get session history
+      const historyKey = `braingrain_pod_plans_${pod.id}`;
+      let sessionHistory = [];
+      try {
+        const historyData = localStorage.getItem(historyKey);
+        if (historyData) {
+          sessionHistory = JSON.parse(historyData).filter(p => p.status === 'executed');
+        }
+      } catch (e) {}
+
       html += `
         <div class="pod-card">
           <div class="pod-card__header">
@@ -888,6 +898,39 @@
             </div>
           </div>
           <div class="pod-members">${memberText}</div>
+          
+          ${sessionHistory.length > 0 ? `
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0;">
+              <div style="font-weight: 600; font-size: 13px; color: var(--color-text-secondary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                📅 Sessions (${sessionHistory.length})
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                ${sessionHistory.slice(0, 3).map((session, idx) => {
+                  const sessionDate = session.executedAt ? new Date(session.executedAt).toLocaleDateString() : '';
+                  const sessionTime = session.executedAt ? new Date(session.executedAt).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '';
+                  const sessionName = session.sessionName || `Session ${sessionHistory.length - idx}`;
+                  
+                  return `
+                    <div style="background: #f8fafc; padding: 8px 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+                      <div style="flex: 1;">
+                        <div style="font-weight: 600; font-size: 13px; color: var(--color-text);">${sessionName}</div>
+                        <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 2px;">${sessionDate} ${sessionTime}</div>
+                      </div>
+                      <div style="display: flex; gap: 6px;">
+                        <button class="btn btn-secondary btn-small" onclick="viewSessionPlan('${pod.id}', '${session.id}')" style="font-size: 11px; padding: 4px 8px;">📄 Plan</button>
+                        <button class="btn btn-secondary btn-small" onclick="viewSessionFeedback('${pod.id}', '${session.id}')" style="font-size: 11px; padding: 4px 8px;">💬 Feedback</button>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+                ${sessionHistory.length > 3 ? `
+                  <div style="text-align: center; margin-top: 4px;">
+                    <button class="btn btn-secondary btn-small" onclick="openPlanHistoryModal('${pod.id}')" style="font-size: 11px;">View all ${sessionHistory.length} sessions</button>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          ` : ''}
         </div>`;
     });
 
@@ -3121,5 +3164,239 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
   window.exportCohortStatsCSV = exportCohortStatsCSV;
   window.exportComprehensiveJSON = exportComprehensiveJSON;
   window.exportAtRiskStudentsCSV = exportAtRiskStudentsCSV;
+
+  // Session viewing functions
+  function viewSessionPlan(podId, sessionId) {
+    try {
+      // Get session from history
+      const historyKey = `braingrain_pod_plans_${podId}`;
+      const historyData = localStorage.getItem(historyKey);
+      if (!historyData) {
+        alert('No session history found');
+        return;
+      }
+      
+      const sessions = JSON.parse(historyData);
+      const session = sessions.find(s => s.id === sessionId);
+      if (!session) {
+        alert('Session not found');
+        return;
+      }
+      
+      // Open plan modal with session content
+      window.currentPodPlanId = podId;
+      
+      const modal = document.getElementById('podPlanModal');
+      const titleEl = document.getElementById('podPlanTitle');
+      const statusEl = document.getElementById('podPlanStatus');
+      const contentEl = document.getElementById('podFacilitatorCard');
+      const quickViewEl = document.getElementById('podQuickViewContent');
+      const systemNotesEl = document.getElementById('podSystemNotesContent');
+      const spinnerEl = document.getElementById('podPlanSpinner');
+      
+      if (titleEl) titleEl.textContent = session.sessionName || 'Session Plan';
+      if (statusEl) {
+        const execDate = session.executedAt ? new Date(session.executedAt).toLocaleDateString() : '';
+        const execTime = session.executedAt ? new Date(session.executedAt).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '';
+        statusEl.textContent = `Executed: ${execDate} ${execTime}`;
+      }
+      if (spinnerEl) spinnerEl.style.display = 'none';
+      
+      // Display plan content
+      if (contentEl) {
+        contentEl.innerHTML = session.facilitatorHtml || formatSessionPlanHTML(session.plan);
+      }
+      
+      if (quickViewEl) {
+        quickViewEl.innerHTML = session.quickViewHtml || '<div style="padding:12px; color:#666;">Quick view not available for this session</div>';
+      }
+      
+      if (systemNotesEl) {
+        systemNotesEl.innerHTML = session.systemNotesHtml || '<div style="padding:12px; color:#666;">No system notes</div>';
+      }
+      
+      if (modal) modal.style.display = 'flex';
+    } catch (error) {
+      console.error('viewSessionPlan error:', error);
+      alert('Failed to load session plan: ' + error.message);
+    }
+  }
+  
+  function viewSessionFeedback(podId, sessionId) {
+    try {
+      // Get feedback for this session
+      const feedbackKey = `braingrain_session_feedback_${podId}`;
+      const feedbackData = localStorage.getItem(feedbackKey);
+      if (!feedbackData) {
+        alert('No feedback recorded for this pod yet');
+        return;
+      }
+      
+      const allFeedback = JSON.parse(feedbackData);
+      const sessionFeedback = allFeedback.filter(f => f.sessionId === sessionId);
+      
+      if (sessionFeedback.length === 0) {
+        alert('No feedback recorded for this session');
+        return;
+      }
+      
+      // Get session info
+      const historyKey = `braingrain_pod_plans_${podId}`;
+      const historyData = localStorage.getItem(historyKey);
+      const sessions = historyData ? JSON.parse(historyData) : [];
+      const session = sessions.find(s => s.id === sessionId);
+      const sessionName = session ? (session.sessionName || 'Session') : 'Session';
+      
+      // Create feedback display modal or reuse plan modal
+      const modal = document.getElementById('podPlanModal');
+      const titleEl = document.getElementById('podPlanTitle');
+      const contentEl = document.getElementById('podFacilitatorCard');
+      const statusEl = document.getElementById('podPlanStatus');
+      
+      if (titleEl) titleEl.textContent = `${sessionName} - Feedback`;
+      if (statusEl) statusEl.textContent = `${sessionFeedback.length} student${sessionFeedback.length === 1 ? '' : 's'} with feedback`;
+      
+      // Format feedback HTML
+      let feedbackHTML = '<div style="display: flex; flex-direction: column; gap: 16px;">';
+      
+      sessionFeedback.forEach(feedback => {
+        const student = allStudents.find(s => s.id === feedback.studentId);
+        const studentName = student ? `${student.firstName || ''} ${student.lastName || ''}`.trim() : 'Unknown Student';
+        const feedbackDate = feedback.timestamp ? new Date(feedback.timestamp).toLocaleString() : '';
+        
+        feedbackHTML += `
+          <div style="background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0;">
+              <div>
+                <h3 style="margin: 0; color: #1e40af; font-size: 16px;">${studentName}</h3>
+                <div style="font-size: 11px; color: #64748b; margin-top: 4px;">${feedbackDate}</div>
+              </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 12px;">
+              ${feedback.behaviour ? `
+                <div style="background: #f0f9ff; padding: 10px; border-radius: 8px; border-left: 3px solid #0ea5e9;">
+                  <div style="font-size: 11px; font-weight: 600; color: #0369a1; margin-bottom: 4px;">😊 Behaviour</div>
+                  <div style="font-size: 20px; margin-bottom: 4px;">${feedback.behaviour}</div>
+                  ${feedback.behaviourNote ? `<div style="font-size: 12px; color: #334155; margin-top: 4px;">${feedback.behaviourNote}</div>` : ''}
+                </div>
+              ` : ''}
+              
+              ${feedback.participation ? `
+                <div style="background: #f0fdf4; padding: 10px; border-radius: 8px; border-left: 3px solid #10b981;">
+                  <div style="font-size: 11px; font-weight: 600; color: #166534; margin-bottom: 4px;">✋ Participation</div>
+                  <div style="font-size: 20px; margin-bottom: 4px;">${feedback.participation}</div>
+                  ${feedback.participationNote ? `<div style="font-size: 12px; color: #334155; margin-top: 4px;">${feedback.participationNote}</div>` : ''}
+                </div>
+              ` : ''}
+              
+              ${feedback.interest ? `
+                <div style="background: #fef3c7; padding: 10px; border-radius: 8px; border-left: 3px solid #fbbf24;">
+                  <div style="font-size: 11px; font-weight: 600; color: #92400e; margin-bottom: 4px;">🤩 Interest</div>
+                  <div style="font-size: 20px; margin-bottom: 4px;">${feedback.interest}</div>
+                  ${feedback.interestNote ? `<div style="font-size: 12px; color: #334155; margin-top: 4px;">${feedback.interestNote}</div>` : ''}
+                </div>
+              ` : ''}
+              
+              ${feedback.emotional ? `
+                <div style="background: #fef2f2; padding: 10px; border-radius: 8px; border-left: 3px solid #f43f5e;">
+                  <div style="font-size: 11px; font-weight: 600; color: #991b1b; margin-bottom: 4px;">💕 Emotional</div>
+                  <div style="font-size: 20px; margin-bottom: 4px;">${feedback.emotional}</div>
+                  ${feedback.emotionalNote ? `<div style="font-size: 12px; color: #334155; margin-top: 4px;">${feedback.emotionalNote}</div>` : ''}
+                </div>
+              ` : ''}
+            </div>
+            
+            ${feedback.strengths ? `
+              <div style="background: #d1fae5; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
+                <div style="font-weight: 600; font-size: 12px; color: #065f46; margin-bottom: 4px;">💪 Strengths Observed</div>
+                <div style="font-size: 13px; color: #064e3b;">${feedback.strengths}</div>
+              </div>
+            ` : ''}
+            
+            ${feedback.needs ? `
+              <div style="background: #fef3c7; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
+                <div style="font-weight: 600; font-size: 12px; color: #92400e; margin-bottom: 4px;">🎯 Needs Identified</div>
+                <div style="font-size: 13px; color: #78350f;">${feedback.needs}</div>
+              </div>
+            ` : ''}
+            
+            ${feedback.nextSession ? `
+              <div style="background: #ede9fe; padding: 12px; border-radius: 8px;">
+                <div style="font-weight: 600; font-size: 12px; color: #5b21b6; margin-bottom: 4px;">➡️ Next Session</div>
+                <div style="font-size: 13px; color: #4c1d95;">${feedback.nextSession}</div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      });
+      
+      feedbackHTML += '</div>';
+      
+      if (contentEl) contentEl.innerHTML = feedbackHTML;
+      if (modal) modal.style.display = 'flex';
+    } catch (error) {
+      console.error('viewSessionFeedback error:', error);
+      alert('Failed to load session feedback: ' + error.message);
+    }
+  }
+  
+  function formatSessionPlanHTML(planJSON) {
+    try {
+      const plan = typeof planJSON === 'string' ? JSON.parse(planJSON) : planJSON;
+      
+      let html = `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">`;
+      
+      if (plan.session_title) {
+        html += `<h2 style="color: #0b66d0; margin-bottom: 8px;">${plan.session_title}</h2>`;
+      }
+      
+      if (plan.objective || plan.duration_minutes) {
+        html += `<div style="background: #f0f9ff; padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #0ea5e9;">`;
+        if (plan.objective) html += `<strong>Objective:</strong> ${plan.objective}<br>`;
+        if (plan.duration_minutes) html += `<strong>Duration:</strong> ${plan.duration_minutes} minutes`;
+        html += `</div>`;
+      }
+      
+      if (plan.student_roles) {
+        html += `<div style="background: #fef3c7; padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #f59e0b;">`;
+        html += `<strong>Student Roles:</strong><ul style="margin: 8px 0;">`;
+        plan.student_roles.role_list.forEach((role, i) => {
+          html += `<li><strong>${role}:</strong> ${plan.student_roles.instructions[i]}</li>`;
+        });
+        html += `</ul><em style="font-size: 12px;">${plan.student_roles.rotation_note}</em></div>`;
+      }
+      
+      if (plan.activities && plan.activities.length > 0) {
+        plan.activities.forEach((act, idx) => {
+          html += `<div style="background: white; border: 2px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px;">`;
+          html += `<h3 style="color: #1e40af; margin: 0 0 8px 0;">${idx + 1}. ${act.activity_title} (${act.duration_minutes} min)</h3>`;
+          html += `<p style="margin: 8px 0;"><strong>What to do:</strong> ${act.description}</p>`;
+          
+          if (act.differentiation && act.differentiation.length > 0) {
+            html += `<div style="background: #f0fdf4; padding: 10px; border-radius: 6px; margin: 8px 0;">`;
+            html += `<strong>Differentiation:</strong><ul style="margin: 4px 0; padding-left: 20px;">`;
+            act.differentiation.forEach(d => html += `<li style="font-size: 13px;">${d}</li>`);
+            html += `</ul></div>`;
+          }
+          
+          if (act.signals) {
+            html += `<div style="background: #fef3c7; padding: 10px; border-radius: 6px; margin-top: 8px;">`;
+            html += `<strong>Watch for:</strong> ${act.signals}</div>`;
+          }
+          html += `</div>`;
+        });
+      }
+      
+      html += `</div>`;
+      return html;
+    } catch (error) {
+      console.error('formatSessionPlanHTML error:', error);
+      return '<div style="padding: 20px; text-align: center; color: #ef4444;">Error formatting session plan</div>';
+    }
+  }
+  
+  window.viewSessionPlan = viewSessionPlan;
+  window.viewSessionFeedback = viewSessionFeedback;
 
 })();
