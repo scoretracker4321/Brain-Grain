@@ -14,14 +14,44 @@
   }
 
   /**
+   * Clear old demo data from localStorage
+   */
+  function clearOldDemoData() {
+    console.log('🧹 Clearing old demo data...');
+    
+    // Clear demo students
+    const students = StorageHelper.loadStudents();
+    const nonDemoStudents = students.filter(s => !s.id.startsWith('DEMO_STU_'));
+    StorageHelper.saveStudents(nonDemoStudents);
+    
+    // Clear demo pods
+    const pods = StorageHelper.loadPods();
+    const nonDemoPods = pods.filter(p => !p.id.startsWith('DEMO_POD_'));
+    StorageHelper.savePods(nonDemoPods);
+    
+    // Clear demo pod plans
+    localStorage.removeItem('braingrain_pod_plans_DEMO_POD_1');
+    localStorage.removeItem('braingrain_pod_plan_DEMO_POD_1');
+    
+    // Clear demo feedback
+    localStorage.removeItem('braingrain_session_feedback_DEMO_POD_1');
+    
+    console.log('✓ Old demo data cleared');
+  }
+
+  /**
    * Load demo data from backend endpoint
    * Fetches pre-configured students, pods, and session plans
    */
   window.loadDemoDataFromBackend = async function() {
     try {
-      if (!confirm('📦 Load Demo Data from Backend?\n\nThis will:\n• Load 4 demo students\n• Create 1 demo pod\n• Add 3 pre-configured session plans\n• Add session feedback\n\nContinue?')) {
+      if (!confirm('📦 Load Demo Data from Backend?\n\nThis will:\n• Load 4 demo students\n• Create 1 demo pod\n• Add 6 detailed session plans\n• Add session feedback\n\nContinue?')) {
         return;
       }
+
+      showProgress('Clearing old demo data...', 'info');
+      clearOldDemoData();
+      await delay(300);
 
       showProgress('Loading demo data from backend...', 'info');
 
@@ -64,9 +94,9 @@
       // Generate session plans for the demo pod
       if (pods.length > 0) {
         const demoPod = pods[0];
-        showProgress('Generating session plans...', 'info');
+        showProgress('Generating 6 detailed session plans...', 'info');
         await generateDemoSessionPlans(demoPod, students);
-        showProgress('✓ Generated 3 session plans with feedback', 'success');
+        showProgress('✓ Generated 6 session plans with feedback', 'success');
       }
 
       // Refresh UI
@@ -315,13 +345,238 @@
       }
     };
 
+    // Session Plan 4: Emotional Intelligence & Self-Awareness
+    const plan4 = {
+      id: 'DEMO_PLAN_4',
+      sessionId: 'DEMO_PLAN_4',
+      status: 'executed',
+      acceptedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+      executedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+      sessionType: 'followup',
+      plan: {
+        session_title: 'Emotional Intelligence - Understanding Our Feelings',
+        objective: 'Develop emotional literacy through naming and validating feelings, practice self-regulation strategies using the "feelings thermometer," build empathy by perspective-taking, and create personal emotion toolkits for managing strong feelings in academic and social contexts.',
+        duration_minutes: 45,
+        student_roles: {
+          role_list: ['Feelings Monitor', 'Examples Collector', 'Strategy Suggester', 'Practice Leader'],
+          instructions: [
+            'Notice emotional language used - tally how many feeling words the group uses',
+            'Write down real-life examples shared by peers for later discussion',
+            'When someone shares a problem, suggest one coping strategy we\'ve learned',
+            'Lead practice of deep breathing or other calming techniques when needed'
+          ],
+          rotation_note: 'Emotional intelligence roles help normalize feelings as data to understand, not problems to fix.'
+        },
+        activities: [
+          {
+            activity_title: 'Feelings Check-In with Thermometer',
+            duration_minutes: 10,
+            description: 'Introduce "Feelings Thermometer" poster (0-10 scale: 0=calm, 5=ok, 10=overwhelmed). Each student places their name on the scale for how they feel RIGHT NOW. No judgment, just data. Facilitator shares first: "I\'m at a 6 today because I\'m excited but also nervous about trying something new." Debrief: What do different numbers mean to different people?',
+            differentiation: [
+              `${students[0].firstName}: Validate that being nervous (6-7) is normal and shows you care`,
+              `${students[1].firstName}: Offer color-coding instead of numbers if that feels clearer`,
+              `${students[2].firstName}: Physical placement - walk to poster and move your name marker`,
+              `${students[3].firstName}: Ask to identify patterns - why might we all be at similar or different levels today?`
+            ],
+            signals: 'Watch: Who avoids sharing? Who downplays strong feelings? Do students use specific feeling words or just "good/bad"? Validate ALL emotions as acceptable.'
+          },
+          {
+            activity_title: 'Emotion Scenarios - What Would You Do?',
+            duration_minutes: 15,
+            description: 'Present 4 age-appropriate scenarios (missed goal in sports, bad test grade, friend excluded you, proud of accomplishment). For each: 1) Name the feeling (anger, disappointment, hurt, pride), 2) Rate intensity on thermometer, 3) Suggest 2 healthy coping strategies, 4) Role-play one strategy as group. Facilitator models: "I feel _____ because _____. To help myself, I could _____."',
+            differentiation: [
+              `${students[0].firstName}: Academic scenarios resonate - focus on test anxiety, homework stress`,
+              `${students[1].firstName}: Include scenarios about creativity/art - frustration when project doesn\'t turn out as imagined`,
+              `${students[2].firstName}: Physical/sports scenarios - energy management when hyper or tired`,
+              `${students[3].firstName}: Social scenarios - navigating peer dynamics, being the responsible one`
+            ],
+            signals: 'Listen for: Problem-solving vs. blame, self-compassion vs. self-criticism, ability to name specific emotions beyond "mad/sad/happy," willingness to try coping strategies.'
+          },
+          {
+            activity_title: 'Build Your Emotion Toolkit',
+            duration_minutes: 12,
+            description: 'Each student creates personal "toolkit" on index card. Draw/write 5 strategies that help when feelings get big: deep breathing (box breathing demo), count to 10, walk away and come back, talk to trusted person, draw/write about it, physical movement, etc. Decorate cards, laminate if possible, keep in pocket/backpack. Practice one strategy together as group.',
+            differentiation: [
+              `${students[0].firstName}: Include cognitive strategies - "positive self-talk," "remind myself of past success"`,
+              `${students[1].firstName}: Visual/artistic toolkit - use colors, symbols, drawings instead of just words`,
+              `${students[2].firstName}: Kinesthetic strategies emphasized - jumping jacks, wall push-ups, stretching`,
+              `${students[3].firstName}: Include helping-others strategies - "teach a peer," "be the calm leader"`
+            ],
+            signals: 'Observe: Engagement with toolkit creation, whether strategies are realistic (not just "calm down"), ownership of personalized tools, willingness to practice in safe space.'
+          },
+          {
+            activity_title: 'Empathy Circle - Walking in Others\' Shoes',
+            duration_minutes: 8,
+            description: 'Quick empathy exercise: Each person shares one time they felt misunderstood. Others respond with: "That must have felt _____" (naming the emotion). No fixing, no advice, just validation. Facilitator emphasizes: Understanding ≠ Agreeing. We can understand someone\'s feelings without experiencing the same situation. Close with appreciation for vulnerability.',
+            differentiation: [
+              `${students[0].firstName}: Allow written sharing first if speaking feels vulnerable`,
+              `${students[1].firstName}: Connect to art/stories - "Characters in books feel misunderstood too"`,
+              `${students[2].firstName}: Keep it brief if sitting still is hard - one sentence max per person`,
+              `${students[3].firstName}: Challenge to name complex emotions - frustration + sadness, excited + nervous`
+            ],
+            signals: 'Watch: Ability to validate without minimizing, use of empathetic language, comfort with vulnerability, tendency to share personal vs. hypothetical examples.'
+          }
+        ]
+      }
+    };
+
+    // Session Plan 5: Communication & Conflict Resolution
+    const plan5 = {
+      id: 'DEMO_PLAN_5',
+      sessionId: 'DEMO_PLAN_5',
+      status: 'executed',
+      acceptedAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
+      executedAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
+      sessionType: 'followup',
+      plan: {
+        session_title: 'Communication Skills - Speaking Up & Listening Well',
+        objective: 'Master "I statements" for expressing needs without blame, practice active listening with reflection and clarification, role-play conflict scenarios using problem-solving framework, and build confidence in advocating for self and others in academic and social settings.',
+        duration_minutes: 45,
+        student_roles: {
+          role_list: ['Body Language Watcher', 'I-Statement Counter', 'Clarifier', 'Peacekeeper'],
+          instructions: [
+            'Observe non-verbal communication - posture, eye contact, gestures - share what you notice',
+            'Tally when people use "I feel..." vs. "You always..." statements',
+            'When confusion arises, ask "Can you explain what you mean by...?"',
+            'If tension builds, suggest break or reframe conversation positively'
+          ],
+          rotation_note: 'Communication roles make invisible skills visible - we learn by observing ourselves and others.'
+        },
+        activities: [
+          {
+            activity_title: 'I-Statements vs. You-Statements Practice',
+            duration_minutes: 12,
+            description: 'Teach formula: "I feel _____ when _____ because _____, and I need _____." Contrast with blaming: "You always _____!" Present 5 conflict situations (partner not sharing materials, someone cut in line, group member not contributing, etc.). For each, students rewrite "You" statement as "I" statement. Practice saying them out loud with confident tone.',
+            differentiation: [
+              `${students[0].firstName}: Academic conflicts - "I feel frustrated when I don\'t understand directions because I want to do well, and I need clearer examples"`,
+              `${students[1].firstName}: Emotional conflicts - "I feel hurt when my ideas are dismissed because I worked hard on them, and I need to be heard"`,
+              `${students[2].firstName}: Behavioral conflicts - "I feel overwhelmed when I\'m expected to sit still for long periods because I learn better when moving, and I need movement breaks"`,
+              `${students[3].firstName}: Leadership conflicts - "I feel stressed when I\'m always the one organizing because it\'s a lot of responsibility, and I need others to step up sometimes"`
+            ],
+            signals: 'Listen: Use of formula vs. reverting to blame, ability to name specific feelings and needs, tone (assertive vs. aggressive vs. passive), willingness to practice publicly.'
+          },
+          {
+            activity_title: 'Active Listening Challenge',
+            duration_minutes: 10,
+            description: 'Pairs take turns: Speaker shares 1-minute story about their day. Listener cannot interrupt, must maintain eye contact, nod/show engagement. After speaker finishes, listener reflects back: "What I heard you say is..." and asks ONE clarifying question. Switch roles. Debrief: What made you feel heard? What was hardest about just listening?',
+            differentiation: [
+              `${students[0].firstName}: Cognitive listening - focus on content, details, logical sequence`,
+              `${students[1].firstName}: Emotional listening - tune into feelings behind words, validate emotions`,
+              `${students[2].firstName}: Physical listening - may need fidget tool to help focus, that\'s ok`,
+              `${students[3].firstName}: Strategic listening - notice what\'s NOT being said, read between lines`
+            ],
+            signals: 'Observe: Interrupting behavior, body language of engagement, quality of reflection (surface vs. deep understanding), comfort with silence, empathy in questions asked.'
+          },
+          {
+            activity_title: 'Conflict Role-Play with Framework',
+            duration_minutes: 18,
+            description: 'Present realistic peer conflict: Two students want to be team leader, or group can\'t agree on project topic, or someone feels left out. Apply 5-step conflict resolution: 1) Each person uses I-statement, 2) Active listening - reflect back, 3) Find common ground, 4) Brainstorm solutions together, 5) Try one solution. Role-play with 2 volunteers, class observes and gives feedback. Switch and try second scenario.',
+            differentiation: [
+              `${students[0].firstName}: Assign reflector role - listen carefully and summarize both perspectives`,
+              `${students[1].firstName}: Assign feelings identifier - name emotions underlying conflict`,
+              `${students[2].firstName}: Assign solution generator - brainstorm creative compromise ideas`,
+              `${students[3].firstName}: Assign facilitator role - keep group on track through 5 steps`
+            ],
+            signals: 'Critical watch: Power dynamics (who dominates), win-win vs. win-lose thinking, genuine empathy vs. performative, ability to separate person from problem, persistence when first solution doesn\'t work.'
+          },
+          {
+            activity_title: 'Assertiveness Skill Practice',
+            duration_minutes: 5,
+            description: 'Quick scenarios where students practice assertive (not aggressive, not passive) responses: Saying "no" to peer pressure, asking teacher for help, correcting someone who mispronounced your name, advocating for fair group roles. Practice body language: stand tall, calm voice, direct eye contact. Emphasize: Being assertive means respecting yourself AND others.',
+            differentiation: [
+              `${students[0].firstName}: Academic assertiveness - "Could you explain that a different way? I want to understand"`,
+              `${students[1].firstName}: Creative assertiveness - "I have a different idea. Can I share it?"`,
+              `${students[2].firstName}: Physical space assertiveness - "I need more room to work comfortably"`,
+              `${students[3].firstName}: Leadership assertiveness - "I\'d like to try leading this time, not always following"`
+            ],
+            signals: 'Watch: Comfort level with assertiveness (cultural/gender considerations), distinguishing assertive from rude, ability to say "no" without guilt, confidence in voice and posture.'
+          }
+        ]
+      }
+    };
+
+    // Session Plan 6: Growth Mindset & Celebrating Progress
+    const plan6 = {
+      id: 'DEMO_PLAN_6',
+      sessionId: 'DEMO_PLAN_6',
+      status: 'executed',
+      acceptedAt: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
+      executedAt: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
+      sessionType: 'followup',
+      plan: {
+        session_title: 'Growth Mindset - From "I Can\'t" to "I Can\'t YET"',
+        objective: 'Transform fixed mindset beliefs into growth mindset perspectives, document personal progress across sessions using concrete evidence, practice reframing failure as feedback, set SMART goals for continued development, and celebrate both academic and social-emotional growth achievements.',
+        duration_minutes: 45,
+        student_roles: {
+          role_list: ['Progress Tracker', 'Reframe Helper', 'Evidence Collector', 'Celebration Leader'],
+          instructions: [
+            'Document examples of growth mindset language used during session',
+            'When someone says "I can\'t," gently add "...YET!" and ask what they need to learn',
+            'Collect specific evidence of progress - quotes, examples, observations',
+            'Lead group in celebrating wins - both big milestones and tiny improvements'
+          ],
+          rotation_note: 'Growth mindset roles help us see progress that\'s easy to miss when we\'re too close to our own journey.'
+        },
+        activities: [
+          {
+            activity_title: 'Then vs. Now - Progress Showcase',
+            duration_minutes: 15,
+            description: 'Facilitator shares evidence from Session 1: "In week 1, Aarav said 3 words in Name Circle. Today, he led a full conflict role-play." Each student reviews their goal cards from previous sessions. Create "Then vs. Now" poster: Draw line down middle. LEFT side = "When I started Brain Grain," RIGHT side = "Now I can..." Include academic skills (problem-solving) AND social-emotional skills (speaking up, managing frustration, helping others).',
+            differentiation: [
+              `${students[0].firstName}: Academic progress highlighted - confidence in participation, understanding concepts faster`,
+              `${students[1].firstName}: Creative/emotional progress - expressing feelings, contributing ideas without fear`,
+              `${students[2].firstName}: Behavioral progress - focus improvement, leadership in physical activities`,
+              `${students[3].firstName}: Leadership progress - teaching peers, strategic thinking, empathy development`
+            ],
+            signals: 'Watch: Ability to self-assess accurately (not overly harsh or inflated), recognition of small wins, pride in non-academic growth, specific examples vs. vague claims.'
+          },
+          {
+            activity_title: 'Failure = Feedback Activity',
+            duration_minutes: 12,
+            description: 'Share famous failure stories: Michael Jordan cut from team, J.K. Rowling rejected 12 times, Einstein struggled in school. Then: Each student shares one "failure" from past year. Reframe together: What did you LEARN? What would you do differently? How did it make you stronger? Write new narrative: "I tried _____, it didn\'t work because _____, so next time I\'ll _____." Burn/crumple old "I failed" paper, keep new "I learned" paper.',
+            differentiation: [
+              `${students[0].firstName}: Academic failure reframe - bad test grade taught me to ask for help sooner`,
+              `${students[1].firstName}: Creative failure reframe - art project that "failed" taught me to try new techniques`,
+              `${students[2].firstName}: Behavioral failure reframe - getting in trouble taught me about consequences and self-control`,
+              `${students[3].firstName}: Social failure reframe - friend conflict taught me about communication and compromise`
+            ],
+            signals: 'Critical observation: Willingness to be vulnerable about failure, shift from shame to curiosity, ownership vs. blame, specificity of learning, emotional regulation when discussing painful memories.'
+          },
+          {
+            activity_title: 'SMART Goals for Next Phase',
+            duration_minutes: 10,
+            description: 'Teach SMART framework: Specific, Measurable, Achievable, Relevant, Time-bound. Bad goal: "Be better at math." SMART goal: "Complete 10 practice problems per week for next month, aiming to improve fractions score by 15%." Each student creates ONE academic goal and ONE social-emotional goal for next 6 weeks. Share with partner for accountability. Exchange contact info (with facilitator as backup) for check-ins.',
+            differentiation: [
+              `${students[0].firstName}: Academic SMART goal - "Raise hand at least twice per class next week" (participation confidence)`,
+              `${students[1].firstName}: Artistic SMART goal - "Submit one creative project to class competition by end of month"`,
+              `${students[2].firstName}: Behavioral SMART goal - "Use 3 deep breaths before reacting when frustrated, track daily for 2 weeks"`,
+              `${students[3].firstName}: Leadership SMART goal - "Mentor one younger student weekly, help with homework for 4 weeks"`
+            ],
+            signals: 'Check: Are goals truly SMART or still vague? Ambitious but achievable vs. impossible? Internal motivation vs. external pressure? Excitement vs. dread about goals?'
+          },
+          {
+            activity_title: 'Celebration & Gratitude Circle',
+            duration_minutes: 8,
+            description: 'Final circle: Each person shares ONE thing they\'re proud of from entire Brain Grain experience AND ONE person they want to thank (can be peer, facilitator, or even themselves). Facilitator gives each student personalized "certificate of growth" highlighting specific observed progress. Group cheer/chant. End with: "What you learned here doesn\'t stay here - take it everywhere you go. You\'ve got this!"',
+            differentiation: [
+              `${students[0].firstName}: Proud of academic courage - "I\'m proud I asked questions even when scared"`,
+              `${students[1].firstName}: Proud of emotional growth - "I\'m proud I shared my feelings and didn\'t hide"`,
+              `${students[2].firstName}: Proud of behavioral change - "I\'m proud I learned to focus better"`,
+              `${students[3].firstName}: Proud of impact on others - "I\'m proud I helped my teammates succeed"`
+            ],
+            signals: 'Final assessment: Genuine pride vs. obligatory participation, gratitude specificity, emotional tone (joyful, bittersweet, excited for future), peer support visible, facilitator-student rapport, readiness to apply skills independently.'
+          }
+        ]
+      }
+    };
+
     // Generate facilitatorHtml for each plan
-    [plan1, plan2, plan3].forEach(plan => {
+    [plan1, plan2, plan3, plan4, plan5, plan6].forEach(plan => {
       plan.facilitatorHtml = generateFacilitatorHTML(plan.plan);
     });
 
     // Save plans to localStorage
-    const planHistory = [plan1, plan2, plan3];
+    const planHistory = [plan1, plan2, plan3, plan4, plan5, plan6];
     localStorage.setItem(`braingrain_pod_plans_${podId}`, JSON.stringify(planHistory));
 
     // Add session feedback for each executed plan
@@ -386,6 +641,69 @@
         strengths: ['Teaching patience, clear explanations', 'Emotional intelligence, kindness', 'Leadership under pressure', 'Meta-cognition, strategy'][idx],
         needs: ['Continue leadership development', 'Academic skill building', 'Sustained attention practice', 'Advanced challenges'][idx],
         nextSession: ['Student-led activity planning', 'One-on-one skill work', 'Complex multi-step problems', 'Design next session structure'][idx]
+      };
+      feedback.push(feedbackData);
+    });
+
+    // Feedback for Session 4
+    students.forEach((student, idx) => {
+      const feedbackData = {
+        sessionId: 'DEMO_PLAN_4',
+        studentId: student.id,
+        timestamp: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+        behaviour: ['😊', '😊', '🙂', '😊'][idx],
+        behaviourNote: ['Opening up emotionally', 'Comfortable sharing feelings', 'Engaged with emotion talk', 'Insightful observations'][idx],
+        participation: ['✋', '🙌', '🙌', '🙌'][idx],
+        participationNote: ['Shared personal example', 'Very active in toolkit creation', 'Physical strategies resonated', 'Led empathy exercise'][idx],
+        interest: ['😊', '🤩', '😊', '🤩'][idx],
+        interestNote: ['Interested in coping strategies', 'Loved artistic toolkit', 'Thermometer made sense', 'Fascinated by emotional patterns'][idx],
+        emotional: ['😌', '😄', '😌', '😄'][idx],
+        emotionalNote: ['More self-aware', 'Expressed joy freely', 'Calmer overall', 'Emotionally intelligent'][idx],
+        strengths: ['Named specific emotions, self-reflection', 'Creative expression, empathy', 'Physical self-regulation tools', 'Meta-awareness of emotions'][idx],
+        needs: ['Continue building feeling vocabulary', 'Bridge emotions to academics', 'Practice strategies at home', 'Advanced emotion concepts'][idx],
+        nextSession: ['Role-play emotion scenarios', 'Art-based emotion work', 'Movement-based regulation', 'Teach emotion concepts to peers'][idx]
+      };
+      feedback.push(feedbackData);
+    });
+
+    // Feedback for Session 5
+    students.forEach((student, idx) => {
+      const feedbackData = {
+        sessionId: 'DEMO_PLAN_5',
+        studentId: student.id,
+        timestamp: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
+        behaviour: ['🙂', '😊', '😊', '😊'][idx],
+        behaviourNote: ['More assertive communication', 'Confident in expressing self', 'Better impulse control', 'Natural facilitator'][idx],
+        participation: ['🙌', '✋', '🙌', '🙌'][idx],
+        participationNote: ['Used I-statements naturally', 'Great active listener', 'Role-played conflict well', 'Modeled assertiveness'][idx],
+        interest: ['😊', '😊', '🤩', '😊'][idx],
+        interestNote: ['Interested in communication', 'Appreciated listening skills', 'Loved conflict role-play', 'Engaged with all concepts'][idx],
+        emotional: ['😄', '😌', '😄', '😄'][idx],
+        emotionalNote: ['Proud of new skills', 'Peaceful and confident', 'Energized by activity', 'Emotionally mature'][idx],
+        strengths: ['Clear communication, assertiveness', 'Empathetic listening, validation', 'Creative problem-solving', 'Conflict mediation skills'][idx],
+        needs: ['Practice in real conflicts', 'Build on communication base', 'Channel energy appropriately', 'Advanced negotiation skills'][idx],
+        nextSession: ['Real-world conflict practice', 'Peer mediation role', 'Physical communication games', 'Lead communication workshop'][idx]
+      };
+      feedback.push(feedbackData);
+    });
+
+    // Feedback for Session 6
+    students.forEach((student, idx) => {
+      const feedbackData = {
+        sessionId: 'DEMO_PLAN_6',
+        studentId: student.id,
+        timestamp: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
+        behaviour: ['😊', '😊', '😊', '😊'][idx],
+        behaviourNote: ['Confident and proud', 'Joyful and expressive', 'Focused and mature', 'Leadership shining'][idx],
+        participation: ['🙌', '🙌', '🙌', '🙌'][idx],
+        participationNote: ['Shared progress authentically', 'Emotional in gratitude circle', 'Set ambitious goals', 'Inspired the group'][idx],
+        interest: ['🤩', '🤩', '😊', '🤩'][idx],
+        interestNote: ['Excited about growth journey', 'Loved celebrating progress', 'Proud of achievements', 'Ready for next challenge'][idx],
+        emotional: ['😄', '😄', '😄', '😄'][idx],
+        emotionalNote: ['Deeply proud', 'Grateful and happy', 'Confident in abilities', 'Transformative experience'][idx],
+        strengths: ['Academic confidence, growth mindset', 'Emotional intelligence, creativity', 'Self-regulation, leadership', 'Meta-cognition, mentorship'][idx],
+        needs: ['Continue challenging self', 'Share gifts with others', 'Maintain healthy practices', 'Set bigger goals'][idx],
+        nextSession: ['Advanced problem-solving', 'Mentor younger students', 'Complex team challenges', 'Design own learning projects'][idx]
       };
       feedback.push(feedbackData);
     });
