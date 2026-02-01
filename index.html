@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brain Grain - Complete Platform</title>
     <link rel="icon" href="assets/braingrainupdatedlogo.png" />
+    <link rel="stylesheet" href="styles.css">
     <style>
         :root {
             /* White background + blue text theme (logo blue: #0b66d0) */
@@ -1080,6 +1081,9 @@
                             <label style="display: flex; align-items: center; gap: 8px; color: var(--color-text-secondary); font-size: 14px; cursor: pointer; padding: 6px 12px; background: #f8fafc; border-radius: 6px; border: 1px solid var(--color-border);">
                                 <input type="checkbox" id="showArchived" onchange="loadStudents()" style="cursor: pointer;"> Show archived
                             </label>
+                            <button type="button" class="btn btn-secondary btn-small" onclick="showAnalytics()" title="View student and pod analytics" style="display: flex; align-items: center; gap: 6px;">
+                                <span style="font-size: 16px;">📊</span> Analytics
+                            </button>
                             <button type="button" class="btn btn-primary btn-small" onclick="showUserProfile()" title="User profile and cloud sync" style="display: flex; align-items: center; gap: 6px;">
                                 <span style="font-size: 16px;">👤</span> Profile
                             </button>
@@ -1105,6 +1109,53 @@
                         </tbody>
                     </table>
                 </div>
+                </div>
+            </div>
+
+            <!-- Analytics View -->
+            <div id="analyticsView" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: var(--spacing-16);">
+                    <h2 style="display:flex; align-items:center; gap:12px;">
+                        <span style="font-size:32px;">📊</span> Analytics Dashboard
+                    </h2>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-primary btn-small" onclick="showCohortStats()" style="display:flex; align-items:center; gap:6px;">
+                            🔬 Deep Analytics
+                        </button>
+                        <button class="btn btn-secondary btn-small" onclick="backToStudentList()">← Back to list</button>
+                    </div>
+                </div>
+
+                <!-- Analytics Type Selector -->
+                <div style="display:flex; gap:12px; margin-bottom:24px; padding:16px; background:linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius:12px; border:2px solid #0ea5e9;">
+                    <button class="btn btn-primary" id="studentAnalyticsBtn" onclick="switchAnalyticsView('student')" style="flex:1;">
+                        <span style="font-size:20px;">🎓</span> Student Analysis
+                    </button>
+                    <button class="btn btn-secondary" id="podAnalyticsBtn" onclick="switchAnalyticsView('pod')" style="flex:1;">
+                        <span style="font-size:20px;">👥</span> Pod Analysis
+                    </button>
+                </div>
+
+                <!-- Student Analytics Section -->
+                <div id="studentAnalyticsSection" style="display:none;">
+                    <div style="margin-bottom:24px;">
+                        <label class="form-label" style="margin-bottom:8px;">Select Student:</label>
+                        <select id="studentAnalyticsSelect" class="form-select" onchange="loadStudentAnalytics(this.value)" style="max-width:400px;">
+                            <option value="">-- Choose a student --</option>
+                        </select>
+                    </div>
+                    <div id="studentAnalyticsContent"></div>
+                </div>
+
+                <!-- Pod Analytics Section -->
+                <div id="podAnalyticsSection" style="display:none;">
+                    <div style="margin-bottom:24px;">
+                        <label class="form-label" style="margin-bottom:8px;">Select Pod:</label>
+                        <select id="podAnalyticsSelect" class="form-select" onchange="loadPodAnalytics(this.value)" style="max-width:400px;">
+                            <option value="">-- Choose a pod --</option>
+                        </select>
+                    </div>
+                    <div id="podAnalyticsContent"></div>
                 </div>
             </div>
 
@@ -1992,7 +2043,11 @@
           }
         });
     </script>
+    <script src="config.js"></script>
+    <script src="core-utils.js"></script>
     <script src="utils.js"></script>
+    <script src="analytics.js"></script>
+    <script src="deep-analytics.js"></script>
     <script src="ai-config.js"></script>
     <script src="admin.js"></script>
     <script src="registration.js"></script>

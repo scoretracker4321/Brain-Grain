@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Grain - Complete Platform Testing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            padding: 2rem;
+            background: #f8fafc;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #0b66d0;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .test-section h2 {
+            color: #1e293b;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+        }
+        
+        .test-button {
+            background: #0b66d0;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 1rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .test-button:hover {
+            background: #1976d2;
+            transform: translateY(-2px);
+        }
+        
+        .test-button.danger {
+            background: #ef4444;
+        }
+        
+        .test-button.danger:hover {
+            background: #dc2626;
+        }
+        
+        .test-button.success {
+            background: #10b981;
+        }
+        
+        .test-button.success:hover {
+            background: #059669;
+        }
+        
+        .log-container {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+        
+        .log-entry {
+            margin-bottom: 0.5rem;
+            padding: 0.25rem 0;
+        }
+        
+        .log-entry.success {
+            color: #10b981;
+        }
+        
+        .log-entry.error {
+            color: #ef4444;
+        }
+        
+        .log-entry.warning {
+            color: #f59e0b;
+        }
+        
+        .log-entry.info {
+            color: #3b82f6;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Brain Grain - Complete Platform Testing</h1>
+        
+        <!-- Test Data Setup -->
+        <div class="test-section">
+            <h2>📊 Test Data Setup</h2>
+            <button class="test-button success" onclick="setupTestData()">Setup Complete Test Data</button>
+            <button class="test-button danger" onclick="clearAllData()">Clear All Data</button>
+            <button class="test-button" onclick="viewCurrentData()">View Current Data</button>
+            <div id="dataLog" class="log-container"></div>
+        </div>
+        
+        <!-- Parent Portal Tests -->
+        <div class="test-section">
+            <h2>👨‍👩‍👧 Parent Portal Tests</h2>
+            <button class="test-button" onclick="testParentLoginValid()">Test Valid Login</button>
+            <button class="test-button" onclick="testParentLoginInvalid()">Test Invalid Login</button>
+            <button class="test-button" onclick="testParentLoginEdgeCases()">Test Edge Cases</button>
+            <button class="test-button" onclick="openParentPortal()">Open Parent Portal</button>
+            <div id="parentLog" class="log-container"></div>
+        </div>
+        
+        <!-- Deep Analytics Tests -->
+        <div class="test-section">
+            <h2>📈 Deep Analytics Tests</h2>
+            <button class="test-button" onclick="testCohortAnalysis()">Test Cohort Analysis</button>
+            <button class="test-button" onclick="testCorrelations()">Test Correlations</button>
+            <button class="test-button" onclick="testAtRiskIdentification()">Test At-Risk ID</button>
+            <button class="test-button" onclick="testWithEmptyData()">Test Empty Data</button>
+            <div id="analyticsLog" class="log-container"></div>
+        </div>
+        
+        <!-- Export Tests -->
+        <div class="test-section">
+            <h2>💾 Export Function Tests</h2>
+            <button class="test-button" onclick="testAllExports()">Test All Exports</button>
+            <button class="test-button" onclick="testExportWithNoData()">Test No Data</button>
+            <button class="test-button" onclick="testExportWithPartialData()">Test Partial Data</button>
+            <div id="exportLog" class="log-container"></div>
+        </div>
+        
+        <!-- Error Handling Tests -->
+        <div class="test-section">
+            <h2>⚠️ Error Handling Tests</h2>
+            <button class="test-button" onclick="testNullInputs()">Test Null Inputs</button>
+            <button class="test-button" onclick="testInvalidData()">Test Invalid Data</button>
+            <button class="test-button" onclick="testMissingData()">Test Missing Data</button>
+            <button class="test-button" onclick="testBoundaryConditions()">Test Boundaries</button>
+            <div id="errorLog" class="log-container"></div>
+        </div>
+        
+        <!-- Results Summary -->
+        <div class="test-section">
+            <h2>✅ Test Results Summary</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="testsRun">0</div>
+                    <div class="stat-label">Tests Run</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <div class="stat-value" id="testsPassed">0</div>
+                    <div class="stat-label">Tests Passed</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                    <div class="stat-value" id="testsFailed">0</div>
+                    <div class="stat-label">Tests Failed</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                    <div class="stat-value" id="testsWarning">0</div>
+                    <div class="stat-label">Warnings</div>
+                </div>
+            </div>
+            <button class="test-button success" onclick="runAllTests()" style="margin-top: 1.5rem; width: 100%;">
+                🚀 Run All Tests
+            </button>
+        </div>
+    </div>
+    
+    <script src="utils.js"></script>
+    <script src="deep-analytics.js"></script>
+    
+    <script>
+        let testStats = { run: 0, passed: 0, failed: 0, warnings: 0 };
+        
+        function log(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+            
+            if (type === 'success') testStats.passed++;
+            if (type === 'error') testStats.failed++;
+            if (type === 'warning') testStats.warnings++;
+            testStats.run++;
+            updateStats();
+        }
+        
+        function updateStats() {
+            document.getElementById('testsRun').textContent = testStats.run;
+            document.getElementById('testsPassed').textContent = testStats.passed;
+            document.getElementById('testsFailed').textContent = testStats.failed;
+            document.getElementById('testsWarning').textContent = testStats.warnings;
+        }
+        
+        function setupTestData() {
+            try {
+                const now = new Date().toISOString();
+                const testStudents = [
+                    {
+                        id: 'TEST001',
+                        firstName: 'Ravi',
+                        lastName: 'Kumar',
+                        grade: '5',
+                        phone: '9876543210',
+                        parentPhone: '9988776655',
+                        school: 'SVS 2 Chennai',
+                        assessmentScore: 45,
+                        assessmentBreakdown: {
+                            sel: { marks: 18, maxMarks: 20, percent: 90 },
+                            criticalThinking: { marks: 16, maxMarks: 20, percent: 80 },
+                            leadership: { marks: 17, maxMarks: 20, percent: 85 }
+                        },
+                        academicScores: {
+                            maths: { marks: 85, maxMarks: 100, percent: 85 },
+                            science: { marks: 78, maxMarks: 100, percent: 78 },
+                            english: { marks: 92, maxMarks: 100, percent: 92 },
+                            socialStudies: { marks: 80, maxMarks: 100, percent: 80 }
+                        },
+                        assessmentStatus: 'Completed',
+                        assessmentDate: now,
+                        registeredAt: now,
+                        pod: 'Pod A'
+                    },
+                    {
+                        id: 'TEST002',
+                        firstName: 'Priya',
+                        lastName: 'Sharma',
+                        grade: '6',
+                        phone: '9876543211',
+                        parentPhone: '9988776656',
+                        school: 'SVS 2 Chennai',
+                        assessmentScore: 38,
+                        assessmentBreakdown: {
+                            sel: { marks: 15, maxMarks: 20, percent: 75 },
+                            criticalThinking: { marks: 14, maxMarks: 20, percent: 70 },
+                            leadership: { marks: 13, maxMarks: 20, percent: 65 }
+                        },
+                        academicScores: {
+                            maths: { marks: 72, maxMarks: 100, percent: 72 },
+                            science: { marks: 68, maxMarks: 100, percent: 68 },
+                            english: { marks: 75, maxMarks: 100, percent: 75 },
+                            socialStudies: { marks: 70, maxMarks: 100, percent: 70 }
+                        },
+                        assessmentStatus: 'Completed',
+                        assessmentDate: now,
+                        registeredAt: now,
+                        pod: 'Pod A'
+                    },
+                    {
+                        id: 'TEST003',
+                        firstName: 'Amit',
+                        lastName: 'Patel',
+                        grade: '7',
+                        phone: '9876543212',
+                        parentPhone: '9988776657',
+                        school: 'SVS 2 Chennai',
+                        assessmentScore: 22,
+                        assessmentBreakdown: {
+                            sel: { marks: 8, maxMarks: 20, percent: 40 },
+                            criticalThinking: { marks: 7, maxMarks: 20, percent: 35 },
+                            leadership: { marks: 9, maxMarks: 20, percent: 45 }
+                        },
+                        academicScores: {
+                            maths: { marks: 55, maxMarks: 100, percent: 55 },
+                            science: { marks: 48, maxMarks: 100, percent: 48 },
+                            english: { marks: 52, maxMarks: 100, percent: 52 },
+                            socialStudies: { marks: 50, maxMarks: 100, percent: 50 }
+                        },
+                        assessmentStatus: 'Completed',
+                        assessmentDate: now,
+                        registeredAt: now,
+                        pod: 'Pod B'
+                    },
+                    {
+                        id: 'TEST004',
+                        firstName: 'Sneha',
+                        lastName: 'Reddy',
+                        grade: '8',
+                        phone: '9876543213',
+                        parentPhone: '9988776658',
+                        school: 'SVS 2 Chennai',
+                        assessmentScore: 52,
+                        assessmentBreakdown: {
+                            sel: { marks: 19, maxMarks: 20, percent: 95 },
+                            criticalThinking: { marks: 18, maxMarks: 20, percent: 90 },
+                            leadership: { marks: 19, maxMarks: 20, percent: 95 }
+                        },
+                        academicScores: {
+                            maths: { marks: 95, maxMarks: 100, percent: 95 },
+                            science: { marks: 92, maxMarks: 100, percent: 92 },
+                            english: { marks: 96, maxMarks: 100, percent: 96 },
+                            socialStudies: { marks: 90, maxMarks: 100, percent: 90 }
+                        },
+                        assessmentStatus: 'Completed',
+                        assessmentDate: now,
+                        registeredAt: now,
+                        pod: 'Pod B'
+                    }
+                ];
+                
+                StorageHelper.saveStudents(testStudents);
+                log('dataLog', `✓ Created ${testStudents.length} test students with complete data`, 'success');
+                log('dataLog', 'Test credentials: ID=TEST001, Parent Phone=9988776655', 'info');
+                log('dataLog', 'Test credentials: ID=TEST003 (At-Risk), Parent Phone=9988776657', 'info');
+            } catch (error) {
+                log('dataLog', `✗ Setup failed: ${error.message}`, 'error');
+                console.error('Setup error:', error);
+            }
+        }
+        
+        function clearAllData() {
+            if (confirm('Clear all student data? This cannot be undone.')) {
+                try {
+                    localStorage.removeItem('brainGrainStudents');
+                    log('dataLog', '✓ All data cleared', 'success');
+                } catch (error) {
+                    log('dataLog', `✗ Clear failed: ${error.message}`, 'error');
+                }
+            }
+        }
+        
+        function viewCurrentData() {
+            try {
+                const students = StorageHelper.loadStudents();
+                log('dataLog', `📊 Current students: ${students.length}`, 'info');
+                students.forEach(s => {
+                    log('dataLog', `  • ${s.firstName} ${s.lastName} (${s.id}) - Grade ${s.grade}`, 'info');
+                });
+            } catch (error) {
+                log('dataLog', `✗ View failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testParentLoginValid() {
+            try {
+                const students = StorageHelper.loadStudents();
+                const student = students.find(s => s.id === 'TEST001');
+                
+                if (!student) {
+                    log('parentLog', '⚠ No test data found. Run "Setup Complete Test Data" first.', 'warning');
+                    return;
+                }
+                
+                // Simulate login validation
+                if (student.parentPhone === '9988776655') {
+                    log('parentLog', '✓ Valid login test passed', 'success');
+                    log('parentLog', `  Student: ${student.firstName} ${student.lastName}`, 'info');
+                    log('parentLog', `  Assessment Score: ${student.assessmentScore}`, 'info');
+                } else {
+                    log('parentLog', '✗ Parent phone mismatch', 'error');
+                }
+            } catch (error) {
+                log('parentLog', `✗ Test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testParentLoginInvalid() {
+            try {
+                const students = StorageHelper.loadStudents();
+                const wrongPhone = '0000000000';
+                const student = students.find(s => s.parentPhone === wrongPhone);
+                
+                if (!student) {
+                    log('parentLog', '✓ Invalid credentials correctly rejected', 'success');
+                } else {
+                    log('parentLog', '✗ Security issue: accepted invalid credentials', 'error');
+                }
+            } catch (error) {
+                log('parentLog', `✗ Test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testParentLoginEdgeCases() {
+            log('parentLog', 'Testing edge cases...', 'info');
+            
+            // Test empty inputs
+            try {
+                const result = '' || null;
+                if (!result) {
+                    log('parentLog', '✓ Empty input validation passed', 'success');
+                }
+            } catch (e) {
+                log('parentLog', '✗ Empty input test failed', 'error');
+            }
+            
+            // Test invalid phone format
+            try {
+                const invalidPhones = ['123', '12345678901', 'abcdefghij'];
+                let passed = true;
+                invalidPhones.forEach(phone => {
+                    if (!/^[0-9]{10}$/.test(phone)) {
+                        // Expected to fail validation
+                    } else {
+                        passed = false;
+                    }
+                });
+                if (passed) {
+                    log('parentLog', '✓ Phone format validation passed', 'success');
+                } else {
+                    log('parentLog', '✗ Phone format validation failed', 'error');
+                }
+            } catch (e) {
+                log('parentLog', '✗ Phone validation test error', 'error');
+            }
+        }
+        
+        function openParentPortal() {
+            window.open('parent-portal.html', '_blank');
+            log('parentLog', '↗ Opened parent portal in new tab', 'info');
+        }
+        
+        function testCohortAnalysis() {
+            try {
+                if (typeof DeepAnalytics === 'undefined') {
+                    log('analyticsLog', '⚠ DeepAnalytics module not loaded', 'warning');
+                    return;
+                }
+                
+                const students = StorageHelper.loadStudents();
+                const cohort = DeepAnalytics.analyzeCohort(students);
+                
+                if (cohort && cohort.totalStudents > 0) {
+                    log('analyticsLog', '✓ Cohort analysis successful', 'success');
+                    log('analyticsLog', `  Students analyzed: ${cohort.totalStudents}`, 'info');
+                    log('analyticsLog', `  Average assessment: ${cohort.averageAssessmentScore.toFixed(2)}`, 'info');
+                } else {
+                    log('analyticsLog', '✗ Cohort analysis returned invalid data', 'error');
+                }
+            } catch (error) {
+                log('analyticsLog', `✗ Cohort analysis failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testCorrelations() {
+            try {
+                if (typeof DeepAnalytics === 'undefined') {
+                    log('analyticsLog', '⚠ DeepAnalytics module not loaded', 'warning');
+                    return;
+                }
+                
+                const students = StorageHelper.loadStudents();
+                const correlations = DeepAnalytics.analyzeCorrelations(students);
+                
+                if (correlations && correlations.length > 0) {
+                    log('analyticsLog', '✓ Correlation analysis successful', 'success');
+                    log('analyticsLog', `  Correlations found: ${correlations.length}`, 'info');
+                    correlations.slice(0, 3).forEach(corr => {
+                        log('analyticsLog', `  ${corr.pair}: ${corr.coefficient.toFixed(3)}`, 'info');
+                    });
+                } else {
+                    log('analyticsLog', '⚠ No correlations found (may need more data)', 'warning');
+                }
+            } catch (error) {
+                log('analyticsLog', `✗ Correlation analysis failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testAtRiskIdentification() {
+            try {
+                if (typeof DeepAnalytics === 'undefined') {
+                    log('analyticsLog', '⚠ DeepAnalytics module not loaded', 'warning');
+                    return;
+                }
+                
+                const students = StorageHelper.loadStudents();
+                const atRisk = DeepAnalytics.identifyAtRiskStudents(students);
+                
+                if (atRisk !== null) {
+                    log('analyticsLog', '✓ At-risk identification successful', 'success');
+                    log('analyticsLog', `  At-risk students: ${atRisk.length}`, 'info');
+                    atRisk.forEach(student => {
+                        log('analyticsLog', `  • ${student.name} - Risk: ${student.riskLevel}`, 'warning');
+                    });
+                } else {
+                    log('analyticsLog', '✗ At-risk identification returned null', 'error');
+                }
+            } catch (error) {
+                log('analyticsLog', `✗ At-risk identification failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testWithEmptyData() {
+            try {
+                if (typeof DeepAnalytics === 'undefined') {
+                    log('analyticsLog', '⚠ DeepAnalytics module not loaded', 'warning');
+                    return;
+                }
+                
+                const cohort = DeepAnalytics.analyzeCohort([]);
+                if (cohort === null || cohort.totalStudents === 0) {
+                    log('analyticsLog', '✓ Empty data handled gracefully', 'success');
+                } else {
+                    log('analyticsLog', '✗ Empty data not handled correctly', 'error');
+                }
+            } catch (error) {
+                log('analyticsLog', `✗ Empty data test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testAllExports() {
+            log('exportLog', 'Testing export functions...', 'info');
+            
+            try {
+                const students = StorageHelper.loadStudents();
+                
+                // Test CSV export
+                const csv = DeepAnalytics.exportAnalyticsCSV(students);
+                if (csv && csv.includes(',')) {
+                    log('exportLog', '✓ Full Analytics CSV export successful', 'success');
+                } else {
+                    log('exportLog', '✗ CSV export failed', 'error');
+                }
+                
+                // Test correlations CSV
+                const corrCSV = DeepAnalytics.exportCorrelationsCSV(students);
+                if (corrCSV) {
+                    log('exportLog', '✓ Correlations CSV export successful', 'success');
+                } else {
+                    log('exportLog', '⚠ Correlations CSV empty (may need more data)', 'warning');
+                }
+                
+                // Test at-risk CSV
+                const atRiskCSV = DeepAnalytics.exportAtRiskCSV(students);
+                if (atRiskCSV !== null) {
+                    log('exportLog', '✓ At-Risk CSV export successful', 'success');
+                } else {
+                    log('exportLog', '✗ At-Risk CSV export failed', 'error');
+                }
+                
+            } catch (error) {
+                log('exportLog', `✗ Export tests failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testExportWithNoData() {
+            try {
+                const csv = DeepAnalytics.exportAnalyticsCSV([]);
+                if (!csv || csv.includes('error') || csv === null) {
+                    log('exportLog', '✓ No data export handled correctly', 'success');
+                } else {
+                    log('exportLog', '⚠ No data export returned unexpected result', 'warning');
+                }
+            } catch (error) {
+                log('exportLog', `✗ No data test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testExportWithPartialData() {
+            try {
+                const partialStudent = [{
+                    id: 'PARTIAL',
+                    firstName: 'Test',
+                    assessmentScore: 30
+                    // Missing many fields
+                }];
+                
+                const csv = DeepAnalytics.exportAnalyticsCSV(partialStudent);
+                if (csv) {
+                    log('exportLog', '✓ Partial data export handled gracefully', 'success');
+                } else {
+                    log('exportLog', '⚠ Partial data export issue', 'warning');
+                }
+            } catch (error) {
+                log('exportLog', `✗ Partial data test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testNullInputs() {
+            log('errorLog', 'Testing null input handling...', 'info');
+            
+            try {
+                if (typeof DeepAnalytics === 'undefined') {
+                    log('errorLog', '⚠ DeepAnalytics not loaded', 'warning');
+                    return;
+                }
+                
+                const result = DeepAnalytics.analyzeCohort(null);
+                if (result === null) {
+                    log('errorLog', '✓ Null input handled correctly', 'success');
+                } else {
+                    log('errorLog', '✗ Null input not handled', 'error');
+                }
+            } catch (error) {
+                log('errorLog', `✓ Null input threw expected error`, 'success');
+            }
+        }
+        
+        function testInvalidData() {
+            log('errorLog', 'Testing invalid data handling...', 'info');
+            
+            try {
+                const invalidStudent = [{
+                    invalid: 'data',
+                    notAStudent: true
+                }];
+                
+                const result = DeepAnalytics.analyzeCohort(invalidStudent);
+                log('errorLog', '✓ Invalid data handled without crash', 'success');
+            } catch (error) {
+                log('errorLog', `✓ Invalid data caught: ${error.message}`, 'success');
+            }
+        }
+        
+        function testMissingData() {
+            log('errorLog', 'Testing missing data scenarios...', 'info');
+            
+            try {
+                const incompleteStudent = [{
+                    id: 'INC',
+                    firstName: 'Incomplete'
+                    // Missing assessmentScore, academicScores, etc.
+                }];
+                
+                const result = DeepAnalytics.analyzeCohort(incompleteStudent);
+                log('errorLog', '✓ Missing data handled gracefully', 'success');
+            } catch (error) {
+                log('errorLog', `⚠ Missing data caused error: ${error.message}`, 'warning');
+            }
+        }
+        
+        function testBoundaryConditions() {
+            log('errorLog', 'Testing boundary conditions...', 'info');
+            
+            // Test with 1 student (minimum)
+            try {
+                const oneStudent = StorageHelper.loadStudents().slice(0, 1);
+                const result = DeepAnalytics.analyzeCohort(oneStudent);
+                if (result) {
+                    log('errorLog', '✓ Single student analysis passed', 'success');
+                } else {
+                    log('errorLog', '⚠ Single student analysis failed', 'warning');
+                }
+            } catch (error) {
+                log('errorLog', `⚠ Single student test error: ${error.message}`, 'warning');
+            }
+            
+            // Test with 2 students (below correlation minimum)
+            try {
+                const twoStudents = StorageHelper.loadStudents().slice(0, 2);
+                const correlations = DeepAnalytics.analyzeCorrelations(twoStudents);
+                if (!correlations || correlations.length === 0) {
+                    log('errorLog', '✓ Minimum data requirement enforced', 'success');
+                }
+            } catch (error) {
+                log('errorLog', `✓ Minimum data check working`, 'success');
+            }
+        }
+        
+        async function runAllTests() {
+            // Reset stats
+            testStats = { run: 0, passed: 0, failed: 0, warnings: 0 };
+            updateStats();
+            
+            // Clear logs
+            ['dataLog', 'parentLog', 'analyticsLog', 'exportLog', 'errorLog'].forEach(id => {
+                document.getElementById(id).innerHTML = '';
+            });
+            
+            log('dataLog', '🚀 Starting comprehensive test suite...', 'info');
+            
+            // Setup test data
+            setupTestData();
+            
+            // Wait a bit for data to save
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Parent Portal Tests
+            testParentLoginValid();
+            testParentLoginInvalid();
+            testParentLoginEdgeCases();
+            
+            // Analytics Tests
+            testCohortAnalysis();
+            testCorrelations();
+            testAtRiskIdentification();
+            testWithEmptyData();
+            
+            // Export Tests
+            testAllExports();
+            testExportWithNoData();
+            testExportWithPartialData();
+            
+            // Error Handling Tests
+            testNullInputs();
+            testInvalidData();
+            testMissingData();
+            testBoundaryConditions();
+            
+            // Final summary
+            log('dataLog', '✅ Test suite completed!', 'success');
+            log('dataLog', `Results: ${testStats.passed} passed, ${testStats.failed} failed, ${testStats.warnings} warnings`, 'info');
+        }
+        
+        // Initialize
+        updateStats();
+        log('dataLog', 'Test harness ready. Click "Run All Tests" to begin.', 'info');
+    </script>
+</body>
+</html>

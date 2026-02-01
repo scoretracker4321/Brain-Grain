@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Grain - Cognition Intelligence for Human Potential</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0b66d0;
+            --secondary: #1976d2;
+            --accent: #667eea;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: #ffffff;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .cta-button {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(11, 102, 208, 0.3);
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6rem 2rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .hero .subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.95;
+        }
+
+        .hero .tagline {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 3rem auto 0;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        /* Section Styles */
+        section {
+            margin-bottom: 4rem;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        h4 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--accent);
+        }
+
+        /* Problem Section */
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .problem-card {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            padding: 2rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--danger);
+        }
+
+        .problem-card .metric {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--danger);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Data Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .data-table th {
+            background: var(--primary);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:hover {
+            background: var(--light);
+        }
+
+        /* Solution Cards */
+        .solution-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .solution-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-top: 4px solid var(--accent);
+        }
+
+        .solution-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .solution-card .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding: 2rem 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--primary);
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .timeline-item:nth-child(odd) {
+            padding-right: calc(50% + 2rem);
+        }
+
+        .timeline-item:nth-child(even) {
+            padding-left: calc(50% + 2rem);
+        }
+
+        .timeline-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border: 4px solid white;
+            border-radius: 50%;
+            left: 50%;
+            top: 0;
+            transform: translateX(-50%);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Market Opportunity */
+        .market-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .market-card {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            border-top: 4px solid var(--success);
+        }
+
+        .market-card .amount {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--success);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Business Model */
+        .revenue-horizon {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-left: 6px solid var(--primary);
+        }
+
+        .revenue-horizon h4 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .revenue-streams {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .revenue-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem;
+            background: var(--light);
+            border-radius: 8px;
+        }
+
+        /* Impact Section */
+        .impact-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .impact-card {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .impact-card .impact-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .impact-card .impact-title {
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            border-radius: 16px;
+            margin: 4rem 0;
+        }
+
+        .cta-section h2 {
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        footer .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        footer h3 {
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        footer .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        footer .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .timeline::before {
+                left: 0;
+            }
+
+            .timeline-item:nth-child(odd),
+            .timeline-item:nth-child(even) {
+                padding-left: 2rem;
+                padding-right: 0;
+            }
+
+            .timeline-item::before {
+                left: 0;
+                transform: translateX(-50%);
+            }
+
+            .impact-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h2 {
+                font-size: 2rem;
+            }
+
+            h3 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Scroll Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s, transform 0.6s;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Highlight Box */
+        .highlight-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 2rem;
+            border-radius: 12px;
+            border-left: 6px solid var(--warning);
+            margin: 2rem 0;
+        }
+
+        .highlight-box strong {
+            color: #92400e;
+        }
+
+        /* Cascade Flow */
+        .cascade {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin: 2rem 0;
+        }
+
+        .cascade-item {
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-left: 4px solid var(--danger);
+            background: #fee2e2;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .cascade-item::after {
+            content: '↓';
+            display: block;
+            text-align: center;
+            font-size: 1.5rem;
+            color: var(--danger);
+            margin-top: 0.5rem;
+        }
+
+        .cascade-item:last-child::after {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span>🧠</span> BRAIN GRAIN
+            </div>
+            <ul class="nav-links">
+                <li><a href="#problem">Problem</a></li>
+                <li><a href="#solution">Solution</a></li>
+                <li><a href="#market">Market</a></li>
+                <li><a href="#business">Business Model</a></li>
+                <li><a href="#impact">Impact</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <a href="#contact" class="cta-button">Get in Touch</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>BRAIN GRAIN</h1>
+        <div class="subtitle">Cognition Intelligence Layer for Human Potential</div>
+        <div class="tagline">Understanding how humans learn, regulate, and lead — before marks, exams, or labels exist</div>
+        
+        <div class="hero-stats">
+            <div class="stat-card">
+                <div class="number">6.5M</div>
+                <div class="label">Children dropped out in 5 years</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">8.5%</div>
+                <div class="label">Tamil Nadu secondary dropout rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">₹26 lakh Cr</div>
+                <div class="label">India education market by 2030</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">11%+</div>
+                <div class="label">Productivity gain from SEL programs</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Executive Summary -->
+    <div class="container">
+        <section id="executive-summary" class="fade-in">
+            <h2>The Core Insight</h2>
+            <div class="highlight-box">
+                <h3>Most education systems ask: "What did the student answer?"</h3>
+                <h3>We ask: "How does the student think, cope with failure, and engage with peers?"</h3>
+                <p style="margin-top: 1rem; font-size: 1.1rem;">
+                    This shifts measurement from test scores to cognitive capability — a layer untouched by existing EdTech.
+                </p>
+            </div>
+            <p style="font-size: 1.2rem; line-height: 1.8;">
+                Brain Grain is a <strong>deeptech platform</strong> that measures and optimizes how humans think, regulate emotions, and learn — transforming invisible cognitive struggles into actionable intelligence before academic failure, workplace mismatch, or mental health crises occur.
+            </p>
+        </section>
+
+        <!-- Problem Section -->
+        <section id="problem" class="fade-in">
+            <h2>Problem: Invisible Struggles Become Expensive Failures</h2>
+            
+            <h3>Tamil Nadu & India Context</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Current Data (2024-25)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Tamil Nadu secondary dropout rate</td>
+                        <td><strong style="color: var(--danger);">8.5%</strong> (highest in 5 years, up from 7.7%)</td>
+                    </tr>
+                    <tr>
+                        <td>Primary level dropout (TN)</td>
+                        <td><strong style="color: var(--danger);">2.7%</strong> (highest in 5 years)</td>
+                    </tr>
+                    <tr>
+                        <td>Upper primary dropout (TN)</td>
+                        <td><strong style="color: var(--danger);">2.8%</strong> (highest in 5 years)</td>
+                    </tr>
+                    <tr>
+                        <td>Boys vs girls dropout gap</td>
+                        <td><strong>10.8% boys</strong> vs <strong>4.4% girls</strong> at secondary</td>
+                    </tr>
+                    <tr>
+                        <td>India nationwide school enrollment decline</td>
+                        <td><strong style="color: var(--danger);">37 lakh students lost</strong> in 2023-24</td>
+                    </tr>
+                    <tr>
+                        <td>Tamil Nadu total students</td>
+                        <td>1.25 crore across 57,935 schools</td>
+                    </tr>
+                    <tr>
+                        <td>Single-teacher schools (TN)</td>
+                        <td>3,671 schools (up from 2,758 in 2023-24)</td>
+                    </tr>
+                    <tr>
+                        <td>Government spending (India)</td>
+                        <td>₹73,008 crore (2024-25) on school education</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="highlight-box">
+                <strong>Why this matters:</strong> Dropout happens before marks show it. When a child disengages, they're already on a failure trajectory — teachers and parents can't see it coming.
+            </div>
+
+            <h3>The Cascade of Failure</h3>
+            <div class="cascade">
+                <div class="cascade-item">School disengagement (invisible)</div>
+                <div class="cascade-item">Academic failure (shows in marks)</div>
+                <div class="cascade-item">Dropout or low-quality pathway</div>
+                <div class="cascade-item">Skills gap in college/work</div>
+                <div class="cascade-item">High attrition, mental health issues</div>
+                <div class="cascade-item">Lost economic potential & social cost</div>
+            </div>
+
+            <h3>Cost to India</h3>
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <div class="metric">6.5M</div>
+                    <strong>Children dropped out of school over 5 years</strong>
+                </div>
+                <div class="problem-card">
+                    <div class="metric">Billions</div>
+                    <strong>Wasted on interventions that don't address root causes</strong>
+                </div>
+                <div class="problem-card">
+                    <div class="metric">Millions</div>
+                    <strong>Enter workforce without core regulation and learning skills</strong>
+                </div>
+            </div>
+        </section>
+
+        <!-- Solution Section -->
+        <section id="solution" class="fade-in">
+            <h2>Brain Grain's Insight: Behavioral Telemetry</h2>
+            <p style="font-size: 1.2rem; margin-bottom: 2rem;">Brain Grain turns human observation into machine-learnable signals.</p>
+
+            <h3>What We Capture Each Session</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Signal</th>
+                        <th>What It Reveals</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Entry behaviour</strong></td>
+                        <td>Ease, resistance, excitement — signals motivation and anxiety</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Engagement pattern</strong></td>
+                        <td>Watch → try → retry (or freeze) — how they approach learning</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Emotional regulation</strong></td>
+                        <td>Calm, playful, frustrated, shutdown — how they handle stress</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Social interaction</strong></td>
+                        <td>Lead, follow, avoid, support — collaboration and leadership style</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Recovery ability</strong></td>
+                        <td>Time to bounce back after failure — resilience and growth mindset</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="highlight-box">
+                <strong>These are raw cognitive-behavioural signals, not scores.</strong>
+            </div>
+
+            <h3>How the Profile Evolves</h3>
+            <div class="solution-grid">
+                <div class="solution-card">
+                    <div class="icon">📅</div>
+                    <h4>Weeks</h4>
+                    <p><strong>Individual thinking style, emotional triggers, regulation needs</strong></p>
+                    <p style="margin-top: 0.5rem; color: var(--gray);">Mentor targets support</p>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">📈</div>
+                    <h4>Months</h4>
+                    <p><strong>Patterns by peer, group, context</strong></p>
+                    <p style="margin-top: 0.5rem; color: var(--gray);">Predict disengagement risk</p>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">🌍</div>
+                    <h4>Years</h4>
+                    <p><strong>Population patterns; what blocks learning in certain contexts</strong></p>
+                    <p style="margin-top: 0.5rem; color: var(--gray);">Policy guidance, scaled interventions</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lifelong Journey -->
+        <section id="journey" class="fade-in">
+            <h2>The Lifelong Cognition Journey: From School to Work</h2>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>Age 7–12: School Years (Pods + Classrooms)</h3>
+                        <p><strong>What we observe:</strong> Entry behaviour, engagement patterns, how they cope with failure in real-world learning</p>
+                        <p><strong>What we do:</strong> Personalized pods (small groups, safe space); share insights with schools</p>
+                        <h4>Impact:</h4>
+                        <ul style="margin-left: 1.5rem;">
+                            <li>Early detection of cognitive/emotional struggles (before marks crash)</li>
+                            <li>Mentors provide targeted support (regulation strategies, optimal group size, pacing)</li>
+                            <li>Child builds foundational resilience and learning confidence</li>
+                            <li>Parents understand how their child learns (not just marks)</li>
+                        </ul>
+                        <p style="margin-top: 1rem; color: var(--success); font-weight: 700;">Outcome: 15–20% higher engagement, reduced school disengagement signals</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>Age 12–18: School-to-College Transition</h3>
+                        <p><strong>What happens:</strong> Profile travels with student (with consent) to new school/college; teachers see how this student thinks and learns</p>
+                        <p><strong>What we do:</strong> Dashboards for teachers/advisors; personalized transition strategies</p>
+                        <h4>Impact:</h4>
+                        <ul style="margin-left: 1.5rem;">
+                            <li>Fewer "lost" students in large school transition</li>
+                            <li>Teachers adapt teaching/grouping from day 1 (not guessing)</li>
+                            <li>Student self-advocacy improves ("I learn best with X")</li>
+                            <li>Early identification of anxiety, mismatch, or skill gaps</li>
+                        </ul>
+                        <p style="margin-top: 1rem; color: var(--success); font-weight: 700;">Outcome: Higher retention across school transitions; 10–15% fewer disengagements</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>Age 18–27: Higher Ed + Workforce</h3>
+                        <p><strong>What happens:</strong> Profile integrated into college/HR systems; used for course selection, project teams, onboarding</p>
+                        <p><strong>What we do:</strong> Early-warning dashboards in LMS/HR; role recommendations; training customization</p>
+                        <h4>Impact:</h4>
+                        <ul style="margin-left: 1.5rem;">
+                            <li>Colleges catch at-risk students before dropout (via engagement signals)</li>
+                            <li>Employers place people in roles matching their learning/regulation style</li>
+                            <li>Training customized (e.g., "this person needs 1:1 feedback, not large group")</li>
+                            <li>20–30% improvement in course completion, job retention, and performance</li>
+                        </ul>
+                        <p style="margin-top: 1rem; color: var(--success); font-weight: 700;">Outcome: Higher graduation rates, better job fit, reduced early-career attrition</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Market Opportunity -->
+        <section id="market" class="fade-in">
+            <h2>Market Opportunity: India Focus</h2>
+            
+            <h3>India Education & EdTech Market</h3>
+            <div class="market-cards">
+                <div class="market-card">
+                    <div class="amount">₹26 lakh Cr</div>
+                    <div class="label">Total India education sector by FY30</div>
+                </div>
+                <div class="market-card">
+                    <div class="amount">₹5,100 Cr</div>
+                    <div class="label">India EdTech industry by 2030</div>
+                </div>
+                <div class="market-card">
+                    <div class="amount">₹4,050 Cr</div>
+                    <div class="label">Learning analytics global market by 2033</div>
+                </div>
+                <div class="market-card">
+                    <div class="amount">₹2,300 Cr</div>
+                    <div class="label">SEL market global by 2033</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 3rem;">Tamil Nadu: Why We Start Here</h3>
+            <div class="solution-grid">
+                <div class="solution-card">
+                    <div class="icon">📊</div>
+                    <h4>Scale</h4>
+                    <p>1.25 crore (12.5M) students across 57,935 schools</p>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">⚠️</div>
+                    <h4>Urgency</h4>
+                    <p>Dropout rates at 5-year highs (8.5% secondary, 2.7% primary)</p>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">🏗️</div>
+                    <h4>Infrastructure</h4>
+                    <p>Mature EMIS, active use of UDISE+ data</p>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">🎯</div>
+                    <h4>Appetite</h4>
+                    <p>State Education Department actively seeking dropout/retention solutions</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Business Model -->
+        <section id="business" class="fade-in">
+            <h2>Business Model: Three Revenue Horizons</h2>
+
+            <div class="revenue-horizon">
+                <h4>Horizon 1: Premium Pods + School Pilots (0–24 months)</h4>
+                <div class="revenue-streams">
+                    <div class="revenue-item">
+                        <span><strong>Premium pods:</strong> ₹3,000–5,000/month per student</span>
+                        <span>—</span>
+                    </div>
+                    <div class="revenue-item">
+                        <span><strong>Target:</strong> 60–80 students by Q4 2026</span>
+                        <span>₹18–40 lakh/month</span>
+                    </div>
+                    <div class="revenue-item">
+                        <span><strong>School/NGO dashboards:</strong> ₹400–850 per student/year</span>
+                        <span>₹21–83 lakh</span>
+                    </div>
+                </div>
+                <p style="margin-top: 1rem; font-weight: 700; color: var(--success);">Target ARR: ₹2.5–4.2 crore with 70% gross margin</p>
+            </div>
+
+            <div class="revenue-horizon">
+                <h4>Horizon 2: School/Skilling SaaS + API (2–5 years)</h4>
+                <div class="revenue-streams">
+                    <div class="revenue-item">
+                        <span><strong>School SaaS:</strong> ₹250–420 per student/year</span>
+                        <span>₹1.2–2.1 crore ARR</span>
+                    </div>
+                    <div class="revenue-item">
+                        <span><strong>Skilling/HR integration:</strong> ₹170–850 per trainee</span>
+                        <span>₹83 lakh–4.2 crore ARR</span>
+                    </div>
+                    <div class="revenue-item">
+                        <span><strong>API/integration fees:</strong> Usage-based</span>
+                        <span>₹1.7–4.2 crore ARR</span>
+                    </div>
+                </div>
+                <p style="margin-top: 1rem; font-weight: 700; color: var(--success);">Target ARR: ₹17–42 crore with 60–65% gross margin</p>
+            </div>
+
+            <div class="revenue-horizon">
+                <h4>Horizon 3: Platform + National Scale (5+ years)</h4>
+                <div class="revenue-streams">
+                    <div class="revenue-item">
+                        <span><strong>National integration:</strong> Per-state or per-million-learner licensing</span>
+                        <span>—</span>
+                    </div>
+                    <div class="revenue-item">
+                        <span><strong>Global API + platform:</strong> Global EdTech ecosystem adoption</span>
+                        <span>—</span>
+                    </div>
+                    <div class="revenue-item">
+                        <span><strong>Research licensing:</strong> Anonymised data for universities</span>
+                        <span>—</span>
+                    </div>
+                </div>
+                <p style="margin-top: 1rem; font-weight: 700; color: var(--success);">Target ARR: ₹83+ crore with 65–75% gross margin</p>
+            </div>
+
+            <h3 style="margin-top: 2rem;">Unit Economics (Pod Model)</h3>
+            <table class="data-table">
+                <tr>
+                    <td><strong>Revenue per student/month</strong></td>
+                    <td>INR 4,000 (avg)</td>
+                </tr>
+                <tr>
+                    <td><strong>Cost per student/month</strong></td>
+                    <td>INR 2,000</td>
+                </tr>
+                <tr>
+                    <td><strong>Gross margin per student</strong></td>
+                    <td style="color: var(--success); font-weight: 700;">50%</td>
+                </tr>
+                <tr>
+                    <td><strong>Blended gross margin</strong></td>
+                    <td style="color: var(--success); font-weight: 700;">60–70%</td>
+                </tr>
+            </table>
+        </section>
+
+        <!-- Impact Section -->
+        <section id="impact" class="fade-in">
+            <h2>Impact: Individual, Peer, and Systemic</h2>
+            
+            <div class="impact-grid">
+                <div class="impact-card">
+                    <div class="impact-icon">👦</div>
+                    <div class="impact-title">For the Child</div>
+                    <p><strong>0–3 years:</strong> Better focus, stronger relationships, academic engagement</p>
+                    <p><strong>3–10 years:</strong> Sustained resilience, mental health, higher graduation rates</p>
+                    <p><strong>10+ years:</strong> Career success, higher earnings, life satisfaction</p>
+                </div>
+                <div class="impact-card">
+                    <div class="impact-icon">👥</div>
+                    <div class="impact-title">For Peers</div>
+                    <p><strong>0–3 years:</strong> Reduced bullying, peer support improves</p>
+                    <p><strong>3–10 years:</strong> Positive peer norms, collaboration becomes norm</p>
+                    <p><strong>10+ years:</strong> Strong communities and wellbeing</p>
+                </div>
+                <div class="impact-card">
+                    <div class="impact-icon">🇮🇳</div>
+                    <div class="impact-title">For Country</div>
+                    <p><strong>0–3 years:</strong> Higher school retention; lower intervention costs</p>
+                    <p><strong>3–10 years:</strong> Skilled graduates; reduced dropout cycles; cost savings</p>
+                    <p><strong>10+ years:</strong> Economic productivity up 11%+; reduced social costs</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 3rem;">Evidence Base</h3>
+            <div class="solution-grid">
+                <div class="solution-card">
+                    <div class="icon">📚</div>
+                    <h4>SEL Programs</h4>
+                    <p><strong>11% academic gain</strong> + <strong>23% improvement in social skills</strong></p>
+                    <p style="margin-top: 0.5rem; color: var(--gray);">Meta-analysis across 300+ studies</p>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">📊</div>
+                    <h4>Learning Analytics</h4>
+                    <p><strong>10–20% reduction</strong> in course dropout</p>
+                    <p style="margin-top: 0.5rem; color: var(--gray);">In higher ed and online learning</p>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">🎯</div>
+                    <h4>Early Intervention</h4>
+                    <p><strong>15–25% reduction</strong> in secondary dropout risk</p>
+                    <p style="margin-top: 0.5rem; color: var(--gray);">Predictive models</p>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">💪</div>
+                    <h4>Resilience Programs</h4>
+                    <p><strong>30% reduction</strong> in anxiety/depression</p>
+                    <p style="margin-top: 0.5rem; color: var(--gray);">In children with adversity</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 3rem;">National Impact (Tamil Nadu Projection, 5 Years)</h3>
+            <div class="highlight-box">
+                <p style="font-size: 1.1rem;"><strong>Assuming 50,000 students across pods, schools, and skilling centers:</strong></p>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Impact Metric</th>
+                        <th>Projected Gain</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Reduction in secondary dropout rate</strong></td>
+                        <td>1–2 percentage points (from 8.5% to 6.5–7.5%) = <strong style="color: var(--success);">12,500–25,000 students retained</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>School completion rate improvement</strong></td>
+                        <td><strong style="color: var(--success);">10–15%</strong> of at-risk cohorts stay in school</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cost savings</strong></td>
+                        <td><strong style="color: var(--success);">₹50–100 crore</strong> (government + family spending)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Workforce readiness gain</strong></td>
+                        <td><strong style="color: var(--success);">8,000–10,000 students</strong> better prepared for college/work</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Traction -->
+        <section id="traction" class="fade-in">
+            <h2>Current State: Traction & Proof Points</h2>
+            
+            <h3>Brain Grain Today</h3>
+            <div class="solution-grid">
+                <div class="solution-card">
+                    <div class="icon">📍</div>
+                    <h4>Location</h4>
+                    <p>School project within SVS 2, Chennai</p>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">👥</div>
+                    <h4>Participants</h4>
+                    <p>12 grade 7 students (diverse learning profiles)</p>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">📅</div>
+                    <h4>Duration</h4>
+                    <p>Ongoing; weekly sessions with daily observation logs</p>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">📊</div>
+                    <h4>Data Collected</h4>
+                    <p>Behavioral signals, session outcomes, parent/teacher feedback</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 2rem;">Early Findings</h3>
+            <div class="problem-grid">
+                <div class="problem-card" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-left-color: var(--success);">
+                    <div class="metric" style="color: var(--success);">40%</div>
+                    <strong>Faster identification of what each student needs (vs. traditional assessment)</strong>
+                </div>
+                <div class="problem-card" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-left-color: var(--success);">
+                    <div class="metric" style="color: var(--success);">3–4 weeks</div>
+                    <strong>Parents report behavior improvements (focus, confidence, peer engagement)</strong>
+                </div>
+                <div class="problem-card" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-left-color: var(--success);">
+                    <div class="metric" style="color: var(--success);">6 weeks</div>
+                    <strong>Skills progress visible — students who initially resisted now lead group work</strong>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 2rem;">18-Month Roadmap</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Quarter</th>
+                        <th>Milestone</th>
+                        <th>Infrastructure & Team</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Q3 2026</strong></td>
+                        <td>Scale to 24 students (2x); data stored and analyzed on Brain Grain platform</td>
+                        <td>1 centre, 2 mentors; basic transport for nearby areas</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Q4 2026</strong></td>
+                        <td>Scale to 48 students (2x); comprehensive data collection and pattern analysis</td>
+                        <td>2 centres opened; 4 mentors; transport routes expanded</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Q1 2027</strong></td>
+                        <td>Scale to 96 students (2x); platform demonstrates predictive capabilities; case study published</td>
+                        <td>3 centres; 6-8 mentors; dedicated transport for long-distance students</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Q2 2027</strong></td>
+                        <td>Scale to 192 students (2x); platform ready for school/ministry demonstrations</td>
+                        <td>4-5 centres across Chennai; 12-15 mentors; multi-route transport system</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Q3 2027</strong></td>
+                        <td>Scale to 384 students (2x); full longitudinal data set available</td>
+                        <td>6-8 centres; 25-30 mentors; transport covering wider Chennai area</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Q4 2027</strong></td>
+                        <td>Scale to 768 students (2x); Brain Grain platform proven at scale</td>
+                        <td>10-12 centres; 50+ mentors; comprehensive transport network established</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Funding Ask -->
+        <section id="funding" class="fade-in">
+            <h2>Funding Ask & Use of Funds</h2>
+            
+            <div class="highlight-box">
+                <h3 style="color: var(--primary);">Seed Round: ₹4.2–8.3 crore</h3>
+                <p style="font-size: 1.1rem; margin-top: 0.5rem;">Use of funds over 18 months:</p>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Budget</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Space & Infrastructure</strong></td>
+                        <td>35% (₹1.5–2.9 crore)</td>
+                        <td>Rent for multiple centres, security deposits, maintenance, electricity (EB), pod space setup and scaling</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mentor Salaries</strong></td>
+                        <td>30% (₹1.2–2.5 crore)</td>
+                        <td>Competitive salaries for 50+ mentors across 18 months; training and development</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Student Transport Services</strong></td>
+                        <td>15% (₹62 lakh–1.2 crore)</td>
+                        <td>Dedicated transport for students from long distances; vehicle rental/purchase, fuel, drivers</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Session Materials & Stationery</strong></td>
+                        <td>12% (₹50 lakh–1 crore)</td>
+                        <td>Learning materials, activity supplies, teaching aids, student stationery, observation forms</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Operations & Platform</strong></td>
+                        <td>8% (₹33–66 lakh)</td>
+                        <td>Data platform development, basic tools, administrative costs, buffer</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top: 2rem;">18-Month Milestones</h3>
+            <ul style="margin-left: 1.5rem; font-size: 1.1rem; line-height: 2;">
+                <li>250+ active students across pods and school pilots with outcome data</li>
+                <li>5–10 schools live on early-warning dashboard (classroom integration)</li>
+                <li>First published case study showing 15–20% engagement lift, dropout risk reduction</li>
+                <li>₹1.7–2.5 crore ARR from pods + school pilots (70%+ gross margin)</li>
+                <li>State-level interest confirmed (Tamil Nadu ministry exploring UDISE+ integration)</li>
+                <li>Team of 8–10 (founder + 2–3 engineers, 1 data scientist, 2 partnership/ops)</li>
+                <li>Runway to Series A with clear path to ₹17–42 crore revenue</li>
+            </ul>
+        </section>
+
+        <!-- Why We Win -->
+        <section id="defensibility" class="fade-in">
+            <h2>Why Brain Grain Wins: Defensible Deeptech</h2>
+            
+            <h3>Brain Grain vs EdTech</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Dimension</th>
+                        <th>EdTech (content/tests)</th>
+                        <th>Brain Grain (cognition layer)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Measurement</strong></td>
+                        <td>What did student answer?</td>
+                        <td style="color: var(--success); font-weight: 700;">How does student think?</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Data source</strong></td>
+                        <td>LMS clicks, quiz scores</td>
+                        <td style="color: var(--success); font-weight: 700;">Real-world behavior, multiple contexts</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Defensibility</strong></td>
+                        <td>Low (easily replicated content)</td>
+                        <td style="color: var(--success); font-weight: 700;">High (years of behavioral data + models)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Moat</strong></td>
+                        <td>Speed to market; brand</td>
+                        <td style="color: var(--success); font-weight: 700;">Longitudinal data + network effects</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Integration</strong></td>
+                        <td>Replaces teaching; friction</td>
+                        <td style="color: var(--success); font-weight: 700;">Augments all teaching; no replacement</td>
+                    </tr>
+                    <tr>
+                        <td><strong>TAM</strong></td>
+                        <td>₹25 lakh crore (EdTech)</td>
+                        <td style="color: var(--success); font-weight: 700;">₹4+ lakh crore (analytics + SEL + APIs)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top: 2rem;">Why We Can Win</h3>
+            <div class="solution-grid">
+                <div class="solution-card">
+                    <div class="icon">👨‍💼</div>
+                    <h4>Founder Expertise</h4>
+                    <p>Deep experience in education, student data, and tech implementation (rare combination)</p>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">📊</div>
+                    <h4>Early Data</h4>
+                    <p>12-student pilot already showing clear signals and early impact</p>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">⚡</div>
+                    <h4>Market Urgency</h4>
+                    <p>Dropout crisis in Tamil Nadu + India; government ready for solutions</p>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">🏗️</div>
+                    <h4>Infrastructure Tailwinds</h4>
+                    <p>UDISE+, APAAR, EMIS systems already live; we're a data layer on top</p>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">🔄</div>
+                    <h4>Network Effects</h4>
+                    <p>More schools → more data → better models → more schools (increasing returns)</p>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">🛡️</div>
+                    <h4>Defensibility through IP</h4>
+                    <p>Behavioral observation protocols, feature engineering, and predictive models are proprietary</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Vision -->
+        <section id="vision" class="fade-in">
+            <h2>Vision: The Next 10 Years</h2>
+            
+            <div class="highlight-box">
+                <h3 style="color: var(--primary);">Brain Grain's North Star</h3>
+                <p style="font-size: 1.2rem;">
+                    From age 7 to 27, Brain Grain travels with the learner, quietly preventing failure and unlocking environments where they think, regulate, and lead at their best.
+                </p>
+            </div>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>Year 1–2</h3>
+                        <p>Prove impact in Chennai pods and schools. Show 15–20% engagement lift and dropout reduction.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>Year 3–5</h3>
+                        <p>Scale to 50,000+ students across Tamil Nadu and 2–3 adjacent states. Integrate with government systems (UDISE+).</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>Year 5–10</h3>
+                        <p>National platform; millions of learners using Brain Grain for school, college, and career. API ecosystem of EdTechs, HR platforms, and governments using cognition intelligence.</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 2rem; text-align: center; color: var(--primary);">Outcome</h3>
+            <div class="solution-grid">
+                <div class="solution-card">
+                    <div class="icon">👶</div>
+                    <h4>Every child understood early</h4>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">🏫</div>
+                    <h4>Every school equipped to support regulation and learning</h4>
+                </div>
+                <div class="solution-card">
+                    <div class="icon">💼</div>
+                    <h4>Every employer placing people in roles where they thrive</h4>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 2rem; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-left-color: var(--success);">
+                <h3 style="color: var(--success);">Impact:</h3>
+                <ul style="margin-left: 1.5rem; font-size: 1.1rem; line-height: 2;">
+                    <li>Millions of children avoid failure, dropout, and mental health crises</li>
+                    <li>Economies gain skilled, resilient workers</li>
+                    <li>Societies become more equitable</li>
+                </ul>
+            </div>
+        </section>
+    </div>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Ready to Invest, Pilot, or Partner?</h2>
+            <p>Schedule a conversation with the founder to discuss investment terms, pilot opportunities, or partnership models.</p>
+            <div class="cta-buttons">
+                <a href="mailto:contact@braingrain.ai" class="btn btn-primary">Schedule a Meeting</a>
+                <a href="#traction" class="btn btn-secondary">View Traction</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact">
+        <div class="footer-content">
+            <h3>BRAIN GRAIN</h3>
+            <p style="margin-bottom: 2rem; opacity: 0.9;">Understanding how humans learn, regulate, and lead — before marks, exams, or labels exist.</p>
+            
+            <div class="contact-info">
+                <div class="contact-item">
+                    <span>📍</span>
+                    <span>Chennai, Tamil Nadu, India</span>
+                </div>
+                <div class="contact-item">
+                    <span>📧</span>
+                    <span>contact@braingrain.ai</span>
+                </div>
+                <div class="contact-item">
+                    <span>📅</span>
+                    <span>Founded January 2026</span>
+                </div>
+            </div>
+
+            <p style="margin-top: 2rem; opacity: 0.7; font-size: 0.9rem;">
+                © 2026 Brain Grain. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Fade-in animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(element => {
+            observer.observe(element);
+        });
+
+        // Active navigation link
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section[id]');
+            const scrollY = window.pageYOffset;
+
+            sections.forEach(section => {
+                const sectionHeight = section.offsetHeight;
+                const sectionTop = section.offsetTop - 100;
+                const sectionId = section.getAttribute('id');
+                const navLink = document.querySelector(`.nav-links a[href="#${sectionId}"]`);
+
+                if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
+                    document.querySelectorAll('.nav-links a').forEach(link => {
+                        link.style.color = 'var(--dark)';
+                    });
+                    if (navLink) {
+                        navLink.style.color = 'var(--primary)';
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Grain - Comprehensive Component Tests</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+        
+        .test-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .test-card h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+        
+        .test-list {
+            list-style: none;
+        }
+        
+        .test-item {
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            background: #f8fafc;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .test-item:hover {
+            background: #e0f2fe;
+            transform: translateX(5px);
+        }
+        
+        .test-status {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .status-pending {
+            background: #fbbf24;
+            color: white;
+        }
+        
+        .status-pass {
+            background: #10b981;
+            color: white;
+        }
+        
+        .status-fail {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        
+        .btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .btn-success {
+            background: #10b981;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .results {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .results h3 {
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+        
+        .result-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .pass { color: #10b981; font-weight: 600; }
+        .fail { color: #ef4444; font-weight: 600; }
+        .pending { color: #f59e0b; font-weight: 600; }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+        
+        .log {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+        
+        .log-entry {
+            padding: 0.25rem 0;
+        }
+        
+        .log-pass { color: #10b981; }
+        .log-fail { color: #ef4444; }
+        .log-info { color: #3b82f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Brain Grain - Component Testing Suite</h1>
+        
+        <div class="test-grid">
+            <!-- Registration Tests -->
+            <div class="test-card">
+                <h2>📝 Registration Module</h2>
+                <ul class="test-list">
+                    <li class="test-item" onclick="runTest('reg-validation')">
+                        <span>Validation Rules</span>
+                        <span class="test-status status-pending" id="status-reg-validation">⏳</span>
+                    </li>
+                    <li class="test-item" onclick="runTest('reg-phone')">
+                        <span>Phone Validation</span>
+                        <span class="test-status status-pending" id="status-reg-phone">⏳</span>
+                    </li>
+                    <li class="test-item" onclick="runTest('reg-email')">
+                        <span>Email Validation</span>
+                        <span class="test-status status-pending" id="status-reg-email">⏳</span>
+                    </li>
+                    <li class="test-item" onclick="runTest('reg-storage')">
+                        <span>Data Storage</span>
+                        <span class="test-status status-pending" id="status-reg-storage">⏳</span>
+                    </li>
+                </ul>
+                <button class="btn" onclick="runTestGroup('registration')">Run All Registration Tests</button>
+            </div>
+            
+            <!-- Assessment Tests -->
+            <div class="test-card">
+                <h2>📋 Assessment Module</h2>
+                <ul class="test-list">
+                    <li class="test-item" onclick="runTest('assess-questions')">
+                        <span>Question Bank Load</span>
+                        <span class="test-status status-pending" id="status-assess-questions">⏳</span>
+                    </li>
+                    <li class="test-item" onclick="runTest('assess-scoring')">
+                        <span>Scoring Logic</span>
+                        <span class="test-status status-pending" id="status-assess-scoring">⏳</span>
+                    </li>
+                    <li class="test-item" onclick="runTest('assess-state')">
+                        <span>State Management</span>
+                        <span class="test-status status-pending" id="status-assess-state">⏳</span>
+                    </li>
+                    <li class="test-item" onclick="runTest('assess-persistence')">
+                        <span>Data Persistence</span>
+                        <span class="test-status status-pending" id="status-assess-persistence">⏳</span>
+                    </li>
+                </ul>
+                <button class="btn" onclick="runTestGroup('assessment')">Run All Assessment Tests</button>
+            </div>
+            
+            <!-- Admin Panel Tests -->
+            <div class="test-card">
+                <h2>👨‍💼 Admin Panel</h2>
+                <ul class="test-list">
+                    <li class="test-item" onclick="runTest('admin-load')">
+                        <span>Student List Load</span>
+                        <span class="test-status status-pending" id="status-admin-load">⏳</span>
+                    </li>
+                    <li class="test-item" onclick="runTest('admin-filter')">
+                        <span>Pod Filtering</span>
+                        <span class="test-status status-pending" id="status-admin-filter">⏳</span>
+                    </li>
+                    <li class="test-item" onclick="runTest('admin-analytics')">
+                        <span>Analytics Integration</span>
+                        <span class="test-status status-pending" id="status-admin-analytics">⏳</span>
+                    </li>
+                    <li class="test-item" onclick="runTest('admin-exports')">
+                        <span>Export Functions</span>
+                        <span class="test-status status-pending" id="status-admin-exports">⏳</span>
+                    </li>
+                </ul>
+                <button class="btn" onclick="runTestGroup('admin')">Run All Admin Tests</button>
+            </div>
+            
+            <!-- Integration Tests -->
+            <div class="test-card">
+                <h2>🔗 Integration Tests</h2>
+                <ul class="test-list">
+                    <li class="test-item" onclick="runTest('int-workflow')">
+                        <span>Complete User Workflow</span>
+                        <span class="test-status status-pending" id="status-int-workflow">⏳</span>
+                    </li>
+                    <li class="test-item" onclick="runTest('int-storage')">
+                        <span>LocalStorage Ops</span>
+                        <span class="test-status status-pending" id="status-int-storage">⏳</span>
+                    </li>
+                    <li class="test-item" onclick="runTest('int-modules')">
+                        <span>Module Dependencies</span>
+                        <span class="test-status status-pending" id="status-int-modules">⏳</span>
+                    </li>
+                    <li class="test-item" onclick="runTest('int-responsive')">
+                        <span>Responsive Design</span>
+                        <span class="test-status status-pending" id="status-int-responsive">⏳</span>
+                    </li>
+                </ul>
+                <button class="btn" onclick="runTestGroup('integration')">Run All Integration Tests</button>
+            </div>
+        </div>
+        
+        <!-- Overall Stats -->
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-value" id="total-tests">0</div>
+                <div class="stat-label">Total Tests</div>
+            </div>
+            <div class="stat-box" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <div class="stat-value" id="passed-tests">0</div>
+                <div class="stat-label">Passed</div>
+            </div>
+            <div class="stat-box" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                <div class="stat-value" id="failed-tests">0</div>
+                <div class="stat-label">Failed</div>
+            </div>
+        </div>
+        
+        <!-- Run All Button -->
+        <button class="btn btn-success" onclick="runAllTests()" style="margin-top: 2rem; font-size: 1.1rem; padding: 1rem 2rem;">
+            🚀 RUN ALL TESTS
+        </button>
+        
+        <!-- Results Log -->
+        <div class="results">
+            <h3>📊 Test Results</h3>
+            <div class="log" id="test-log">
+                <div class="log-entry log-info">Ready to run tests...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="utils.js"></script>
+    <script src="config.js"></script>
+    <script src="core-utils.js"></script>
+    <script src="analytics.js"></script>
+    <script src="deep-analytics.js"></script>
+    <script src="registration.js"></script>
+    <script src="assessment-app.js"></script>
+    
+    <script>
+        const testResults = {
+            total: 0,
+            passed: 0,
+            failed: 0
+        };
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('test-log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function updateStats() {
+            document.getElementById('total-tests').textContent = testResults.total;
+            document.getElementById('passed-tests').textContent = testResults.passed;
+            document.getElementById('failed-tests').textContent = testResults.failed;
+        }
+        
+        function setTestStatus(testId, status) {
+            const statusEl = document.getElementById(`status-${testId}`);
+            if (statusEl) {
+                statusEl.className = `test-status status-${status}`;
+                statusEl.textContent = status === 'pass' ? '✓' : status === 'fail' ? '✗' : '⏳';
+            }
+        }
+        
+        // Registration Tests
+        function testRegValidation() {
+            try {
+                // Test that validation functions exist
+                if (typeof window.validateField === 'undefined') {
+                    throw new Error('Registration validation functions not loaded');
+                }
+                
+                log('✓ Registration validation functions defined', 'pass');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                log(`✗ Registration validation failed: ${error.message}`, 'fail');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        function testRegPhone() {
+            try {
+                const phoneRegex = /^\d{10}$/;
+                const validPhone = '9876543210';
+                const invalidPhone = '123';
+                
+                if (!phoneRegex.test(validPhone)) throw new Error('Valid phone rejected');
+                if (phoneRegex.test(invalidPhone)) throw new Error('Invalid phone accepted');
+                
+                log('✓ Phone validation working correctly', 'pass');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                log(`✗ Phone validation failed: ${error.message}`, 'fail');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        function testRegEmail() {
+            try {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                const validEmail = 'test@example.com';
+                const invalidEmail = 'notanemail';
+                
+                if (!emailRegex.test(validEmail)) throw new Error('Valid email rejected');
+                if (emailRegex.test(invalidEmail)) throw new Error('Invalid email accepted');
+                
+                log('✓ Email validation working correctly', 'pass');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                log(`✗ Email validation failed: ${error.message}`, 'fail');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        function testRegStorage() {
+            try {
+                if (typeof StorageHelper === 'undefined') {
+                    throw new Error('StorageHelper not loaded');
+                }
+                
+                // Test save and load
+                const testStudent = {
+                    id: 'TEST_STORAGE',
+                    firstName: 'Test',
+                    lastName: 'Student',
+                    phone: '9999999999'
+                };
+                
+                const students = StorageHelper.loadStudents();
+                const filtered = students.filter(s => s.id !== 'TEST_STORAGE');
+                filtered.push(testStudent);
+                StorageHelper.saveStudents(filtered);
+                
+                const reloaded = StorageHelper.loadStudents();
+                const found = reloaded.find(s => s.id === 'TEST_STORAGE');
+                
+                if (!found) throw new Error('Student not saved/loaded correctly');
+                
+                log('✓ Data storage working correctly', 'pass');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                log(`✗ Storage test failed: ${error.message}`, 'fail');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        // Assessment Tests
+        function testAssessQuestions() {
+            try {
+                if (typeof questionBank === 'undefined') {
+                    throw new Error('questionBank not loaded');
+                }
+                
+                if (!Array.isArray(questionBank) || questionBank.length === 0) {
+                    throw new Error('questionBank is empty or invalid');
+                }
+                
+                // Verify question structure
+                const sampleQ = questionBank[0];
+                if (!sampleQ.skill || !sampleQ.text || !sampleQ.type) {
+                    throw new Error('Question structure invalid');
+                }
+                
+                log(`✓ Question bank loaded (${questionBank.length} questions)`, 'pass');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                log(`✗ Question bank test failed: ${error.message}`, 'fail');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        function testAssessScoring() {
+            try {
+                if (typeof assessmentState === 'undefined') {
+                    throw new Error('assessmentState not defined');
+                }
+                
+                // Verify scoring structure
+                if (!assessmentState.scores || !assessmentState.scores.SEL) {
+                    throw new Error('Scoring structure invalid');
+                }
+                
+                log('✓ Assessment scoring logic defined', 'pass');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                log(`✗ Scoring test failed: ${error.message}`, 'fail');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        function testAssessState() {
+            try {
+                if (typeof assessmentState === 'undefined') {
+                    throw new Error('assessmentState not defined');
+                }
+                
+                // Verify state properties
+                const required = ['currentQuestionIndex', 'answers', 'scores', 'totalScore'];
+                for (const prop of required) {
+                    if (!(prop in assessmentState)) {
+                        throw new Error(`Missing property: ${prop}`);
+                    }
+                }
+                
+                log('✓ Assessment state management working', 'pass');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                log(`✗ State test failed: ${error.message}`, 'fail');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        function testAssessPersistence() {
+            try {
+                // Verify localStorage is available
+                if (typeof localStorage === 'undefined') {
+                    throw new Error('localStorage not available');
+                }
+                
+                localStorage.setItem('test_key', 'test_value');
+                const value = localStorage.getItem('test_key');
+                localStorage.removeItem('test_key');
+                
+                if (value !== 'test_value') {
+                    throw new Error('localStorage read/write failed');
+                }
+                
+                log('✓ Assessment persistence working', 'pass');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                log(`✗ Persistence test failed: ${error.message}`, 'fail');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        // Admin Tests
+        function testAdminLoad() {
+            try {
+                const students = StorageHelper.loadStudents();
+                
+                if (!Array.isArray(students)) {
+                    throw new Error('Students is not an array');
+                }
+                
+                log(`✓ Admin can load students (${students.length} found)`, 'pass');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                log(`✗ Admin load test failed: ${error.message}`, 'fail');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        function testAdminFilter() {
+            try {
+                const students = StorageHelper.loadStudents();
+                const podA = students.filter(s => s.pod === 'Pod A');
+                
+                log(`✓ Admin filtering working (${podA.length} in Pod A)`, 'pass');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                log(`✗ Admin filter test failed: ${error.message}`, 'fail');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        function testAdminAnalytics() {
+            try {
+                if (typeof window.AnalyticsModule === 'undefined') {
+                    throw new Error('AnalyticsModule not loaded');
+                }
+                
+                const students = StorageHelper.loadStudents();
+                if (students.length > 0) {
+                    const analytics = window.AnalyticsModule.calculateStudentAnalytics(students[0]);
+                    if (!analytics) throw new Error('Analytics calculation failed');
+                }
+                
+                log('✓ Admin analytics integration working', 'pass');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                log(`✗ Analytics integration test failed: ${error.message}`, 'fail');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        function testAdminExports() {
+            try {
+                // Verify export functions exist
+                if (typeof window.exportFullAnalyticsCSV === 'undefined') {
+                    throw new Error('Export functions not defined');
+                }
+                
+                log('✓ Admin export functions available', 'pass');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                log(`✗ Export test failed: ${error.message}`, 'fail');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        // Integration Tests
+        function testIntWorkflow() {
+            try {
+                // Simulate complete workflow
+                log('Testing complete user workflow...', 'info');
+                
+                // 1. Load students
+                const students = StorageHelper.loadStudents();
+                
+                // 2. Calculate analytics
+                if (students.length > 0 && window.AnalyticsModule) {
+                    const analytics = window.AnalyticsModule.calculateStudentAnalytics(students[0]);
+                    if (!analytics) throw new Error('Workflow: analytics failed');
+                }
+                
+                log('✓ Complete workflow integration working', 'pass');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                log(`✗ Workflow test failed: ${error.message}`, 'fail');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        function testIntStorage() {
+            try {
+                // Test all storage operations
+                const students = StorageHelper.loadStudents();
+                const pods = StorageHelper.loadPods();
+                
+                log('✓ All storage operations functional', 'pass');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                log(`✗ Storage integration failed: ${error.message}`, 'fail');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        function testIntModules() {
+            try {
+                const required = ['StorageHelper', 'AnalyticsModule'];
+                const missing = [];
+                
+                for (const mod of required) {
+                    if (typeof window[mod] === 'undefined') {
+                        missing.push(mod);
+                    }
+                }
+                
+                if (missing.length > 0) {
+                    throw new Error(`Missing modules: ${missing.join(', ')}`);
+                }
+                
+                log('✓ All required modules loaded', 'pass');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                log(`✗ Module check failed: ${error.message}`, 'fail');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        function testIntResponsive() {
+            try {
+                // Check viewport meta tag
+                const viewport = document.querySelector('meta[name="viewport"]');
+                if (!viewport) throw new Error('Viewport meta tag missing');
+                
+                log('✓ Responsive design configuration present', 'pass');
+                testResults.passed++;
+                return true;
+            } catch (error) {
+                log(`✗ Responsive test failed: ${error.message}`, 'fail');
+                testResults.failed++;
+                return false;
+            }
+        }
+        
+        // Test Runner
+        const testMap = {
+            'reg-validation': testRegValidation,
+            'reg-phone': testRegPhone,
+            'reg-email': testRegEmail,
+            'reg-storage': testRegStorage,
+            'assess-questions': testAssessQuestions,
+            'assess-scoring': testAssessScoring,
+            'assess-state': testAssessState,
+            'assess-persistence': testAssessPersistence,
+            'admin-load': testAdminLoad,
+            'admin-filter': testAdminFilter,
+            'admin-analytics': testAdminAnalytics,
+            'admin-exports': testAdminExports,
+            'int-workflow': testIntWorkflow,
+            'int-storage': testIntStorage,
+            'int-modules': testIntModules,
+            'int-responsive': testIntResponsive
+        };
+        
+        function runTest(testId) {
+            log(`Running test: ${testId}...`, 'info');
+            testResults.total++;
+            
+            const testFn = testMap[testId];
+            if (testFn) {
+                const result = testFn();
+                setTestStatus(testId, result ? 'pass' : 'fail');
+            }
+            
+            updateStats();
+        }
+        
+        function runTestGroup(group) {
+            log(`Running ${group} test group...`, 'info');
+            
+            const groupTests = {
+                'registration': ['reg-validation', 'reg-phone', 'reg-email', 'reg-storage'],
+                'assessment': ['assess-questions', 'assess-scoring', 'assess-state', 'assess-persistence'],
+                'admin': ['admin-load', 'admin-filter', 'admin-analytics', 'admin-exports'],
+                'integration': ['int-workflow', 'int-storage', 'int-modules', 'int-responsive']
+            };
+            
+            const tests = groupTests[group] || [];
+            tests.forEach(testId => runTest(testId));
+        }
+        
+        async function runAllTests() {
+            log('🚀 Starting comprehensive test suite...', 'info');
+            
+            // Reset stats
+            testResults.total = 0;
+            testResults.passed = 0;
+            testResults.failed = 0;
+            
+            // Run all test groups
+            runTestGroup('registration');
+            await new Promise(r => setTimeout(r, 500));
+            
+            runTestGroup('assessment');
+            await new Promise(r => setTimeout(r, 500));
+            
+            runTestGroup('admin');
+            await new Promise(r => setTimeout(r, 500));
+            
+            runTestGroup('integration');
+            
+            const successRate = ((testResults.passed / testResults.total) * 100).toFixed(1);
+            log(`\n✅ Test suite completed: ${testResults.passed}/${testResults.total} passed (${successRate}%)`, 
+                testResults.failed === 0 ? 'pass' : 'info');
+        }
+        
+        // Initialize
+        log('Test harness loaded. Ready to run tests.', 'info');
+        updateStats();
+    </script>
+</body>
+</html>

@@ -1,6 +1,11 @@
 // Admin-related functionality extracted from index.html
 (function(){
   'use strict';
+  
+  // Import utilities and configuration
+  const { $, $$, create, showToast, formatDate, formatTime } = window.CoreUtils || {};
+  const config = window.BrainGrainConfig || {};
+  
   // Fallback shims if ai-config.js hasn't attached modal helpers yet
   if (typeof window.setPlanModalState !== 'function') {
     window.setPlanModalState = function({ title, statusText, contentText, isError = false, showSpinner = false }) {
@@ -2012,6 +2017,541 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
     }
   }
 
+  // ==================== ANALYTICS FUNCTIONS ====================
+
+  /**
+   * Show the analytics view
+   */
+  function showAnalytics() {
+    document.getElementById('adminListView').style.display = 'none';
+    document.getElementById('studentDetailView').style.display = 'none';
+    document.getElementById('assessmentScreen').style.display = 'none';
+    document.getElementById('analyticsView').style.display = 'block';
+    
+    // Default to student analytics
+    switchAnalyticsView('student');
+  }
+
+  /**
+   * Switch between student and pod analytics views
+   */
+  function switchAnalyticsView(type) {
+    const studentBtn = document.getElementById('studentAnalyticsBtn');
+    const podBtn = document.getElementById('podAnalyticsBtn');
+    const studentSection = document.getElementById('studentAnalyticsSection');
+    const podSection = document.getElementById('podAnalyticsSection');
+    
+    if (type === 'student') {
+      studentBtn.className = 'btn btn-primary';
+      podBtn.className = 'btn btn-secondary';
+      studentSection.style.display = 'block';
+      podSection.style.display = 'none';
+      
+      // Populate student dropdown
+      populateStudentAnalyticsDropdown();
+    } else {
+      studentBtn.className = 'btn btn-secondary';
+      podBtn.className = 'btn btn-primary';
+      studentSection.style.display = 'none';
+      podSection.style.display = 'block';
+      
+      // Populate pod dropdown
+      populatePodAnalyticsDropdown();
+    }
+  }
+
+  /**
+   * Populate student dropdown for analytics
+   */
+  function populateStudentAnalyticsDropdown() {
+    const select = document.getElementById('studentAnalyticsSelect');
+    if (!select) return;
+    
+    const students = StorageHelper.loadStudents().filter(s => !s.archived);
+    
+    select.innerHTML = '<option value="">-- Choose a student --</option>' +
+      students.map(s => {
+        const name = `${s.firstName || ''} ${s.lastName || ''}`.trim() || s.phone || s.id;
+        return `<option value="${s.id}">${name} (Grade ${s.grade || 'N/A'})</option>`;
+      }).join('');
+  }
+
+  /**
+   * Populate pod dropdown for analytics
+   */
+  function populatePodAnalyticsDropdown() {
+    const select = document.getElementById('podAnalyticsSelect');
+    if (!select) return;
+    
+    const pods = StorageHelper.loadPods();
+    
+    select.innerHTML = '<option value="">-- Choose a pod --</option>' +
+      pods.map(p => {
+        const studentCount = (p.studentIds || []).length;
+        return `<option value="${p.id}">${p.name} (${studentCount} student${studentCount === 1 ? '' : 's'})</option>`;
+      }).join('');
+  }
+
+  /**
+   * Load and display student analytics
+   */
+  function loadStudentAnalytics(studentId) {
+    const contentDiv = document.getElementById('studentAnalyticsContent');
+    if (!contentDiv || !studentId) {
+      contentDiv.innerHTML = '';
+      return;
+    }
+    
+    const student = StorageHelper.getStudentById(studentId);
+    if (!student) {
+      contentDiv.innerHTML = '<div style="padding:20px; text-align:center; color:#ef4444;">Student not found</div>';
+      return;
+    }
+    
+    // Calculate analytics using the analytics module
+    if (!window.AnalyticsModule) {
+      contentDiv.innerHTML = '<div style="padding:20px; text-align:center; color:#ef4444;">Analytics module not loaded</div>';
+      return;
+    }
+    
+    const analytics = window.AnalyticsModule.calculateStudentAnalytics(student);
+    contentDiv.innerHTML = renderStudentAnalytics(analytics);
+  }
+
+  /**
+   * Render student analytics HTML
+   */
+  function renderStudentAnalytics(analytics) {
+    if (!analytics) return '<div style="padding:20px; text-align:center;">No analytics available</div>';
+    
+    // Header Card
+    const headerHTML = `
+      <div style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; padding:24px; border-radius:12px; margin-bottom:24px; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px;">
+          <div style="width:60px; height:60px; border-radius:50%; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:700;">${analytics.name.charAt(0).toUpperCase()}</div>
+          <div>
+            <h2 style="margin:0; font-size:28px; font-weight:800;">${analytics.name}</h2>
+            <div style="opacity:0.9; font-size:16px;">Grade ${analytics.grade}</div>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-top:16px;">
+          <div style="background:rgba(255,255,255,0.15); padding:12px; border-radius:8px; text-align:center;">
+            <div style="font-size:32px; font-weight:800;">${analytics.overall.score}%</div>
+            <div style="font-size:12px; opacity:0.9;">Overall Performance</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.15); padding:12px; border-radius:8px; text-align:center;">
+            <div style="font-size:32px; font-weight:800;">${analytics.academic.average}%</div>
+            <div style="font-size:12px; opacity:0.9;">Academic Average</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.15); padding:12px; border-radius:8px; text-align:center;">
+            <div style="font-size:32px; font-weight:800;">${analytics.assessment.status}</div>
+            <div style="font-size:12px; opacity:0.9;">Assessment Status</div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Academic Performance Section
+    const subjectsHTML = Object.entries(analytics.academic.subjects).map(([subject, data]) => {
+      const color = data.percent >= 80 ? '#10b981' : data.percent >= 60 ? '#3b82f6' : data.percent >= 40 ? '#f59e0b' : '#ef4444';
+      return `
+        <div style="margin-bottom:16px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span style="font-weight:600; text-transform:capitalize;">${subject}</span>
+            <span style="font-weight:700; color:${color};">${data.percent}% (${data.grade})</span>
+          </div>
+          <div style="background:#e2e8f0; height:8px; border-radius:4px; overflow:hidden;">
+            <div style="background:${color}; height:100%; width:${data.percent}%; transition:width 0.3s ease;"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    const academicHTML = `
+      <div style="background:white; padding:24px; border-radius:12px; margin-bottom:24px; box-shadow:0 2px 4px rgba(0,0,0,0.05); border:2px solid #e2e8f0;">
+        <h3 style="margin:0 0 16px 0; display:flex; align-items:center; gap:8px; color:#0b66d0;">
+          <span style="font-size:24px;">📚</span> Academic Performance
+        </h3>
+        ${subjectsHTML || '<div style="color:#94a3b8;">No academic data available</div>'}
+        <div style="margin-top:16px; padding:12px; background:#f8fafc; border-radius:8px; border-left:4px solid #3b82f6;">
+          <div style="font-weight:600; color:#1e40af;">Performance Level: ${analytics.academic.performanceLevel}</div>
+        </div>
+      </div>
+    `;
+    
+    // Assessment Skills Section
+    const assessmentHTML = `
+      <div style="background:white; padding:24px; border-radius:12px; margin-bottom:24px; box-shadow:0 2px 4px rgba(0,0,0,0.05); border:2px solid #e2e8f0;">
+        <h3 style="margin:0 0 16px 0; display:flex; align-items:center; gap:8px; color:#0b66d0;">
+          <span style="font-size:24px;">🎯</span> Assessment Skills
+        </h3>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;">
+          ${renderSkillCard('Social-Emotional Learning', analytics.assessment.sel, '#fbbf24')}
+          ${renderSkillCard('Critical Thinking', analytics.assessment.criticalThinking, '#3b82f6')}
+          ${renderSkillCard('Leadership', analytics.assessment.leadership, '#10b981')}
+        </div>
+      </div>
+    `;
+    
+    // Strengths Section
+    const strengthsHTML = analytics.strengths.length > 0 ? `
+      <div style="background:white; padding:24px; border-radius:12px; margin-bottom:24px; box-shadow:0 2px 4px rgba(0,0,0,0.05); border:2px solid #10b981;">
+        <h3 style="margin:0 0 16px 0; display:flex; align-items:center; gap:8px; color:#10b981;">
+          <span style="font-size:24px;">💪</span> Strengths
+        </h3>
+        <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;">
+          ${analytics.strengths.map(s => `
+            <div style="padding:12px; background:#f0fdf4; border-radius:8px; border-left:4px solid #10b981;">
+              <div style="font-weight:700; color:#166534;">${s.area}</div>
+              <div style="font-size:24px; font-weight:800; color:#10b981;">${s.score}%</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : '';
+    
+    // Weaknesses Section
+    const weaknessesHTML = analytics.weaknesses.length > 0 ? `
+      <div style="background:white; padding:24px; border-radius:12px; margin-bottom:24px; box-shadow:0 2px 4px rgba(0,0,0,0.05); border:2px solid #f59e0b;">
+        <h3 style="margin:0 0 16px 0; display:flex; align-items:center; gap:8px; color:#f59e0b;">
+          <span style="font-size:24px;">⚠️</span> Areas for Improvement
+        </h3>
+        <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;">
+          ${analytics.weaknesses.map(w => `
+            <div style="padding:12px; background:#fef3c7; border-radius:8px; border-left:4px solid #f59e0b;">
+              <div style="font-weight:700; color:#92400e;">${w.area}</div>
+              <div style="font-size:24px; font-weight:800; color:#f59e0b;">${w.score}%</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : '';
+    
+    // Recommendations Section
+    const recommendationsHTML = analytics.recommendations.length > 0 ? `
+      <div style="background:white; padding:24px; border-radius:12px; box-shadow:0 2px 4px rgba(0,0,0,0.05); border:2px solid #3b82f6;">
+        <h3 style="margin:0 0 16px 0; display:flex; align-items:center; gap:8px; color:#3b82f6;">
+          <span style="font-size:24px;">💡</span> Recommendations
+        </h3>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          ${analytics.recommendations.map(r => {
+            const priorityColor = r.priority === 'high' ? '#ef4444' : r.priority === 'medium' ? '#f59e0b' : '#10b981';
+            const priorityBg = r.priority === 'high' ? '#fee2e2' : r.priority === 'medium' ? '#fef3c7' : '#f0fdf4';
+            return `
+              <div style="padding:16px; background:${priorityBg}; border-radius:8px; border-left:4px solid ${priorityColor};">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                  <span style="font-weight:700; color:${priorityColor};">${r.category}</span>
+                  <span style="font-size:11px; padding:2px 8px; background:${priorityColor}; color:white; border-radius:12px; text-transform:uppercase; font-weight:600;">${r.priority}</span>
+                </div>
+                <div style="color:#334155; font-size:14px;">${r.message}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    ` : '';
+    
+    return headerHTML + academicHTML + assessmentHTML + strengthsHTML + weaknessesHTML + recommendationsHTML;
+  }
+
+  /**
+   * Render a skill card
+   */
+  function renderSkillCard(name, skillData, color) {
+    return `
+      <div style="padding:16px; background:#f8fafc; border-radius:8px; text-align:center; border:2px solid ${color};">
+        <div style="font-size:12px; color:#64748b; margin-bottom:4px;">${name}</div>
+        <div style="font-size:32px; font-weight:800; color:${color}; margin:8px 0;">${skillData.percent}%</div>
+        <div style="font-size:14px; font-weight:600; color:${color};">${skillData.grade}</div>
+        <div style="margin-top:8px; padding:4px 8px; background:${color}; color:white; border-radius:12px; font-size:11px; font-weight:600;">${skillData.level}</div>
+      </div>
+    `;
+  }
+
+  /**
+   * Load and display pod analytics
+   */
+  function loadPodAnalytics(podId) {
+    const contentDiv = document.getElementById('podAnalyticsContent');
+    if (!contentDiv || !podId) {
+      contentDiv.innerHTML = '';
+      return;
+    }
+    
+    const pod = StorageHelper.getPodById(podId);
+    if (!pod) {
+      contentDiv.innerHTML = '<div style="padding:20px; text-align:center; color:#ef4444;">Pod not found</div>';
+      return;
+    }
+    
+    const members = (pod.studentIds || []).map(id => allStudents.find(s => s.id === id)).filter(Boolean);
+    if (members.length === 0) {
+      contentDiv.innerHTML = '<div style="padding:20px; text-align:center; color:#f59e0b;">This pod has no students</div>';
+      return;
+    }
+    
+    // Calculate analytics using the analytics module
+    if (!window.AnalyticsModule) {
+      contentDiv.innerHTML = '<div style="padding:20px; text-align:center; color:#ef4444;">Analytics module not loaded</div>';
+      return;
+    }
+    
+    const analytics = window.AnalyticsModule.calculatePodAnalytics(pod, members, calculateAcademicAverage);
+    contentDiv.innerHTML = renderPodAnalytics(analytics);
+  }
+
+  /**
+   * Render pod analytics HTML
+   */
+  function renderPodAnalytics(analytics) {
+    if (!analytics) return '<div style="padding:20px; text-align:center;">No analytics available</div>';
+    
+    // Header Card
+    const headerHTML = `
+      <div style="background:linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%); color:white; padding:24px; border-radius:12px; margin-bottom:24px; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px;">
+          <div style="width:60px; height:60px; border-radius:12px; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:32px;">👥</div>
+          <div>
+            <h2 style="margin:0; font-size:28px; font-weight:800;">${analytics.podName}</h2>
+            <div style="opacity:0.9; font-size:16px;">${analytics.studentCount} student${analytics.studentCount === 1 ? '' : 's'}</div>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-top:16px;">
+          <div style="background:rgba(255,255,255,0.15); padding:12px; border-radius:8px; text-align:center;">
+            <div style="font-size:28px; font-weight:800;">${analytics.academic.average}%</div>
+            <div style="font-size:11px; opacity:0.9;">Academic Avg</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.15); padding:12px; border-radius:8px; text-align:center;">
+            <div style="font-size:28px; font-weight:800;">${analytics.assessment.completionRate}%</div>
+            <div style="font-size:11px; opacity:0.9;">Assessments Done</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.15); padding:12px; border-radius:8px; text-align:center;">
+            <div style="font-size:28px; font-weight:800;">${analytics.academic.highest}%</div>
+            <div style="font-size:11px; opacity:0.9;">Top Performer</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.15); padding:12px; border-radius:8px; text-align:center;">
+            <div style="font-size:28px; font-weight:800;">${analytics.academic.range}%</div>
+            <div style="font-size:11px; opacity:0.9;">Performance Range</div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Academic Overview
+    const academicHTML = `
+      <div style="background:white; padding:24px; border-radius:12px; margin-bottom:24px; box-shadow:0 2px 4px rgba(0,0,0,0.05); border:2px solid #e2e8f0;">
+        <h3 style="margin:0 0 16px 0; display:flex; align-items:center; gap:8px; color:#0b66d0;">
+          <span style="font-size:24px;">📊</span> Academic Overview
+        </h3>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-bottom:16px;">
+          <div style="text-align:center; padding:16px; background:#f8fafc; border-radius:8px;">
+            <div style="font-size:12px; color:#64748b; margin-bottom:4px;">Average</div>
+            <div style="font-size:32px; font-weight:800; color:#3b82f6;">${analytics.academic.average}%</div>
+          </div>
+          <div style="text-align:center; padding:16px; background:#f8fafc; border-radius:8px;">
+            <div style="font-size:12px; color:#64748b; margin-bottom:4px;">Median</div>
+            <div style="font-size:32px; font-weight:800; color:#8b5cf6;">${analytics.academic.median}%</div>
+          </div>
+          <div style="text-align:center; padding:16px; background:#f8fafc; border-radius:8px;">
+            <div style="font-size:12px; color:#64748b; margin-bottom:4px;">Range</div>
+            <div style="font-size:24px; font-weight:800; color:#f59e0b;">${analytics.academic.lowest}% - ${analytics.academic.highest}%</div>
+          </div>
+        </div>
+        <div style="padding:12px; background:#f0f9ff; border-radius:8px; border-left:4px solid #3b82f6;">
+          <div style="font-weight:600; color:#1e40af;">Performance Level: ${analytics.academic.performanceLevel}</div>
+        </div>
+      </div>
+    `;
+    
+    // Skills Overview
+    const skillsHTML = `
+      <div style="background:white; padding:24px; border-radius:12px; margin-bottom:24px; box-shadow:0 2px 4px rgba(0,0,0,0.05); border:2px solid #e2e8f0;">
+        <h3 style="margin:0 0 16px 0; display:flex; align-items:center; gap:8px; color:#0b66d0;">
+          <span style="font-size:24px;">🎯</span> Skills Assessment Overview
+        </h3>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;">
+          ${renderPodSkillCard('SEL', analytics.assessment.sel, '#fbbf24')}
+          ${renderPodSkillCard('Critical Thinking', analytics.assessment.criticalThinking, '#3b82f6')}
+          ${renderPodSkillCard('Leadership', analytics.assessment.leadership, '#10b981')}
+        </div>
+      </div>
+    `;
+    
+    // Distribution
+    const distributionHTML = `
+      <div style="background:white; padding:24px; border-radius:12px; margin-bottom:24px; box-shadow:0 2px 4px rgba(0,0,0,0.05); border:2px solid #e2e8f0;">
+        <h3 style="margin:0 0 16px 0; display:flex; align-items:center; gap:8px; color:#0b66d0;">
+          <span style="font-size:24px;">📈</span> Student Distribution
+        </h3>
+        <div style="margin-bottom:20px;">
+          <div style="font-weight:600; margin-bottom:8px; color:#334155;">Academic Performance:</div>
+          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;">
+            ${renderDistributionBar('Advanced', analytics.distribution.academic.advanced, '#10b981')}
+            ${renderDistributionBar('On Track', analytics.distribution.academic.onTrack, '#3b82f6')}
+            ${renderDistributionBar('Needs Support', analytics.distribution.academic.needsSupport, '#f59e0b')}
+            ${renderDistributionBar('Intensive', analytics.distribution.academic.intensive, '#ef4444')}
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;">
+          ${renderSkillDistribution('SEL', analytics.distribution.sel)}
+          ${renderSkillDistribution('Critical Thinking', analytics.distribution.criticalThinking)}
+          ${renderSkillDistribution('Leadership', analytics.distribution.leadership)}
+        </div>
+      </div>
+    `;
+    
+    // Student Comparison
+    const studentsHTML = `
+      <div style="background:white; padding:24px; border-radius:12px; margin-bottom:24px; box-shadow:0 2px 4px rgba(0,0,0,0.05); border:2px solid #e2e8f0;">
+        <h3 style="margin:0 0 16px 0; display:flex; align-items:center; gap:8px; color:#0b66d0;">
+          <span style="font-size:24px;">👥</span> Student Comparison
+        </h3>
+        <div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0;">
+                <th style="padding:12px; text-align:left; font-size:12px; color:#64748b; text-transform:uppercase;">Student</th>
+                <th style="padding:12px; text-align:center; font-size:12px; color:#64748b; text-transform:uppercase;">Academic</th>
+                <th style="padding:12px; text-align:center; font-size:12px; color:#64748b; text-transform:uppercase;">SEL</th>
+                <th style="padding:12px; text-align:center; font-size:12px; color:#64748b; text-transform:uppercase;">CT</th>
+                <th style="padding:12px; text-align:center; font-size:12px; color:#64748b; text-transform:uppercase;">Leadership</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${analytics.students.map(s => `
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:12px; font-weight:600;">${s.name}</td>
+                  <td style="padding:12px; text-align:center; font-weight:700; color:${getScoreColor(s.academicAvg)};">${s.academicAvg}%</td>
+                  <td style="padding:12px; text-align:center; font-weight:700; color:${getScoreColor(s.sel)};">${s.sel}%</td>
+                  <td style="padding:12px; text-align:center; font-weight:700; color:${getScoreColor(s.ct)};">${s.ct}%</td>
+                  <td style="padding:12px; text-align:center; font-weight:700; color:${getScoreColor(s.lead)};">${s.lead}%</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+    
+    // Insights
+    const insightsHTML = analytics.insights.length > 0 ? `
+      <div style="background:white; padding:24px; border-radius:12px; margin-bottom:24px; box-shadow:0 2px 4px rgba(0,0,0,0.05); border:2px solid #8b5cf6;">
+        <h3 style="margin:0 0 16px 0; display:flex; align-items:center; gap:8px; color:#8b5cf6;">
+          <span style="font-size:24px;">💡</span> Insights
+        </h3>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          ${analytics.insights.map(insight => {
+            const levelColor = insight.level === 'success' ? '#10b981' : insight.level === 'warning' ? '#f59e0b' : '#3b82f6';
+            const levelBg = insight.level === 'success' ? '#f0fdf4' : insight.level === 'warning' ? '#fef3c7' : '#f0f9ff';
+            const icon = insight.level === 'success' ? '✓' : insight.level === 'warning' ? '⚠️' : 'ℹ️';
+            return `
+              <div style="padding:12px; background:${levelBg}; border-radius:8px; border-left:4px solid ${levelColor}; display:flex; align-items:center; gap:12px;">
+                <span style="font-size:20px;">${icon}</span>
+                <span style="color:#334155; font-size:14px;">${insight.message}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    ` : '';
+    
+    // Recommendations
+    const recommendationsHTML = analytics.recommendations.length > 0 ? `
+      <div style="background:white; padding:24px; border-radius:12px; box-shadow:0 2px 4px rgba(0,0,0,0.05); border:2px solid #3b82f6;">
+        <h3 style="margin:0 0 16px 0; display:flex; align-items:center; gap:8px; color:#3b82f6;">
+          <span style="font-size:24px;">🎯</span> Recommendations
+        </h3>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          ${analytics.recommendations.map(r => {
+            const priorityColor = r.priority === 'high' ? '#ef4444' : r.priority === 'medium' ? '#f59e0b' : '#10b981';
+            const priorityBg = r.priority === 'high' ? '#fee2e2' : r.priority === 'medium' ? '#fef3c7' : '#f0fdf4';
+            return `
+              <div style="padding:16px; background:${priorityBg}; border-radius:8px; border-left:4px solid ${priorityColor};">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                  <span style="font-weight:700; color:${priorityColor};">${r.category}</span>
+                  <span style="font-size:11px; padding:2px 8px; background:${priorityColor}; color:white; border-radius:12px; text-transform:uppercase; font-weight:600;">${r.priority}</span>
+                </div>
+                <div style="color:#334155; font-size:14px;">${r.message}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    ` : '';
+    
+    return headerHTML + academicHTML + skillsHTML + distributionHTML + studentsHTML + insightsHTML + recommendationsHTML;
+  }
+
+  /**
+   * Render pod skill card
+   */
+  function renderPodSkillCard(name, skillData, color) {
+    return `
+      <div style="padding:16px; background:#f8fafc; border-radius:8px; border:2px solid ${color};">
+        <div style="font-size:13px; font-weight:600; color:#64748b; margin-bottom:12px; text-align:center;">${name}</div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+          <span style="font-size:11px; color:#64748b;">Average:</span>
+          <span style="font-size:18px; font-weight:800; color:${color};">${skillData.average}%</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <span style="font-size:11px; color:#64748b;">Highest:</span>
+          <span style="font-size:14px; font-weight:700; color:#10b981;">${skillData.highest}%</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span style="font-size:11px; color:#64748b;">Lowest:</span>
+          <span style="font-size:14px; font-weight:700; color:#ef4444;">${skillData.lowest}%</span>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Render distribution bar
+   */
+  function renderDistributionBar(label, count, color) {
+    return `
+      <div style="text-align:center; padding:12px; background:#f8fafc; border-radius:8px; border:2px solid ${color};">
+        <div style="font-size:24px; font-weight:800; color:${color};">${count}</div>
+        <div style="font-size:11px; color:#64748b;">${label}</div>
+      </div>
+    `;
+  }
+
+  /**
+   * Render skill distribution
+   */
+  function renderSkillDistribution(skillName, dist) {
+    return `
+      <div style="padding:12px; background:#f8fafc; border-radius:8px;">
+        <div style="font-weight:600; font-size:12px; color:#334155; margin-bottom:8px;">${skillName}</div>
+        <div style="display:flex; gap:8px; font-size:11px;">
+          <div style="flex:1; text-align:center; padding:6px; background:#dcfce7; border-radius:4px;">
+            <div style="font-weight:800; color:#166534;">${dist.strong}</div>
+            <div style="color:#166534;">Strong</div>
+          </div>
+          <div style="flex:1; text-align:center; padding:6px; background:#dbeafe; border-radius:4px;">
+            <div style="font-weight:800; color:#1e40af;">${dist.developing}</div>
+            <div style="color:#1e40af;">Developing</div>
+          </div>
+          <div style="flex:1; text-align:center; padding:6px; background:#fef3c7; border-radius:4px;">
+            <div style="font-weight:800; color:#92400e;">${dist.needsSupport}</div>
+            <div style="color:#92400e;">Needs Support</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Get color based on score
+   */
+  function getScoreColor(score) {
+    if (score >= 80) return '#10b981';
+    if (score >= 60) return '#3b82f6';
+    if (score >= 40) return '#f59e0b';
+    return '#ef4444';
+  }
+
   // Expose to global scope (already named functions will be global when file is included normally)
   window.loadStudents = loadStudents;
   window.calculateAcademicAverage = calculateAcademicAverage;
@@ -2063,5 +2603,503 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
   window.viewPlanHistoryItem = viewPlanHistoryItem;
   window.executePlanFromHistory = executePlanFromHistory;
   window.deletePlanHistoryItem = deletePlanHistoryItem;
+  // ==================== DEEP ANALYTICS FUNCTIONS ====================
+  
+  /**
+   * Show cohort statistics view
+   */
+  function showCohortStats() {
+    try {
+      const students = StorageHelper.loadStudents().filter(s => !s.archived);
+      
+      if (!window.DeepAnalytics) {
+        alert('Deep Analytics module not loaded. Please refresh the page.');
+        console.error('DeepAnalytics module not found');
+        return;
+      }
+      
+      if (students.length === 0) {
+        alert('No students found. Please register students first.');
+        return;
+      }
+      
+      const cohortStats = window.DeepAnalytics.analyzeCohort(students);
+      const correlations = window.DeepAnalytics.analyzeCorrelations(students);
+      const atRisk = window.DeepAnalytics.identifyAtRiskStudents(students);
+      
+      if (!cohortStats) {
+        alert('Unable to generate statistics. Please ensure student data is complete.');
+        console.error('Failed to analyze cohort');
+        return;
+      }
+    
+    // Create modal
+    const modal = document.getElementById('deepAnalyticsModal') || createDeepAnalyticsModal();
+    const content = document.getElementById('deepAnalyticsContent');
+    
+    let html = '<div style="padding: 16px;">';
+    
+    // Summary Cards
+    html += `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Total Students</div>
+          <div style="font-size: 36px; font-weight: 800;">${cohortStats.cohortSize}</div>
+        </div>
+        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">At-Risk Students</div>
+          <div style="font-size: 36px; font-weight: 800;">${atRisk.length}</div>
+        </div>
+        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Average Academic</div>
+          <div style="font-size: 36px; font-weight: 800;">${cohortStats.academic.mean.toFixed(1)}%</div>
+        </div>
+        <div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Average Assessment</div>
+          <div style="font-size: 36px; font-weight: 800;">${cohortStats.assessment.mean.toFixed(1)}</div>
+        </div>
+      </div>
+    `;
+    
+    // Tabs for different views
+    html += `
+      <div style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0;">
+        <button class="btn btn-primary btn-small" onclick="switchDeepAnalyticsTab('statistics')" data-deep-tab="statistics" style="border-bottom: 3px solid #0b66d0; border-radius: 8px 8px 0 0;">📊 Statistics</button>
+        <button class="btn btn-secondary btn-small" onclick="switchDeepAnalyticsTab('correlations')" data-deep-tab="correlations" style="border-radius: 8px 8px 0 0;">📈 Correlations</button>
+        <button class="btn btn-secondary btn-small" onclick="switchDeepAnalyticsTab('atrisk')" data-deep-tab="atrisk" style="border-radius: 8px 8px 0 0;">⚠️ At-Risk</button>
+        <button class="btn btn-secondary btn-small" onclick="switchDeepAnalyticsTab('export')" data-deep-tab="export" style="border-radius: 8px 8px 0 0;">💾 Export</button>
+      </div>
+    `;
+    
+    // Statistics Tab
+    html += `<div id="deepAnalyticsStatistics" class="deep-analytics-tab">`;
+    html += renderCohortStatistics(cohortStats);
+    html += '</div>';
+    
+    // Correlations Tab
+    html += `<div id="deepAnalyticsCorrelations" class="deep-analytics-tab" style="display: none;">`;
+    html += renderCorrelations(correlations);
+    html += '</div>';
+    
+    // At-Risk Tab
+    html += `<div id="deepAnalyticsAtrisk" class="deep-analytics-tab" style="display: none;">`;
+    html += renderAtRiskStudents(atRisk);
+    html += '</div>';
+    
+    // Export Tab
+    html += `<div id="deepAnalyticsExport" class="deep-analytics-tab" style="display: none;">`;
+    html += renderExportOptions();
+    html += '</div>';
+    
+    html += '</div>';
+    
+    content.innerHTML = html;
+    modal.style.display = 'flex';
+    } catch (error) {
+      console.error('showCohortStats error:', error);
+      alert('Failed to load deep analytics. Please try again.');
+    }
+  }
+  
+  function createDeepAnalyticsModal() {
+    const modal = document.createElement('div');
+    modal.id = 'deepAnalyticsModal';
+    modal.className = 'modal';
+    modal.style.display = 'none';
+    
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width: 1000px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-header">
+          <h2>🔬 Deep Analytics & Insights</h2>
+          <button class="close-btn" onclick="closeDeepAnalyticsModal()">&times;</button>
+        </div>
+        <div id="deepAnalyticsContent"></div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    return modal;
+  }
+  
+  function closeDeepAnalyticsModal() {
+    const modal = document.getElementById('deepAnalyticsModal');
+    if (modal) modal.style.display = 'none';
+  }
+  
+  function switchDeepAnalyticsTab(tabName) {
+    // Update buttons
+    document.querySelectorAll('[data-deep-tab]').forEach(btn => {
+      if (btn.getAttribute('data-deep-tab') === tabName) {
+        btn.className = 'btn btn-primary btn-small';
+        btn.style.borderBottom = '3px solid #0b66d0';
+      } else {
+        btn.className = 'btn btn-secondary btn-small';
+        btn.style.borderBottom = 'none';
+      }
+    });
+    
+    // Update content
+    document.querySelectorAll('.deep-analytics-tab').forEach(tab => {
+      tab.style.display = 'none';
+    });
+    
+    const activeTab = document.getElementById(`deepAnalytics${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`);
+    if (activeTab) activeTab.style.display = 'block';
+  }
+  
+  function renderCohortStatistics(stats) {
+    let html = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">';
+    
+    // Academic Statistics
+    html += `
+      <div style="background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+        <h3 style="margin: 0 0 16px 0; color: #0b66d0;">📚 Academic Performance</h3>
+        <table style="width: 100%; font-size: 14px;">
+          <tr><td style="padding: 6px 0; font-weight: 600;">Mean:</td><td style="text-align: right;">${stats.academic.mean.toFixed(2)}%</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 600;">Median:</td><td style="text-align: right;">${stats.academic.median.toFixed(2)}%</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 600;">Std Dev:</td><td style="text-align: right;">${stats.academic.stdDev.toFixed(2)}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 600;">Min:</td><td style="text-align: right;">${stats.academic.min.toFixed(2)}%</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 600;">Max:</td><td style="text-align: right;">${stats.academic.max.toFixed(2)}%</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 600;">25th Percentile:</td><td style="text-align: right;">${stats.academic.p25.toFixed(2)}%</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 600;">75th Percentile:</td><td style="text-align: right;">${stats.academic.p75.toFixed(2)}%</td></tr>
+        </table>
+      </div>
+    `;
+    
+    // Assessment Statistics
+    html += `
+      <div style="background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+        <h3 style="margin: 0 0 16px 0; color: #0b66d0;">🎯 Assessment Scores</h3>
+        <table style="width: 100%; font-size: 14px;">
+          <tr><td style="padding: 6px 0; font-weight: 600;">Mean:</td><td style="text-align: right;">${stats.assessment.mean.toFixed(2)}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 600;">Median:</td><td style="text-align: right;">${stats.assessment.median.toFixed(2)}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 600;">Std Dev:</td><td style="text-align: right;">${stats.assessment.stdDev.toFixed(2)}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 600;">Min:</td><td style="text-align: right;">${stats.assessment.min.toFixed(2)}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 600;">Max:</td><td style="text-align: right;">${stats.assessment.max.toFixed(2)}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 600;">25th Percentile:</td><td style="text-align: right;">${stats.assessment.p25.toFixed(2)}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 600;">75th Percentile:</td><td style="text-align: right;">${stats.assessment.p75.toFixed(2)}</td></tr>
+        </table>
+      </div>
+    `;
+    
+    html += '</div>';
+    
+    // Distribution
+    html += `
+      <div style="background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-top: 20px;">
+        <h3 style="margin: 0 0 16px 0; color: #0b66d0;">📊 Performance Distribution</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+    `;
+    
+    Object.entries(stats.academic.distribution).forEach(([range, count]) => {
+      const percentage = (count / stats.cohortSize * 100).toFixed(1);
+      const color = range.includes('Excellent') ? '#22c55e' : range.includes('Good') ? '#3b82f6' : range.includes('Average') ? '#f59e0b' : '#ef4444';
+      html += `
+        <div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 14px;">
+            <span style="font-weight: 600;">${range}</span>
+            <span>${count} students (${percentage}%)</span>
+          </div>
+          <div style="background: #e2e8f0; height: 24px; border-radius: 12px; overflow: hidden;">
+            <div style="background: ${color}; height: 100%; width: ${percentage}%; transition: width 0.3s;"></div>
+          </div>
+        </div>
+      `;
+    });
+    
+    html += '</div></div>';
+    
+    return html;
+  }
+  
+  function renderCorrelations(correlations) {
+    if (!correlations) {
+      return '<div style="padding: 40px; text-align: center; color: #64748b;">Insufficient data for correlation analysis (minimum 3 students with complete data required)</div>';
+    }
+    
+    let html = '<div style="display: flex; flex-direction: column; gap: 16px;">';
+    
+    Object.entries(correlations).forEach(([key, corr]) => {
+      const absCoeff = Math.abs(corr.coefficient);
+      const color = absCoeff >= 0.7 ? '#22c55e' : absCoeff >= 0.5 ? '#3b82f6' : absCoeff >= 0.3 ? '#f59e0b' : '#64748b';
+      
+      html += `
+        <div style="background: white; border: 2px solid ${color}; border-radius: 12px; padding: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+            <h4 style="margin: 0; color: #0b66d0;">${formatCorrelationName(key)}</h4>
+            <span style="background: ${color}; color: white; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 700;">${corr.strength}</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div style="background: #f8fafc; padding: 12px; border-radius: 8px; text-align: center;">
+              <div style="font-size: 24px; font-weight: 800; color: ${color};">${corr.coefficient.toFixed(3)}</div>
+              <div style="font-size: 12px; color: #64748b;">Correlation (r)</div>
+            </div>
+            <div style="background: #f8fafc; padding: 12px; border-radius: 8px; text-align: center;">
+              <div style="font-size: 24px; font-weight: 800; color: ${color};">${corr.regression.r2.toFixed(3)}</div>
+              <div style="font-size: 12px; color: #64748b;">R² Value</div>
+            </div>
+            <div style="background: #f8fafc; padding: 12px; border-radius: 8px; text-align: center;">
+              <div style="font-size: 24px; font-weight: 800; color: ${color};">${corr.regression.slope.toFixed(2)}</div>
+              <div style="font-size: 12px; color: #64748b;">Slope</div>
+            </div>
+          </div>
+          <div style="background: #f8fafc; padding: 12px; border-radius: 8px; font-size: 14px; line-height: 1.6;">
+            ${corr.interpretation}
+          </div>
+        </div>
+      `;
+    });
+    
+    html += '</div>';
+    return html;
+  }
+  
+  function renderAtRiskStudents(atRisk) {
+    if (atRisk.length === 0) {
+      return '<div style="padding: 40px; text-align: center; color: #22c55e; font-size: 18px;">✓ No at-risk students identified</div>';
+    }
+    
+    let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+    
+    atRisk.forEach((item, idx) => {
+      const levelColor = item.riskLevel === 'high' ? '#ef4444' : item.riskLevel === 'medium' ? '#f59e0b' : '#64748b';
+      const levelBg = item.riskLevel === 'high' ? '#fee2e2' : item.riskLevel === 'medium' ? '#fef3c7' : '#f1f5f9';
+      
+      html += `
+        <div style="background: white; border-left: 4px solid ${levelColor}; border-radius: 8px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+            <div>
+              <h4 style="margin: 0 0 4px 0; color: #0b66d0;">${item.student.name}</h4>
+              <div style="font-size: 13px; color: #64748b;">Grade ${item.student.grade} • Risk Score: ${item.riskScore}</div>
+            </div>
+            <span style="background: ${levelColor}; color: white; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 700; text-transform: uppercase;">${item.riskLevel} RISK</span>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <div style="font-weight: 600; margin-bottom: 6px; font-size: 13px;">⚠️ Risk Factors:</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              ${item.risks.map(r => `<span style="background: ${levelBg}; color: ${levelColor}; padding: 4px 10px; border-radius: 12px; font-size: 12px;">${r}</span>`).join('')}
+            </div>
+          </div>
+          <div>
+            <div style="font-weight: 600; margin-bottom: 6px; font-size: 13px;">💡 Recommended Interventions:</div>
+            <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #475569;">
+              ${item.recommendations.map(r => `<li style="margin-bottom: 4px;">${r}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+      `;
+    });
+    
+    html += '</div>';
+    return html;
+  }
+  
+  function renderExportOptions() {
+    let html = `
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div style="background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+          <h3 style="margin: 0 0 12px 0; color: #0b66d0;">📊 Analytics Reports</h3>
+          <p style="color: #64748b; font-size: 14px; margin-bottom: 16px;">Export comprehensive analytics data</p>
+          <button class="btn btn-primary" onclick="exportFullAnalyticsCSV()" style="width: 100%; margin-bottom: 8px;">
+            📄 Export Full Analytics (CSV)
+          </button>
+          <button class="btn btn-secondary" onclick="exportCorrelationsCSV()" style="width: 100%; margin-bottom: 8px;">
+            📈 Export Correlations (CSV)
+          </button>
+          <button class="btn btn-secondary" onclick="exportCohortStatsCSV()" style="width: 100%;">
+            📊 Export Cohort Stats (CSV)
+          </button>
+        </div>
+        
+        <div style="background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+          <h3 style="margin: 0 0 12px 0; color: #0b66d0;">💾 Complete Data</h3>
+          <p style="color: #64748b; font-size: 14px; margin-bottom: 16px;">Export all data in JSON format</p>
+          <button class="btn btn-primary" onclick="exportComprehensiveJSON()" style="width: 100%; margin-bottom: 8px;">
+            📦 Export Complete Report (JSON)
+          </button>
+          <button class="btn btn-secondary" onclick="exportAtRiskStudentsCSV()" style="width: 100%;">
+            ⚠️ Export At-Risk Students (CSV)
+          </button>
+        </div>
+      </div>
+      
+      <div style="background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 12px; padding: 16px; margin-top: 20px;">
+        <div style="display: flex; align-items: start; gap: 12px;">
+          <span style="font-size: 24px;">ℹ️</span>
+          <div style="font-size: 13px; color: #475569; line-height: 1.6;">
+            <strong>Export Tips:</strong>
+            <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+              <li>CSV files can be opened in Excel or Google Sheets</li>
+              <li>JSON files contain the complete data structure</li>
+              <li>All exports include data as of ${new Date().toLocaleString()}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    return html;
+  }
+  
+  function formatCorrelationName(key) {
+    return key
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/Vs/g, 'vs')
+      .replace(/SEL/g, 'SEL')
+      .trim();
+  }
+  
+  // Export functions
+  function exportFullAnalyticsCSV() {
+    try {
+      const students = StorageHelper.loadStudents().filter(s => !s.archived);
+      const pods = StorageHelper.loadPods();
+      
+      if (students.length === 0) {
+        alert('No students to export');
+        return;
+      }
+      
+      const csv = window.DeepAnalytics.exportAnalyticsCSV(students, pods);
+      
+      if (csv.startsWith('Error:')) {
+        alert(csv);
+        return;
+      }
+      
+      downloadFile(csv, `brain-grain-analytics-${Date.now()}.csv`, 'text/csv');
+    } catch (error) {
+      console.error('exportFullAnalyticsCSV:', error);
+      alert('Failed to export analytics. Please try again.');
+    }
+  }
+  
+  function exportCorrelationsCSV() {
+    try {
+      const students = StorageHelper.loadStudents().filter(s => !s.archived);
+      
+      if (students.length < 3) {
+        alert('Need at least 3 students with complete data for correlations');
+        return;
+      }
+      
+      const correlations = window.DeepAnalytics.analyzeCorrelations(students);
+      
+      if (!correlations) {
+        alert('Unable to calculate correlations');
+        return;
+      }
+      
+      const csv = window.DeepAnalytics.exportCorrelationsCSV(students);
+      downloadFile(csv, `brain-grain-correlations-${Date.now()}.csv`, 'text/csv');
+    } catch (error) {
+      console.error('exportCorrelationsCSV:', error);
+      alert('Failed to export correlations. Please try again.');
+    }
+  }
+  
+  function exportCohortStatsCSV() {
+    try {
+      const students = StorageHelper.loadStudents().filter(s => !s.archived);
+      const cohortStats = window.DeepAnalytics.analyzeCohort(students);
+      
+      if (!cohortStats) {
+        alert('Unable to generate statistics');
+        return;
+      }
+      
+      const csv = window.DeepAnalytics.exportCohortStatsCSV(cohortStats);
+      downloadFile(csv, `brain-grain-cohort-stats-${Date.now()}.csv`, 'text/csv');
+    } catch (error) {
+      console.error('exportCohortStatsCSV:', error);
+      alert('Failed to export cohort statistics. Please try again.');
+    }
+  }
+  
+  function exportComprehensiveJSON() {
+    try {
+      const students = StorageHelper.loadStudents().filter(s => !s.archived);
+      const pods = StorageHelper.loadPods();
+      
+      if (students.length === 0) {
+        alert('No data to export');
+        return;
+      }
+      
+      const json = window.DeepAnalytics.exportComprehensiveJSON(students, pods);
+      downloadFile(json, `brain-grain-complete-report-${Date.now()}.json`, 'application/json');
+    } catch (error) {
+      console.error('exportComprehensiveJSON:', error);
+      alert('Failed to export JSON report. Please try again.');
+    }
+  }
+  
+  function exportAtRiskStudentsCSV() {
+    try {
+      const students = StorageHelper.loadStudents().filter(s => !s.archived);
+      
+      if (students.length === 0) {
+        alert('No students to export');
+        return;
+      }
+      
+      const atRisk = window.DeepAnalytics.identifyAtRiskStudents(students);
+    
+      if (atRisk.length === 0) {
+        alert('No at-risk students identified (good news!)');
+        return;
+      }
+      
+      const rows = [['Student ID', 'Name', 'Grade', 'Risk Level', 'Risk Score', 'Risk Factors', 'Recommendations']];
+      atRisk.forEach(item => {
+        rows.push([
+          item.student.id,
+          item.student.name,
+          item.student.grade,
+          item.riskLevel,
+          item.riskScore,
+          item.risks.join('; '),
+          item.recommendations.join('; ')
+        ]);
+      });
+      
+      const csv = rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+      downloadFile(csv, `brain-grain-at-risk-students-${Date.now()}.csv`, 'text/csv');
+    } catch (error) {
+      console.error('exportAtRiskStudentsCSV:', error);
+      alert('Failed to export at-risk students. Please try again.');
+    }
+  }
+  
+  function downloadFile(content, filename, mimeType) {
+    try {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('downloadFile:', error);
+      alert('Failed to download file. Please check browser permissions.');
+    }
+  }
+
+  // Analytics functions
+  window.showAnalytics = showAnalytics;
+  window.switchAnalyticsView = switchAnalyticsView;
+  window.loadStudentAnalytics = loadStudentAnalytics;
+  window.loadPodAnalytics = loadPodAnalytics;
+  window.showCohortStats = showCohortStats;
+  window.closeDeepAnalyticsModal = closeDeepAnalyticsModal;
+  window.switchDeepAnalyticsTab = switchDeepAnalyticsTab;
+  window.exportFullAnalyticsCSV = exportFullAnalyticsCSV;
+  window.exportCorrelationsCSV = exportCorrelationsCSV;
+  window.exportCohortStatsCSV = exportCohortStatsCSV;
+  window.exportComprehensiveJSON = exportComprehensiveJSON;
+  window.exportAtRiskStudentsCSV = exportAtRiskStudentsCSV;
 
 })();

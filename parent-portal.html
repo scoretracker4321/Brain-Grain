@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Grain - Parent Portal & Information</title>
+    <link rel="icon" href="assets/braingrainupdatedlogo.png" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0b66d0;
+            --secondary: #1976d2;
+            --accent: #667eea;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: #ffffff;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .cta-button {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(11, 102, 208, 0.3);
+        }
+
+        .cta-button.secondary {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6rem 2rem 4rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            opacity: 0.95;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hero .cta-button {
+            font-size: 1.1rem;
+            padding: 1rem 2rem;
+        }
+
+        /* Section Styles */
+        .section {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--primary);
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .feature-card p {
+            color: var(--gray);
+            line-height: 1.8;
+        }
+
+        /* Parent Portal Section */
+        .portal-section {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            padding: 4rem 2rem;
+        }
+
+        .portal-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .portal-container h2 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .error-message {
+            color: var(--danger);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        /* Student Progress Card */
+        .progress-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .progress-header h3 {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .progress-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray);
+            margin-top: 0.25rem;
+        }
+
+        /* Testimonials */
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .testimonial-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .testimonial-text {
+            font-style: italic;
+            color: var(--gray);
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5rem 2rem;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1e293b;
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(11,102,208,0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 0.8s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .progress-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Hidden class */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <img src="assets/braingrainupdatedlogo.png" alt="Brain Grain Logo">
+                <span>Brain Grain</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#about">About</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#portal">Parent Portal</a></li>
+                <li><a href="#testimonials">Testimonials</a></li>
+            </ul>
+            <a href="index.html" class="cta-button">Staff Login</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>🧠 Brain Grain</h1>
+        <p>Cognition Intelligence Platform for Human Potential</p>
+        <p style="font-size: 1.1rem; max-width: 800px; margin: 0 auto 2rem;">
+            Empowering students through personalized learning, social-emotional development, 
+            and cognitive intelligence training. Track your child's progress in real-time.
+        </p>
+        <div class="hero-buttons">
+            <a href="#portal" class="cta-button">Access Parent Portal</a>
+            <a href="#about" class="cta-button secondary">Learn More</a>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="section">
+        <h2 class="section-title">About Brain Grain</h2>
+        <div style="max-width: 800px; margin: 0 auto; text-align: center; font-size: 1.1rem; color: var(--gray); line-height: 1.8;">
+            <p style="margin-bottom: 1.5rem;">
+                Brain Grain is a comprehensive cognition intelligence platform designed to unlock 
+                every student's potential through personalized learning experiences, social-emotional 
+                development, and data-driven insights.
+            </p>
+            <p>
+                Currently piloting with 12 students at SVS 2, Chennai, we're revolutionizing how 
+                students learn, grow, and thrive through our innovative pod-based learning system 
+                and advanced analytics.
+            </p>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="section">
+        <h2 class="section-title">What We Offer</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📚</div>
+                <h3>Academic Excellence</h3>
+                <p>Personalized learning plans tailored to each student's academic needs, 
+                   with continuous progress tracking across all subjects.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">❤️</div>
+                <h3>SEL Development</h3>
+                <p>Social-Emotional Learning programs that build emotional intelligence, 
+                   resilience, and interpersonal skills for lifelong success.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🧠</div>
+                <h3>Cognitive Training</h3>
+                <p>Advanced critical thinking and problem-solving exercises designed to 
+                   enhance cognitive abilities and mental agility.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⭐</div>
+                <h3>Leadership Skills</h3>
+                <p>Leadership development through group activities, responsibility assignments, 
+                   and peer mentorship opportunities.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">👥</div>
+                <h3>Pod-Based Learning</h3>
+                <p>Small group learning environments (pods) that foster collaboration, 
+                   peer learning, and individualized attention.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Real-Time Analytics</h3>
+                <p>Comprehensive progress tracking with detailed insights into academic 
+                   performance, strengths, and areas for improvement.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Parent Portal Section -->
+    <section id="portal" class="portal-section">
+        <div class="portal-container">
+            <h2>👨‍👩‍👧‍👦 Parent Portal</h2>
+            
+            <!-- Login Form -->
+            <div id="loginForm">
+                <p style="text-align: center; color: var(--gray); margin-bottom: 2rem;">
+                    Access your child's progress, assessments, and detailed analytics
+                </p>
+                
+                <div class="form-group">
+                    <label class="form-label">Student ID or Phone Number</label>
+                    <input type="text" id="parentStudentId" class="form-input" placeholder="Enter student ID or 10-digit phone" />
+                    <span class="error-message" id="idError">Please enter a valid student ID or phone number</span>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Parent Phone Number</label>
+                    <input type="tel" id="parentPhone" class="form-input" placeholder="Enter your 10-digit phone number" maxlength="10" />
+                    <span class="error-message" id="phoneError">Please enter a valid 10-digit phone number</span>
+                </div>
+                
+                <button class="cta-button" onclick="parentLogin()" style="width: 100%; margin-top: 1rem;">
+                    View Progress
+                </button>
+                
+                <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--gray);">
+                    Don't have access? <a href="#contact" style="color: var(--primary); text-decoration: none;">Contact us</a>
+                </p>
+            </div>
+
+            <!-- Progress View (Hidden initially) -->
+            <div id="progressView" class="hidden">
+                <div class="success-message" id="successMsg">
+                    Successfully loaded student progress!
+                </div>
+                
+                <div class="progress-card">
+                    <div class="progress-header">
+                        <div>
+                            <h3 id="studentName">Loading...</h3>
+                            <p style="color: var(--gray); margin: 0;">Grade <span id="studentGrade">-</span></p>
+                        </div>
+                        <button class="cta-button secondary" onclick="parentLogout()" style="padding: 0.5rem 1rem;">
+                            Logout
+                        </button>
+                    </div>
+                    
+                    <div class="progress-stats">
+                        <div class="stat-box">
+                            <div class="stat-value" id="academicAvg">--</div>
+                            <div class="stat-label">Academic Average</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="assessmentScore">--</div>
+                            <div class="stat-label">Assessment Score</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="selScore">--</div>
+                            <div class="stat-label">SEL Score</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="ctScore">--</div>
+                            <div class="stat-label">Critical Thinking</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress-card">
+                    <h4 style="color: var(--primary); margin-bottom: 1rem;">📚 Subject Performance</h4>
+                    <div id="subjectScores">Loading...</div>
+                </div>
+
+                <div class="progress-card">
+                    <h4 style="color: var(--primary); margin-bottom: 1rem;">💪 Strengths</h4>
+                    <div id="studentStrengths">Loading...</div>
+                </div>
+
+                <div class="progress-card">
+                    <h4 style="color: var(--primary); margin-bottom: 1rem;">📈 Areas for Improvement</h4>
+                    <div id="studentWeaknesses">Loading...</div>
+                </div>
+
+                <div class="progress-card">
+                    <h4 style="color: var(--primary); margin-bottom: 1rem;">💡 Recommendations</h4>
+                    <div id="studentRecommendations">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="section">
+        <h2 class="section-title">What Parents Say</h2>
+        <div class="testimonial-grid">
+            <div class="testimonial-card">
+                <p class="testimonial-text">
+                    "Brain Grain has transformed how my daughter approaches learning. The personalized 
+                    attention and detailed progress tracking gives me confidence in her development."
+                </p>
+                <p class="testimonial-author">— Parent, SVS 2 Chennai</p>
+            </div>
+            <div class="testimonial-card">
+                <p class="testimonial-text">
+                    "The SEL focus is incredible. My son has become more confident, empathetic, and 
+                    better at handling challenges. His academic performance has improved too!"
+                </p>
+                <p class="testimonial-author">— Parent, SVS 2 Chennai</p>
+            </div>
+            <div class="testimonial-card">
+                <p class="testimonial-text">
+                    "Being able to see real-time progress through the parent portal is amazing. 
+                    I always know exactly how my child is doing and where to support them."
+                </p>
+                <p class="testimonial-author">— Parent, SVS 2 Chennai</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <h2>Ready to Unlock Your Child's Potential?</h2>
+        <p>Join Brain Grain and give your child the tools for lifelong success</p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="#portal" class="cta-button" style="background: white; color: var(--primary);">
+                Access Parent Portal
+            </a>
+            <a href="index.html" class="cta-button" style="background: transparent; border: 2px solid white;">
+                Register Your Child
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" id="contact">
+        <h3 style="margin-bottom: 1rem;">Contact Us</h3>
+        <p style="margin-bottom: 1.5rem;">
+            📍 Chennai, Tamil Nadu<br>
+            📧 info@braingrain.edu<br>
+            📱 +91 98765 43210
+        </p>
+        <div class="footer-links">
+            <a href="#about">About</a>
+            <a href="#features">Features</a>
+            <a href="#portal">Parent Portal</a>
+            <a href="index.html">Staff Login</a>
+        </div>
+        <p style="margin-top: 2rem; opacity: 0.7;">
+            © 2026 Brain Grain. All rights reserved.
+        </p>
+    </footer>
+
+    <!-- Load StorageHelper -->
+    <script src="utils.js"></script>
+    <script src="analytics.js"></script>
+
+    <script>
+        // Parent Portal Login
+        function parentLogin() {
+            const studentId = document.getElementById('parentStudentId').value.trim();
+            const parentPhone = document.getElementById('parentPhone').value.trim();
+            const idError = document.getElementById('idError');
+            const phoneError = document.getElementById('phoneError');
+            
+            // Reset errors
+            idError.style.display = 'none';
+            phoneError.style.display = 'none';
+            
+            // Validate inputs
+            let isValid = true;
+            
+            if (!studentId) {
+                idError.textContent = 'Please enter a student ID or phone number';
+                idError.style.display = 'block';
+                isValid = false;
+            }
+            
+            if (!/^[0-9]{10}$/.test(parentPhone)) {
+                phoneError.textContent = 'Please enter a valid 10-digit phone number';
+                phoneError.style.display = 'block';
+                isValid = false;
+            }
+            
+            if (!isValid) return;
+            
+            // Find student
+            try {
+                const students = StorageHelper.loadStudents();
+                const student = students.find(s => 
+                    s.id === studentId || 
+                    s.phone === studentId || 
+                    s.phone === parentPhone ||
+                    s.parentPhone === parentPhone
+                );
+                
+                if (!student) {
+                    idError.textContent = 'Student not found or phone number does not match';
+                    idError.style.display = 'block';
+                    return;
+                }
+                
+                // Security check - verify parent phone matches
+                if (student.parentPhone && student.parentPhone !== parentPhone) {
+                    phoneError.textContent = 'Parent phone number does not match our records';
+                    phoneError.style.display = 'block';
+                    return;
+                }
+                
+                // Load student progress
+                displayStudentProgress(student);
+                
+            } catch (error) {
+                console.error('Parent login error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+        
+        function displayStudentProgress(student) {
+            // Hide login, show progress
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('progressView').classList.remove('hidden');
+            document.getElementById('successMsg').style.display = 'block';
+            
+            // Basic info
+            document.getElementById('studentName').textContent = 
+                `${student.firstName || ''} ${student.lastName || ''}`.trim() || student.phone;
+            document.getElementById('studentGrade').textContent = student.grade || 'N/A';
+            
+            // Calculate analytics
+            let analytics = null;
+            try {
+                if (window.AnalyticsModule) {
+                    analytics = window.AnalyticsModule.calculateStudentAnalytics(student);
+                }
+            } catch (e) {
+                console.warn('Analytics calculation failed:', e);
+            }
+            
+            // Display scores
+            if (analytics) {
+                document.getElementById('academicAvg').textContent = 
+                    analytics.academic.average + '%';
+                document.getElementById('assessmentScore').textContent = 
+                    analytics.assessment.totalScore || 'N/A';
+                document.getElementById('selScore').textContent = 
+                    (analytics.assessment.sel?.percent || 0) + '%';
+                document.getElementById('ctScore').textContent = 
+                    (analytics.assessment.criticalThinking?.percent || 0) + '%';
+                
+                // Subject scores
+                let subjectHTML = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+                const subjects = analytics.academic.subjects;
+                Object.keys(subjects).forEach(subj => {
+                    const data = subjects[subj];
+                    subjectHTML += `
+                        <div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                                <span style="font-weight: 600; text-transform: capitalize;">${subj}</span>
+                                <span style="font-weight: 700; color: var(--primary);">${data.marks}/${data.maxMarks} (${data.percent}%)</span>
+                            </div>
+                            <div style="background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div style="background: var(--primary); height: 100%; width: ${data.percent}%; transition: width 0.3s;"></div>
+                            </div>
+                        </div>
+                    `;
+                });
+                subjectHTML += '</div>';
+                document.getElementById('subjectScores').innerHTML = subjectHTML;
+                
+                // Strengths
+                if (analytics.strengths && analytics.strengths.length > 0) {
+                    document.getElementById('studentStrengths').innerHTML = 
+                        '<ul style="padding-left: 1.5rem;">' +
+                        analytics.strengths.map(s => `<li style="margin-bottom: 0.5rem;">${s}</li>`).join('') +
+                        '</ul>';
+                } else {
+                    document.getElementById('studentStrengths').innerHTML = 
+                        '<p style="color: var(--gray);">Assessment in progress</p>';
+                }
+                
+                // Weaknesses
+                if (analytics.weaknesses && analytics.weaknesses.length > 0) {
+                    document.getElementById('studentWeaknesses').innerHTML = 
+                        '<ul style="padding-left: 1.5rem;">' +
+                        analytics.weaknesses.map(w => `<li style="margin-bottom: 0.5rem;">${w}</li>`).join('') +
+                        '</ul>';
+                } else {
+                    document.getElementById('studentWeaknesses').innerHTML = 
+                        '<p style="color: var(--gray);">No areas of concern identified</p>';
+                }
+                
+                // Recommendations
+                if (analytics.recommendations && analytics.recommendations.length > 0) {
+                    document.getElementById('studentRecommendations').innerHTML = 
+                        '<ul style="padding-left: 1.5rem;">' +
+                        analytics.recommendations.map(r => `<li style="margin-bottom: 0.5rem;">${r}</li>`).join('') +
+                        '</ul>';
+                } else {
+                    document.getElementById('studentRecommendations').innerHTML = 
+                        '<p style="color: var(--gray);">Continue with current learning plan</p>';
+                }
+            } else {
+                // Fallback if analytics not available
+                document.getElementById('academicAvg').textContent = 'N/A';
+                document.getElementById('assessmentScore').textContent = 'N/A';
+                document.getElementById('selScore').textContent = 'N/A';
+                document.getElementById('ctScore').textContent = 'N/A';
+                document.getElementById('subjectScores').innerHTML = 
+                    '<p style="color: var(--gray);">Data not yet available</p>';
+                document.getElementById('studentStrengths').innerHTML = 
+                    '<p style="color: var(--gray);">Assessment in progress</p>';
+                document.getElementById('studentWeaknesses').innerHTML = 
+                    '<p style="color: var(--gray);">Assessment in progress</p>';
+                document.getElementById('studentRecommendations').innerHTML = 
+                    '<p style="color: var(--gray);">Assessment in progress</p>';
+            }
+            
+            // Scroll to progress view
+            document.getElementById('progressView').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function parentLogout() {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('progressView').classList.add('hidden');
+            document.getElementById('successMsg').style.display = 'none';
+            document.getElementById('parentStudentId').value = '';
+            document.getElementById('parentPhone').value = '';
+            
+            // Scroll back to form
+            document.getElementById('loginForm').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
