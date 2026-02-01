@@ -6,7 +6,7 @@
       "use": "@vercel/node"
     },
     {
-      "src": "index.html",
+      "src": "*.html",
       "use": "@vercel/static"
     },
     {
@@ -28,12 +28,32 @@
       "dest": "server.js"
     },
     {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico))",
+      "src": "/brain-grain-one.html",
+      "dest": "/brain-grain-one.html"
+    },
+    {
+      "src": "/Brain%20Grain%20Journey.html",
+      "dest": "/Brain Grain Journey.html"
+    },
+    {
+      "src": "/Brain%20Grain%20Platform%20\\(2\\).html",
+      "dest": "/Brain Grain Platform (2).html"
+    },
+    {
+      "src": "/Impact%20Dashboard.html",
+      "dest": "/Impact Dashboard.html"
+    },
+    {
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|html))",
       "dest": "/$1"
     },
     {
+      "src": "/",
+      "dest": "/brain-grain-one.html"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/brain-grain-one.html"
     }
   ],
   "env": {

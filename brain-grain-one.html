@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Grain One - Unified Platform</title>
+    <link rel="icon" href="assets/braingrainupdatedlogo.png" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        h1 {
+            font-size: 4rem;
+            color: white;
+            margin-bottom: 15px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: rgba(255,255,255,0.95);
+            font-weight: 400;
+            line-height: 1.6;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.85);
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+        }
+
+        .card-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: block;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .card:hover .card-icon {
+            animation: bounce 0.6s ease;
+        }
+
+        .card h2 {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .card p {
+            font-size: 1.05rem;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .card-features {
+            list-style: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .card-features li {
+            font-size: 0.95rem;
+            color: #777;
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .card-features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .platform-access {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            animation: fadeInUp 1s ease;
+        }
+
+        .platform-access h2 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .platform-access p {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 18px 45px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.95rem;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+
+        /* Animation delays for staggered effect */
+        .card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+        .card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            .subtitle {
+                font-size: 1.2rem;
+            }
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            .card {
+                padding: 30px;
+            }
+        }
+
+        /* Particle background effect */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            animation: rise 15s infinite ease-in;
+        }
+
+        @keyframes rise {
+            from {
+                transform: translateY(100vh) scale(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-100vh) scale(1);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <div class="header">
+            <img src="assets/braingrainupdatedlogo.png" alt="Brain Grain Logo" class="logo" onerror="this.style.display='none'">
+            <h1>🧠 Brain Grain One</h1>
+            <p class="subtitle">The Operating System for Learning</p>
+            <p class="tagline">Measuring readiness, behavior & emotional safety — before marks appear</p>
+        </div>
+
+        <div class="cards-grid">
+            <a href="Brain Grain Journey.html" class="card" target="_blank">
+                <span class="card-icon">🗺️</span>
+                <h2>The Journey</h2>
+                <p>Complete student development roadmap from age 12-22</p>
+                <ul class="card-features">
+                    <li>Discovery Phase (12-14)</li>
+                    <li>High-Stakes Phase (15-17)</li>
+                    <li>Transition Phase (18-20)</li>
+                    <li>Launch Phase (20-22)</li>
+                </ul>
+            </a>
+
+            <a href="Brain Grain Platform (2).html" class="card" target="_blank">
+                <span class="card-icon">💻</span>
+                <h2>Platform Showcase</h2>
+                <p>Feature walkthrough and technical overview</p>
+                <ul class="card-features">
+                    <li>Student Management</li>
+                    <li>Pod-Based Learning</li>
+                    <li>AI Session Planning</li>
+                    <li>Analytics & Insights</li>
+                </ul>
+            </a>
+
+            <a href="Impact Dashboard.html" class="card" target="_blank">
+                <span class="card-icon">📊</span>
+                <h2>Impact Dashboard</h2>
+                <p>Metrics, case studies, and unit economics</p>
+                <ul class="card-features">
+                    <li>16-Week Progress Data</li>
+                    <li>Behavioral Changes</li>
+                    <li>Growth Roadmap</li>
+                    <li>Revenue Projections</li>
+                </ul>
+            </a>
+        </div>
+
+        <div class="platform-access">
+            <h2>🚀 Access the Platform</h2>
+            <p>Ready to experience Brain Grain in action?</p>
+            <a href="index.html" class="btn">Launch Brain Grain Platform</a>
+            <p style="margin-top: 20px; font-size: 0.9rem; color: #999;">
+                Demo Login: admin@braingrain.com / admin123
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>Chennai, Tamil Nadu | 2026</p>
+            <p style="margin-top: 10px;">
+                Building the first large-scale system to understand how children learn and behave
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Create animated particles
+        function createParticles() {
+            const particles = document.getElementById('particles');
+            const particleCount = 30;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                const size = Math.random() * 4 + 2;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                
+                particles.appendChild(particle);
+            }
+        }
+
+        createParticles();
+
+        // Add click tracking
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                console.log('Navigating to:', this.href);
+            });
+        });
+    </script>
+</body>
+</html>

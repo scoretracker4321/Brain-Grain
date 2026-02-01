@@ -1,5 +1,64 @@
-node_modules
-.git
-*.md
+# Vercel Ignore File
+# Files and directories to exclude from deployment
+
+# Node modules (installed fresh on deployment)
+node_modules/
+
+# Test files
 test/
-debug-pods.html
+*.test.js
+jest.config.js
+
+# Documentation (deploy selectively)
+*.md
+!README.md
+
+# Development files
+.env
+.env.local
+.env.development
+
+# Git files
+.git/
+.gitignore
+
+# IDE files
+.vscode/
+.idea/
+
+# Backup files
+*.bak
+*.backup
+backup.bat
+
+# Build artifacts (if any)
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Setup scripts (not needed in production)
+setup.bat
+setup.sh
+setup.js
+
+# Migration scripts
+migrate-*.js
+
+# Test data
+load-demo-data.html
+setup-test-data.html
+test-*.html
+debug-*.html
+
+# Demo workflow scripts
+demo-workflow.js
+run-demo.js
+smoke-test.js
+test-api-vercel.js

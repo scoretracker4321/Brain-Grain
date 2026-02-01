@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brain Grain Platform - Feature Showcase</title>
+<style>
+/* Theme Variables */
+:root {
+  --font-family-display: Arial, sans-serif;
+  --font-weight-display: 600;
+  --font-family-content: Arial, sans-serif;
+  --font-weight-content: 400;
+  --font-size-content: 16px;
+  --line-height-content: 1.4;
+}
+
+/* DARK THEME (DEFAULT) */
+body.theme-dark {
+  --color-bg-base: #0f172a;
+  --color-bg-elevated: #020617;
+  --color-bg-surface: #1e293b;
+  --color-bg-muted: #334155;
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #94a3b8;
+  --color-text-accent: #38bdf8;
+  --color-primary: #38bdf8;
+  --color-primary-foreground: #0f172a;
+}
+
+/* Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family-content);
+  font-weight: var(--font-weight-content);
+  font-size: var(--font-size-content);
+  line-height: var(--line-height-content);
+  overflow-x: hidden;
+}
+
+/* Slide Container */
+.slide {
+  width: 960px;
+  height: 540px;
+  margin: 0 auto 20px;
+  display: flex;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Layout Utilities */
+.row { flex-direction: row; }
+.col { flex-direction: column; }
+.center {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.space-between { justify-content: space-between; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+.fill-width { flex: 1; }
+.fill-height { flex: 1; display: flex; flex-direction: column; }
+
+/* Spacing */
+.gap-sm { gap: 0.5rem; }
+.gap-md { gap: 1rem; }
+.gap-lg { gap: 1.5rem; }
+.gap-xl { gap: 2rem; }
+.gap-2xl { gap: 3rem; }
+
+.p-4 { padding: 1rem; }
+.p-6 { padding: 1.5rem; }
+.p-8 { padding: 2rem; }
+.p-12 { padding: 3rem; }
+.p-16 { padding: 4rem; }
+
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+.mb-8 { margin-bottom: 2rem; }
+.mb-12 { margin-bottom: 3rem; }
+
+.mt-2 { margin-top: 0.5rem; }
+.mt-4 { margin-top: 1rem; }
+.mt-6 { margin-top: 1.5rem; }
+.mt-8 { margin-top: 2rem; }
+.mt-12 { margin-top: 3rem; }
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-display);
+  font-weight: var(--font-weight-display);
+  line-height: 1.2;
+  margin: 0;
+}
+
+h1 { font-size: 3rem; }
+h2 { font-size: 2.25rem; }
+h3 { font-size: 1.75rem; }
+h4 { font-size: 1.5rem; }
+h5 { font-size: 1.25rem; }
+h6 { font-size: 1rem; }
+
+.text-6xl { font-size: 3.75rem; }
+.text-5xl { font-size: 3rem; }
+.text-4xl { font-size: 2.25rem; }
+.text-3xl { font-size: 1.875rem; }
+.text-2xl { font-size: 1.5rem; }
+.text-xl { font-size: 1.25rem; }
+.text-lg { font-size: 1.125rem; }
+.text-base { font-size: 1rem; }
+.text-sm { font-size: 0.875rem; }
+.text-xs { font-size: 0.75rem; }
+
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+.font-medium { font-weight: 500; }
+.font-normal { font-weight: 400; }
+
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.opacity-90 { opacity: 0.9; }
+.opacity-80 { opacity: 0.8; }
+.opacity-70 { opacity: 0.7; }
+.opacity-60 { opacity: 0.6; }
+
+/* Lists */
+ul, ol {
+  margin-left: 2rem;
+  line-height: 1.8;
+}
+
+ul li { list-style: disc; }
+ol li { list-style: decimal; }
+
+li { margin-bottom: 0.75rem; }
+li:last-child { margin-bottom: 0; }
+
+/* Card Styles */
+.card-rect {
+  padding: 2rem;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Image styles */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.screenshot {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+</style>
+</head>
+<body class="theme-dark">
+
+  <!-- Slide 1: Title -->
+  <section class="slide p-16 col center" style="background-color: #020617; color: #f1f5f9;">
+    <h1 class="text-6xl mb-4" style="color: #38bdf8;">Brain Grain Platform</h1>
+    <p class="text-2xl mb-6" style="color: #cbd5e1;">Cognition Intelligence Platform for Student Development</p>
+    <p class="text-lg" style="color: #94a3b8;">Version 2.0.0 • Production Ready • February 2026</p>
+  </section>
+
+  <!-- Slide 2: What is Brain Grain -->
+  <section class="slide p-16 col" style="background-color: #0f172a; color: #f1f5f9;">
+    <h2 class="mb-6" style="color: #38bdf8;">What is Brain Grain?</h2>
+    <ul class="text-lg" style="color: #cbd5e1;">
+      <li>Comprehensive student development tracking platform</li>
+      <li>Measures academic performance, SEL, critical thinking, and leadership</li>
+      <li>AI-powered session planning for personalized learning</li>
+      <li>Pod-based learning management with behavioral analytics</li>
+    </ul>
+  </section>
+
+  <!-- Slide 3: Dashboard Overview -->
+  <section class="slide p-16 col" style="background-color: #0f172a; color: #f1f5f9;">
+    <h2 class="mb-4" style="color: #38bdf8;">Dashboard Overview</h2>
+    <img src="https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/0bcf295e-0fc3-495f-affd-46e98a4546f0" alt="Dashboard" class="screenshot" style="max-height: 380px; object-fit: contain;">
+  </section>
+
+  <!-- Slide 4: Core Capabilities -->
+  <section class="slide p-16 col" style="background-color: #0f172a; color: #f1f5f9;">
+    <h2 class="mb-6" style="color: #38bdf8;">Core Capabilities</h2>
+    <div class="row gap-md">
+      <div class="fill-width" style="background-color: #1e293b; padding: 1.5rem;">
+        <h3 class="mb-4" style="color: #38bdf8; font-size: 1.25rem;">Academic Tracking</h3>
+        <p style="color: #cbd5e1;">Subject-wise assessment with scaled scoring</p>
+      </div>
+      <div class="fill-width" style="background-color: #1e293b; padding: 1.5rem;">
+        <h3 class="mb-4" style="color: #38bdf8; font-size: 1.25rem;">Multi-Dimensional</h3>
+        <p style="color: #cbd5e1;">SEL, Critical Thinking, Leadership measurement</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 5: Student Management -->
+  <section class="slide p-16 col" style="background-color: #0f172a; color: #f1f5f9;">
+    <h2 class="mb-4" style="color: #38bdf8;">Student Management</h2>
+    <img src="https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/8c1906cd-674c-4905-b9f5-1717b6321f32" alt="Students" class="screenshot" style="max-height: 380px; object-fit: contain;">
+  </section>
+
+  <!-- Slide 6: Pod Management -->
+  <section class="slide p-16 col" style="background-color: #0f172a; color: #f1f5f9;">
+    <h2 class="mb-6" style="color: #38bdf8;">Pod-Based Learning</h2>
+    <ul class="text-lg mb-4" style="color: #cbd5e1;">
+      <li>Group students into learning pods</li>
+      <li>AI-powered session plan generation</li>
+      <li>Track pod performance and dynamics</li>
+    </ul>
+    <img src="https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/6f5f5897-f015-448b-8ea2-87d16c236316" alt="Pods" class="screenshot" style="max-height: 240px; object-fit: contain;">
+  </section>
+
+  <!-- Slide 7: Pod Creation -->
+  <section class="slide p-16 col" style="background-color: #0f172a; color: #f1f5f9;">
+    <h2 class="mb-4" style="color: #38bdf8;">Creating Learning Pods</h2>
+    <img src="https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/1cf45f3e-3126-4e41-b06c-19f9b101c803" alt="Create Pod" class="screenshot" style="max-height: 380px; object-fit: contain;">
+  </section>
+
+  <!-- Slide 8: AI Session Planning -->
+  <section class="slide p-16 col" style="background-color: #0f172a; color: #f1f5f9;">
+    <h2 class="mb-6" style="color: #38bdf8;">AI-Powered Session Planning</h2>
+    <ul class="text-lg" style="color: #cbd5e1;">
+      <li>Welcome sessions for trust-building</li>
+      <li>Problem-solving and teamwork activities</li>
+      <li>Personalized differentiation strategies</li>
+      <li>Student roles and observation signals</li>
+    </ul>
+  </section>
+
+  <!-- Slide 9: Session Plan Example -->
+  <section class="slide p-16 col" style="background-color: #0f172a; color: #f1f5f9;">
+    <h2 class="mb-4" style="color: #38bdf8;">Session Plan Details</h2>
+    <img src="https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/c664ce49-1f91-4255-8e14-b81d1994f59d" alt="Session Plan" class="screenshot" style="max-height: 380px; object-fit: contain;">
+  </section>
+
+  <!-- Slide 10: Session Feedback -->
+  <section class="slide p-16 col" style="background-color: #0f172a; color: #f1f5f9;">
+    <h2 class="mb-4" style="color: #38bdf8;">Emoji-Based Feedback System</h2>
+    <img src="https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/cc2d379b-591c-4676-a092-96db2801cfce" alt="Feedback" class="screenshot" style="max-height: 380px; object-fit: contain;">
+  </section>
+
+  <!-- Slide 11: Assessment System -->
+  <section class="slide p-16 col" style="background-color: #0f172a; color: #f1f5f9;">
+    <h2 class="mb-4" style="color: #38bdf8;">Interactive Assessment</h2>
+    <img src="https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/7f567e4e-c5f5-4ed6-829a-939b2c230245" alt="Assessment" class="screenshot" style="max-height: 380px; object-fit: contain;">
+  </section>
+
+  <!-- Slide 12: Student Distribution -->
+  <section class="slide p-16 col" style="background-color: #0f172a; color: #f1f5f9;">
+    <h2 class="mb-4" style="color: #38bdf8;">Student Distribution Analysis</h2>
+    <img src="https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/fe19ee36-fb49-4355-b485-2262ec2f03ad" alt="Distribution" class="screenshot" style="max-height: 380px; object-fit: contain;">
+  </section>
+
+  <!-- Slide 13: Correlation Analysis -->
+  <section class="slide p-16 col" style="background-color: #0f172a; color: #f1f5f9;">
+    <h2 class="mb-4" style="color: #38bdf8;">Deep Analytics: Correlations</h2>
+    <img src="https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/819d17f5-09c3-40d1-801a-921ebf74cf04" alt="Correlations" class="screenshot" style="max-height: 380px; object-fit: contain;">
+  </section>
+
+  <!-- Slide 14: Recommendations -->
+  <section class="slide p-16 col" style="background-color: #0f172a; color: #f1f5f9;">
+    <h2 class="mb-4" style="color: #38bdf8;">Personalized Recommendations</h2>
+    <img src="https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/29985fed-6d73-47c3-b4b4-744cbad2f2a1" alt="Recommendations" class="screenshot" style="max-height: 380px; object-fit: contain;">
+  </section>
+
+  <!-- Slide 15: Demo Pod Summary -->
+  <section class="slide p-16 col" style="background-color: #0f172a; color: #f1f5f9;">
+    <h2 class="mb-4" style="color: #38bdf8;">Pod Summary View</h2>
+    <img src="https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/6c914a96-345e-42c3-b8f1-2c70f85d7113" alt="Pod Summary" class="screenshot" style="max-height: 380px; object-fit: contain;">
+  </section>
+
+  <!-- Slide 16: Key Features Summary -->
+  <section class="slide p-16 col" style="background-color: #0f172a; color: #f1f5f9;">
+    <h2 class="mb-6" style="color: #38bdf8;">Key Features Summary</h2>
+    <div class="row gap-md">
+      <div class="fill-width" style="background-color: #1e293b; padding: 1.5rem;">
+        <h3 style="color: #38bdf8; font-size: 1.25rem; margin-bottom: 0.75rem;">Pod Management</h3>
+        <p style="color: #cbd5e1; font-size: 0.95rem;">Create groups, generate AI plans, track sessions</p>
+      </div>
+      <div class="fill-width" style="background-color: #1e293b; padding: 1.5rem;">
+        <h3 style="color: #38bdf8; font-size: 1.25rem; margin-bottom: 0.75rem;">Assessment</h3>
+        <p style="color: #cbd5e1; font-size: 0.95rem;">SEL, CT, Leadership evaluation</p>
+      </div>
+      <div class="fill-width" style="background-color: #1e293b; padding: 1.5rem;">
+        <h3 style="color: #38bdf8; font-size: 1.25rem; margin-bottom: 0.75rem;">Analytics</h3>
+        <p style="color: #cbd5e1; font-size: 0.95rem;">Deep insights, correlations, risk identification</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 17: Technical Architecture -->
+  <section class="slide p-16 col" style="background-color: #0f172a; color: #f1f5f9;">
+    <h2 class="mb-6" style="color: #38bdf8;">Technical Architecture</h2>
+    <ul class="text-lg" style="color: #cbd5e1;">
+      <li>Frontend: HTML5, CSS3, Vanilla JavaScript</li>
+      <li>Backend: Node.js, Express, Gemini AI API</li>
+      <li>Storage: localStorage + Firebase cloud sync</li>
+      <li>Deployment: Vercel with auto-deploy CI/CD</li>
+    </ul>
+  </section>
+
+  <!-- Slide 18: Future Vision -->
+  <section class="slide p-16 col" style="background-color: #0f172a; color: #f1f5f9;">
+    <h2 class="mb-6" style="color: #38bdf8;">Future Vision</h2>
+    <ul class="text-lg" style="color: #cbd5e1;">
+      <li>Student Learning Operating System</li>
+      <li>Thinking pattern capture and analysis</li>
+      <li>Lifelong learning portfolio (K-12 and beyond)</li>
+      <li>Predictive analytics and interventions</li>
+    </ul>
+  </section>
+
+  <!-- Slide 19: Thank You -->
+  <section class="slide p-16 col center" style="background-color: #020617; color: #f1f5f9;">
+    <h2 class="text-5xl mb-6" style="color: #38bdf8;">Thank You!</h2>
+    <p class="text-xl mb-8" style="color: #cbd5e1;">Experience Brain Grain</p>
+    <p class="text-lg" style="color: #94a3b8;">https://brain-grain.vercel.app</p>
+    <p class="text-base mt-6" style="color: #94a3b8;">Demo: admin@braingrain.com / admin123</p>
+  </section>
+
+</body>
+</html>
+
