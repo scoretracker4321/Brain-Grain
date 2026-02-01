@@ -2051,11 +2051,14 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
       populateStudentAnalyticsDropdown();
       
       // Auto-select first student
-      const select = document.getElementById('studentAnalyticsSelect');
-      if (select && select.options.length > 1) {
-        select.selectedIndex = 1; // Skip "-- Choose a student --" option
-        loadStudentAnalytics(select.value);
-      }
+      setTimeout(() => {
+        const select = document.getElementById('studentAnalyticsSelect');
+        if (select && select.options.length > 1) {
+          const firstStudentId = select.options[1].value;
+          select.value = firstStudentId;
+          loadStudentAnalytics(firstStudentId);
+        }
+      }, 50);
     } else {
       studentBtn.className = 'btn btn-secondary';
       podBtn.className = 'btn btn-primary';
@@ -2066,11 +2069,14 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
       populatePodAnalyticsDropdown();
       
       // Auto-select first pod
-      const select = document.getElementById('podAnalyticsSelect');
-      if (select && select.options.length > 1) {
-        select.selectedIndex = 1; // Skip "-- Choose a pod --" option
-        loadPodAnalytics(select.value);
-      }
+      setTimeout(() => {
+        const select = document.getElementById('podAnalyticsSelect');
+        if (select && select.options.length > 1) {
+          const firstPodId = select.options[1].value;
+          select.value = firstPodId;
+          loadPodAnalytics(firstPodId);
+        }
+      }, 50);
     }
   }
 
