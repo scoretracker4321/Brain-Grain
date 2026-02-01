@@ -63,7 +63,7 @@ app.post('/api/generate-pod-plan', async (req, res) => {
       : AI_CONFIG.endpoint;
 
     // System instruction for AI persona
-    const systemInstruction = `You are an expert educational mentor and session planner for the 'Brain Grain' learning pod. Your goal is to generate a detailed, highly engaging, and differentiated 45-minute Day 1 session plan. The plan must be specifically tailored to the individual learning needs, Social Emotional Learning (SEL) status, and academic gaps of each student provided in the input data. Your output must be a single, valid JSON object.`;
+    const systemInstruction = `You are an expert educational mentor and session planner for the 'Brain Grain' learning pod. You create DETAILED, SPECIFIC, and ACTIONABLE 45-minute session plans with RICH CONTENT that mentors can execute immediately.`;
 
     // Enhanced prompt with structured data and clear instructions
     const enhancedPrompt = `${systemInstruction}
@@ -73,45 +73,75 @@ ${prompt}
 Student Data:
 ${studentsData || podSummary}
 
-CRITICAL INSTRUCTIONS:
-1. For the 'differentiation' section in each activity, you MUST reference and utilize the academic_status, sel_status, and intervention_tags for EVERY student provided.
-2. Ensure the total activity time sums to 45 minutes.
-3. Output ONLY valid JSON matching this exact schema:
+MANDATORY REQUIREMENTS - YOUR PLAN WILL BE REJECTED IF THESE ARE NOT MET:
 
+1. SESSION STRUCTURE:
+   - Must include 4-5 detailed activities (NOT 3 generic ones)
+   - Total duration must equal 45 minutes exactly
+   - Each activity must have 6-20 minutes duration (not 5 min, not 25 min)
+   - Activities must build on each other progressively
+
+2. ACTIVITY DESCRIPTIONS - MUST BE DETAILED:
+   ❌ BAD: "Students share one word about how they feel today"
+   ✅ GOOD: "Each student takes turns sharing one word describing their current emotion. Facilitator models first with 'curious'. Go around circle - no judgment, just acknowledgment. Takes 6-8 minutes for 4 students."
+   
+   ❌ BAD: "Collaborative problem-solving exercise"
+   ✅ GOOD: "Present the Tower Challenge: using only 20 straws, 30cm tape, and 10 paper clips, build the tallest free-standing tower in 15 minutes. Tower must stand for 10 seconds unassisted. Groups of 2-3 work together, then present their design and explain their problem-solving strategy."
+
+   - Each description must be 2-4 sentences minimum
+   - Include specific materials, time limits, success criteria
+   - Explain HOW to facilitate, not just WHAT to do
+
+3. DIFFERENTIATION - MUST BE STUDENT-SPECIFIC:
+   - Create one instruction for EACH student by name
+   - Reference their actual needs from the student data
+   - Be specific about HOW to adapt for each student
+   
+   ❌ BAD: ["Support struggling students", "Challenge advanced learners"]
+   ✅ GOOD: [
+     "Aarav (low academic): Start with visual fraction bars, then transition to numeric problems",
+     "Priya (developing): Pair with Aarav to teach - explaining helps solidify understanding",
+     "Arjun (progressing): Challenge with multi-step problems, celebrate strategic thinking",
+     "Ananya (advanced): Invite to create her own challenging problem for the group"
+   ]
+
+4. OBSERVATION SIGNALS - MUST BE SPECIFIC:
+   ❌ BAD: "Monitor student engagement"
+   ✅ GOOD: "Watch for: eye contact during discussions, asking clarifying questions, helping peers without taking over, celebrating others' success. Red flags: disengagement, dominating conversation, frustration without asking for help, giving up quickly."
+
+5. STUDENT ROLES (MANDATORY):
+   - Must include student_roles object with role_list and instructions arrays
+   - Number of roles must match number of students
+   - Roles must be participation-based, not academic (Time Keeper, Materials Helper, Observer, Anchor, Bridge)
+   - Include rotation_note explaining why roles matter
+
+6. JSON OUTPUT STRUCTURE:
 {
-  "session_title": "string (catchy, relevant title)",
-  "objective": "string (main goal of the session)",
+  "session_title": "Engaging title (not generic like 'Follow-up Session')",
+  "objective": "Detailed objective with specific skills/outcomes (30-50 words)",
   "duration_minutes": 45,
   "student_roles": {
-    "role_list": ["Role 1", "Role 2", "Role 3", ...],
-    "instructions": ["Simple instruction for Role 1", "Simple instruction for Role 2", ...],
-    "rotation_note": "string (reminder about rotating roles)"
+    "role_list": ["Role 1", "Role 2", "Role 3", "Role 4"],
+    "instructions": ["Specific instruction 1", "Specific instruction 2", "Specific instruction 3", "Specific instruction 4"],
+    "rotation_note": "Why we rotate and how it helps (20-40 words)"
   },
   "activities": [
     {
-      "activity_title": "string",
-      "duration_minutes": number,
-      "description": "string (purpose and execution)",
-      "differentiation": ["specific instruction for Student 1", "specific instruction for Student 2", ...],
-      "signals": "string (what mentor should observe)"
+      "activity_title": "Specific Activity Name (not 'Warm-Up Circle')",
+      "duration_minutes": 8,
+      "description": "DETAILED 2-4 sentence description with materials, process, and success criteria",
+      "differentiation": [
+        "Student 1 Name: Specific adaptation for their needs",
+        "Student 2 Name: Specific adaptation for their needs",
+        "Student 3 Name: Specific adaptation for their needs",
+        "Student 4 Name: Specific adaptation for their needs"
+      ],
+      "signals": "SPECIFIC observable behaviors to watch for and red flags to notice (40-60 words)"
     }
   ]
 }
 
-ROLE_DISTRIBUTION_RULES (MANDATORY):
-- EACH session MUST include clearly defined student roles.
-- EVERY student in the pod MUST be assigned exactly one role.
-- Roles MUST guarantee participation without requiring speaking or writing.
-- Roles MUST be simple, neutral, and non-hierarchical.
-- Roles MUST rotate across sessions to avoid fixed identity or labelling.
-- The student_roles section MUST include:
-  - a short list of roles (matching the number of students in the pod),
-  - one simple instruction per role,
-  - wording that allows the mentor to assign roles verbally on the spot.
-- Roles MUST support regulation, observation, connection, or task movement, NOT academic performance.
-- Examples of good roles: "Time Keeper" (watches timer), "Materials Helper" (hands out items), "Observer" (notices group energy), "Anchor" (starts each activity), "Bridge" (connects ideas between activities).
-
-Generate the complete Day 1 session plan now:`;
+GENERATE A RICH, DETAILED, FACILITATOR-READY SESSION PLAN NOW:`;
 
     const body = usingGemini
       ? { 
@@ -258,6 +288,81 @@ app.get('/api/health', (req, res) => {
     aiConfigured: !!AI_CONFIG.apiKey,
     endpoint: AI_CONFIG.endpoint.includes('generativelanguage') ? 'Gemini' : 'OpenAI',
     timestamp: new Date().toISOString()
+  });
+});
+
+// Test plan generation endpoint - returns enhanced plan directly
+app.get('/api/test-plan', (req, res) => {
+  const enhancedPlan = {
+    session_title: 'Welcome Circle - Building Trust & Connection',
+    objective: 'Establish emotional safety, introduce Brain Grain approach, build initial peer connections through structured name-sharing, create a visual group agreement, and practice active listening skills that will be foundational for all future sessions.',
+    duration_minutes: 45,
+    student_roles: {
+      role_list: ['Time Keeper', 'Materials Helper', 'Energy Observer', 'Connection Builder'],
+      instructions: [
+        'Watch timer, give 2-minute and 30-second warnings during activities',
+        'Distribute markers, paper, or any materials needed for activities',
+        'Notice group energy (quiet/loud, engaged/distracted) and share observations',
+        'Help connect ideas between speakers, notice who hasn\'t spoken yet'
+      ],
+      rotation_note: 'Roles rotate each session to avoid labeling and ensure everyone experiences different participation modes. Today is just practice - don\'t stress perfection.'
+    },
+    activities: [
+      {
+        activity_title: 'Opening Name Circle - Who Am I?',
+        duration_minutes: 8,
+        description: 'Facilitator models first: share name, favorite snack, one emoji that describes you today. Go around circle (clockwise), everyone shares same format. Facilitator actively listens, repeats each name, asks one follow-up question per person to show genuine interest.',
+        differentiation: [
+          'Aarav: Ask about favorite superhero instead of emoji if he seems hesitant',
+          'Priya: Invite her to draw her emoji if verbal expression is challenging',
+          'Arjun: Physical movement - let him stand/stretch while sharing if needed',
+          'Ananya: Ask her to notice patterns in responses (leadership practice)'
+        ],
+        signals: 'Watch for: eye contact, voice volume, fidgeting, genuine smiles vs. forced. Red flags: silence, looking away, crossed arms. Adjust pace if anyone shows discomfort - this is safety-building, not performance.'
+      },
+      {
+        activity_title: 'Group Agreement Co-Creation',
+        duration_minutes: 12,
+        description: 'Facilitator asks: "What helps you feel safe to try, fail, and learn?" Collect 4-6 ideas from group (one per student if possible). Write on chart paper. Transform into simple rules using student language. Everyone signs/draws on agreement poster. This is THEIR agreement, not teacher-imposed.',
+        differentiation: [
+          'Aarav: Prompt with "When have you felt brave to try something new?"',
+          'Priya: Offer drawing option instead of writing words',
+          'Arjun: Accept physical demonstrations of ideas (e.g., showing "no interrupting")',
+          'Ananya: Invite her to suggest organizing framework if discussion gets scattered'
+        ],
+        signals: 'Listen for: ownership language ("we should", "I need"), specific examples, consensus-building. Intervene if ideas conflict - guide negotiation, don\'t impose. Success = genuine buy-in, not perfect rules.'
+      },
+      {
+        activity_title: 'Connection Web - Finding Commonalities',
+        duration_minutes: 15,
+        description: 'Stand in circle. Facilitator holds ball of yarn, shares "I love reading" - throws yarn to someone who also loves reading. That person holds strand, shares new statement, throws to next. Continue until web connects everyone. Visual metaphor: we\'re stronger connected than alone. End with "gently place web on floor" - discuss interdependence.',
+        differentiation: [
+          'Aarav: Prompt academic interests ("I like solving puzzles") to validate strengths',
+          'Priya: Allow emotions/feelings ("I feel happy when..." statements)',
+          'Arjun: Let him move around circle vs. standing still if restless',
+          'Ananya: Challenge her to find connection with quietest person first'
+        ],
+        signals: 'Observe: Who connects easily? Who struggles to find commonality (may need prompting)? Who throws gently vs. forcefully? Web strength = how much we WANT to connect, not just doing activity. Celebrate "small" connections.'
+      },
+      {
+        activity_title: 'Closing Reflection - One Word Check-Out',
+        duration_minutes: 10,
+        description: 'Quick round: everyone shares ONE WORD describing how they feel leaving today. Facilitator records words on board/paper (visual validation). Ask: "How do these words compare to when we started?" Homework (optional): "Notice one time this week you feel [your word from today]. Tell us next time." End with appreciation: "Thank you for your courage today."',
+        differentiation: [
+          'Aarav: Validate specific thinking/contributions observed',
+          'Priya: Normalize emotional language - feelings are data, not weakness',
+          'Arjun: Movement-based - let him walk to board to write/point at word',
+          'Ananya: Ask her to notice leadership moments she saw in others'
+        ],
+        signals: 'Final check: positive shift from start? If words are negative (bored, tired), don\'t dismiss - acknowledge, ask what would help next time. Success = honest expression, not fake positivity. Note who opts out - needs 1:1 later.'
+      }
+    ]
+  };
+
+  res.json({
+    success: true,
+    plan: JSON.stringify(enhancedPlan),
+    note: 'This is a test enhanced plan structure'
   });
 });
 
