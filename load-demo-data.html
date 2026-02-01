@@ -104,6 +104,10 @@
         <p class="subtitle">Instantly populate your Brain Grain platform with test data</p>
 
         <div class="info-box">
+            <strong>⚠️ IMPORTANT:</strong> If you previously loaded demo data, click "Clear Old Data" first to remove outdated plans. Then click "Load Demo Data" to get the new enhanced session plans with student roles, differentiation, and observation signals.
+        </div>
+
+        <div class="info-box">
             <strong>📦 What's included:</strong>
             <ul>
                 <li>4 students with full profiles and assessments</li>
@@ -121,6 +125,7 @@
             <div class="data-item"><strong>Ananya Reddy</strong> - Grade 7, 80% (Science star, leadership potential)</div>
         </div>
 
+        <button class="btn btn-primary" style="background: #ef4444;" onclick="clearOldData()">🗑️ Clear Old Data</button>
         <button class="btn btn-primary" onclick="loadDemoData()">📥 Load Demo Data</button>
         <button class="btn btn-secondary" onclick="openPlatform()">🚀 Open Platform</button>
 
@@ -656,6 +661,24 @@
             
             html += `</div>`;
             return html;
+        }
+
+        function clearOldData() {
+            try {
+                // Clear all demo-related data
+                localStorage.removeItem('braingrain_students');
+                localStorage.removeItem('braingrain_pods');
+                localStorage.removeItem('braingrain_pod_plans_DEMO_POD_1');
+                localStorage.removeItem('braingrain_session_feedback_DEMO_POD_1');
+                
+                const statusEl = document.getElementById('status');
+                statusEl.textContent = '✓ Old data cleared! Now click "Load Demo Data" to get fresh data.';
+                statusEl.className = 'status success show';
+            } catch (e) {
+                const statusEl = document.getElementById('status');
+                statusEl.textContent = '❌ Error clearing data: ' + e.message;
+                statusEl.className = 'status error show';
+            }
         }
 
         function loadDemoData() {
