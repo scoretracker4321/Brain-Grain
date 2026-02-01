@@ -366,6 +366,182 @@ app.get('/api/test-plan', (req, res) => {
   });
 });
 
+// Load demo data endpoint
+app.get('/api/load-demo-data', (req, res) => {
+  try {
+    const demoData = require('./load-demo-data.json');
+    res.json({
+      success: true,
+      data: demoData
+    });
+  } catch (error) {
+    // If JSON file doesn't exist, return inline demo data
+    const inlineDemo = {
+      students: [
+        {
+          id: 'DEMO_STU_1',
+          firstName: 'Aarav',
+          lastName: 'Mehta',
+          grade: '6',
+          school: 'Sunrise International School',
+          phone: '9876543210',
+          dob: '2013-04-15',
+          doorNo: '12/A',
+          street: 'MG Road',
+          area: 'Koramangala',
+          city: 'Bangalore',
+          pincode: '560034',
+          parentName: 'Rajesh Mehta',
+          parentRelation: 'Father',
+          parentPhone: '9876543210',
+          parentEmail: 'rajesh@example.com',
+          childGoodAt: 'Solving puzzles and logic games',
+          wishForChild: 'Build communication confidence',
+          source: 'School recommendation',
+          examType: 'midterm',
+          maxMarks: 60,
+          english: 32,
+          maths: 28,
+          tamil: 30,
+          science: 35,
+          social: 27,
+          behaviour: 'Calm but hesitant to speak in groups',
+          supportNeeds: ['one-on-one', 'confidence-building'],
+          enjoyDoing: 'Reading comics',
+          findDifficult: 'Public speaking',
+          assessmentScore: 45,
+          assessmentBreakdown: { selPercent: 35, ctPercent: 50, leadPercent: 40 },
+          assessmentStatus: 'Completed',
+          registeredAt: new Date().toISOString()
+        },
+        {
+          id: 'DEMO_STU_2',
+          firstName: 'Priya',
+          lastName: 'Sharma',
+          grade: '6',
+          school: 'Greenfield Academy',
+          phone: '9876543211',
+          dob: '2013-07-22',
+          doorNo: '45',
+          street: 'Lake View Road',
+          area: 'Indiranagar',
+          city: 'Bangalore',
+          pincode: '560038',
+          parentName: 'Meena Sharma',
+          parentRelation: 'Mother',
+          parentPhone: '9876543211',
+          parentEmail: 'meena@example.com',
+          childGoodAt: 'Creative arts and storytelling',
+          wishForChild: 'Improve math skills',
+          source: 'Friend referral',
+          examType: 'midterm',
+          maxMarks: 60,
+          english: 38,
+          maths: 25,
+          tamil: 35,
+          science: 30,
+          social: 34,
+          behaviour: 'Expressive and creative',
+          supportNeeds: ['math-practice', 'confidence-building'],
+          enjoyDoing: 'Drawing and painting',
+          findDifficult: 'Word problems in math',
+          assessmentScore: 52,
+          assessmentBreakdown: { selPercent: 55, ctPercent: 45, leadPercent: 50 },
+          assessmentStatus: 'Completed',
+          registeredAt: new Date().toISOString()
+        },
+        {
+          id: 'DEMO_STU_3',
+          firstName: 'Arjun',
+          lastName: 'Patel',
+          grade: '7',
+          school: 'Riverdale High',
+          phone: '9876543212',
+          dob: '2012-01-10',
+          doorNo: '78/B',
+          street: 'Brigade Road',
+          area: 'Shanthinagar',
+          city: 'Bangalore',
+          pincode: '560027',
+          parentName: 'Amit Patel',
+          parentRelation: 'Father',
+          parentPhone: '9876543212',
+          parentEmail: 'amit@example.com',
+          childGoodAt: 'Sports and physical activities',
+          wishForChild: 'Better focus in academics',
+          source: 'Social media',
+          examType: 'midterm',
+          maxMarks: 60,
+          english: 30,
+          maths: 32,
+          tamil: 28,
+          science: 34,
+          social: 30,
+          behaviour: 'Energetic, needs movement breaks',
+          supportNeeds: ['focus-techniques', 'study-plan'],
+          enjoyDoing: 'Playing cricket',
+          findDifficult: 'Sitting still for long periods',
+          assessmentScore: 58,
+          assessmentBreakdown: { selPercent: 50, ctPercent: 55, leadPercent: 65 },
+          assessmentStatus: 'Completed',
+          registeredAt: new Date().toISOString()
+        },
+        {
+          id: 'DEMO_STU_4',
+          firstName: 'Ananya',
+          lastName: 'Reddy',
+          grade: '7',
+          school: 'Blue Ridge Academy',
+          phone: '9876543213',
+          dob: '2012-11-05',
+          doorNo: '23',
+          street: 'Residency Road',
+          area: 'Richmond Town',
+          city: 'Bangalore',
+          pincode: '560025',
+          parentName: 'Sanjay Reddy',
+          parentRelation: 'Father',
+          parentPhone: '9876543213',
+          parentEmail: 'sanjay@example.com',
+          childGoodAt: 'Science and logical reasoning',
+          wishForChild: 'Develop leadership skills',
+          source: 'Website',
+          examType: 'midterm',
+          maxMarks: 60,
+          english: 52,
+          maths: 50,
+          tamil: 45,
+          science: 54,
+          social: 48,
+          behaviour: 'Focused and helps peers',
+          supportNeeds: ['leadership-development'],
+          enjoyDoing: 'Science experiments',
+          findDifficult: 'Group dynamics sometimes',
+          assessmentScore: 72,
+          assessmentBreakdown: { selPercent: 70, ctPercent: 75, leadPercent: 72 },
+          assessmentStatus: 'Completed',
+          registeredAt: new Date().toISOString()
+        }
+      ],
+      pods: [
+        {
+          id: 'DEMO_POD_1',
+          name: 'Demo Pod - Mixed Abilities',
+          studentIds: ['DEMO_STU_1', 'DEMO_STU_2', 'DEMO_STU_3', 'DEMO_STU_4'],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ]
+    };
+
+    res.json({
+      success: true,
+      data: inlineDemo,
+      note: 'Using inline demo data'
+    });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Brain Grain server running on http://localhost:${PORT}`);
