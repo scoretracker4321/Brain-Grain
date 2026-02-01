@@ -625,37 +625,67 @@
         };
 
         function generateFacilitatorHTML(planObj) {
-            let html = `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">`;
+            let html = `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6;">`;
             
-            html += `<h2 style="color: #0b66d0; margin-bottom: 8px;">${planObj.session_title}</h2>`;
-            html += `<div style="background: #f0f9ff; padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #0ea5e9;">`;
-            html += `<strong>Objective:</strong> ${planObj.objective}<br>`;
-            html += `<strong>Duration:</strong> ${planObj.duration_minutes} minutes`;
+            html += `<h2 style="color: #0b66d0; margin: 0 0 16px 0; font-size: 24px; font-weight: 700;">${planObj.session_title}</h2>`;
+            
+            html += `<div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 16px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid #0ea5e9; box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);">`;
+            html += `<div style="margin-bottom: 8px;"><strong style="color: #0369a1; font-size: 14px;">📋 OBJECTIVE:</strong></div>`;
+            html += `<div style="font-size: 15px; color: #0c4a6e; line-height: 1.5;">${planObj.objective}</div>`;
+            html += `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(14, 165, 233, 0.2);"><strong style="color: #0369a1; font-size: 14px;">⏱️ Duration:</strong> <span style="font-weight: 600; color: #0c4a6e;">${planObj.duration_minutes} minutes</span></div>`;
             html += `</div>`;
             
             if (planObj.student_roles) {
-                html += `<div style="background: #fef3c7; padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #f59e0b;">`;
-                html += `<strong>Student Roles:</strong><ul style="margin: 8px 0;">`;
+                html += `<div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 16px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid #f59e0b; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);">`;
+                html += `<div style="margin-bottom: 12px;"><strong style="color: #92400e; font-size: 16px;">👥 STUDENT ROLES FOR TODAY:</strong></div>`;
+                html += `<ul style="margin: 0; padding-left: 20px; list-style: none;">`;
                 planObj.student_roles.role_list.forEach((role, i) => {
-                    html += `<li><strong>${role}:</strong> ${planObj.student_roles.instructions[i]}</li>`;
+                    html += `<li style="margin-bottom: 8px; padding: 8px 12px; background: rgba(255, 255, 255, 0.6); border-radius: 6px;">`;
+                    html += `<strong style="color: #78350f; font-size: 14px;">🎭 ${role}:</strong> `;
+                    html += `<span style="color: #451a03; font-size: 13px;">${planObj.student_roles.instructions[i]}</span>`;
+                    html += `</li>`;
                 });
-                html += `</ul><em style="font-size: 12px;">${planObj.student_roles.rotation_note}</em></div>`;
+                html += `</ul>`;
+                html += `<div style="margin-top: 12px; padding: 10px; background: rgba(255, 255, 255, 0.5); border-radius: 6px;">`;
+                html += `<em style="font-size: 13px; color: #78350f;">💡 ${planObj.student_roles.rotation_note}</em>`;
+                html += `</div>`;
+                html += `</div>`;
             }
             
+            html += `<div style="margin-bottom: 12px;"><strong style="color: #0b66d0; font-size: 18px;">🎯 ACTIVITIES:</strong></div>`;
+            
             planObj.activities.forEach((act, idx) => {
-                html += `<div style="background: white; border: 2px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px;">`;
-                html += `<h3 style="color: #1e40af; margin: 0 0 8px 0;">${idx + 1}. ${act.activity_title} (${act.duration_minutes} min)</h3>`;
-                html += `<p style="margin: 8px 0;"><strong>What to do:</strong> ${act.description}</p>`;
+                html += `<div style="background: white; border: 2px solid #0ea5e9; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(14, 165, 233, 0.08);">`;
+                html += `<h3 style="color: #0369a1; margin: 0 0 12px 0; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">`;
+                html += `<span style="background: #0ea5e9; color: white; width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 16px;">${idx + 1}</span>`;
+                html += `${act.activity_title}`;
+                html += `<span style="margin-left: auto; background: #f0f9ff; color: #0369a1; padding: 4px 12px; border-radius: 20px; font-size: 14px; font-weight: 600;">⏱️ ${act.duration_minutes} min</span>`;
+                html += `</h3>`;
+                
+                html += `<div style="background: #f8fafc; padding: 14px; border-radius: 8px; margin: 12px 0; border-left: 3px solid #64748b;">`;
+                html += `<div style="margin-bottom: 6px;"><strong style="color: #475569; font-size: 13px;">📝 WHAT TO DO:</strong></div>`;
+                html += `<p style="margin: 0; color: #1e293b; font-size: 14px; line-height: 1.6;">${act.description}</p>`;
+                html += `</div>`;
                 
                 if (act.differentiation && act.differentiation.length > 0) {
-                    html += `<div style="background: #f0fdf4; padding: 10px; border-radius: 6px; margin: 8px 0;">`;
-                    html += `<strong>Differentiation:</strong><ul style="margin: 4px 0; padding-left: 20px;">`;
-                    act.differentiation.forEach(d => html += `<li style="font-size: 13px;">${d}</li>`);
+                    html += `<div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 14px; border-radius: 8px; margin: 12px 0; border-left: 4px solid #22c55e;">`;
+                    html += `<div style="margin-bottom: 8px;"><strong style="color: #15803d; font-size: 13px;">🎯 DIFFERENTIATION (Per Student):</strong></div>`;
+                    html += `<ul style="margin: 0; padding-left: 20px;">`;
+                    act.differentiation.forEach(d => {
+                        const studentName = d.split(':')[0].trim();
+                        const instruction = d.split(':').slice(1).join(':').trim();
+                        html += `<li style="margin-bottom: 6px; font-size: 13px; color: #166534;">`;
+                        html += `<strong style="color: #15803d;">${studentName}:</strong> ${instruction}`;
+                        html += `</li>`;
+                    });
                     html += `</ul></div>`;
                 }
                 
-                html += `<div style="background: #fef3c7; padding: 10px; border-radius: 6px; margin-top: 8px;">`;
-                html += `<strong>Watch for:</strong> ${act.signals}</div>`;
+                html += `<div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 14px; border-radius: 8px; border-left: 4px solid #f59e0b;">`;
+                html += `<div style="margin-bottom: 6px;"><strong style="color: #92400e; font-size: 13px;">👀 WATCH FOR (Observation Signals):</strong></div>`;
+                html += `<p style="margin: 0; color: #78350f; font-size: 13px; line-height: 1.6;">${act.signals}</p>`;
+                html += `</div>`;
+                
                 html += `</div>`;
             });
             
@@ -685,22 +715,42 @@
             const statusEl = document.getElementById('status');
             
             try {
+                console.log('🔄 Starting demo data load...');
+                
                 // Generate facilitatorHtml for each plan
-                demoData.podPlans.forEach(plan => {
-                    const planObj = JSON.parse(plan.plan);
-                    plan.facilitatorHtml = generateFacilitatorHTML(planObj);
+                console.log(`📋 Generating HTML for ${demoData.podPlans.length} plans...`);
+                demoData.podPlans.forEach((plan, idx) => {
+                    try {
+                        const planObj = JSON.parse(plan.plan);
+                        console.log(`  Plan ${idx + 1}: "${planObj.session_title}" - ${planObj.activities.length} activities`);
+                        plan.facilitatorHtml = generateFacilitatorHTML(planObj);
+                        console.log(`  ✓ Generated ${plan.facilitatorHtml.length} chars of HTML`);
+                    } catch (e) {
+                        console.error(`  ❌ Failed to generate HTML for plan ${idx + 1}:`, e);
+                    }
                 });
                 
                 // Load students
+                console.log(`👥 Loading ${demoData.students.length} students...`);
                 localStorage.setItem('braingrain_students', JSON.stringify(demoData.students));
                 
                 // Load pods
+                console.log(`🏫 Loading ${demoData.pods.length} pods...`);
                 localStorage.setItem('braingrain_pods', JSON.stringify(demoData.pods));
                 
                 // Load pod plans
+                console.log(`📝 Saving ${demoData.podPlans.length} plans to localStorage...`);
                 localStorage.setItem('braingrain_pod_plans_DEMO_POD_1', JSON.stringify(demoData.podPlans));
                 
+                // Verify save
+                const savedPlans = JSON.parse(localStorage.getItem('braingrain_pod_plans_DEMO_POD_1'));
+                console.log(`✓ Verified: ${savedPlans.length} plans saved`);
+                savedPlans.forEach((p, i) => {
+                    console.log(`  Plan ${i + 1}: Has facilitatorHtml? ${!!p.facilitatorHtml} (${p.facilitatorHtml ? p.facilitatorHtml.length + ' chars' : 'MISSING'})`);
+                });
+                
                 // Load feedback
+                console.log(`💬 Loading ${demoData.feedback.length} feedback entries...`);
                 localStorage.setItem('braingrain_session_feedback_DEMO_POD_1', JSON.stringify(demoData.feedback));
                 
                 // Mark as synced
