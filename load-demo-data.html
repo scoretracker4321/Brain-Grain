@@ -619,10 +619,55 @@
             ]
         };
 
+        function generateFacilitatorHTML(planObj) {
+            let html = `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">`;
+            
+            html += `<h2 style="color: #0b66d0; margin-bottom: 8px;">${planObj.session_title}</h2>`;
+            html += `<div style="background: #f0f9ff; padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #0ea5e9;">`;
+            html += `<strong>Objective:</strong> ${planObj.objective}<br>`;
+            html += `<strong>Duration:</strong> ${planObj.duration_minutes} minutes`;
+            html += `</div>`;
+            
+            if (planObj.student_roles) {
+                html += `<div style="background: #fef3c7; padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #f59e0b;">`;
+                html += `<strong>Student Roles:</strong><ul style="margin: 8px 0;">`;
+                planObj.student_roles.role_list.forEach((role, i) => {
+                    html += `<li><strong>${role}:</strong> ${planObj.student_roles.instructions[i]}</li>`;
+                });
+                html += `</ul><em style="font-size: 12px;">${planObj.student_roles.rotation_note}</em></div>`;
+            }
+            
+            planObj.activities.forEach((act, idx) => {
+                html += `<div style="background: white; border: 2px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px;">`;
+                html += `<h3 style="color: #1e40af; margin: 0 0 8px 0;">${idx + 1}. ${act.activity_title} (${act.duration_minutes} min)</h3>`;
+                html += `<p style="margin: 8px 0;"><strong>What to do:</strong> ${act.description}</p>`;
+                
+                if (act.differentiation && act.differentiation.length > 0) {
+                    html += `<div style="background: #f0fdf4; padding: 10px; border-radius: 6px; margin: 8px 0;">`;
+                    html += `<strong>Differentiation:</strong><ul style="margin: 4px 0; padding-left: 20px;">`;
+                    act.differentiation.forEach(d => html += `<li style="font-size: 13px;">${d}</li>`);
+                    html += `</ul></div>`;
+                }
+                
+                html += `<div style="background: #fef3c7; padding: 10px; border-radius: 6px; margin-top: 8px;">`;
+                html += `<strong>Watch for:</strong> ${act.signals}</div>`;
+                html += `</div>`;
+            });
+            
+            html += `</div>`;
+            return html;
+        }
+
         function loadDemoData() {
             const statusEl = document.getElementById('status');
             
             try {
+                // Generate facilitatorHtml for each plan
+                demoData.podPlans.forEach(plan => {
+                    const planObj = JSON.parse(plan.plan);
+                    plan.facilitatorHtml = generateFacilitatorHTML(planObj);
+                });
+                
                 // Load students
                 localStorage.setItem('braingrain_students', JSON.stringify(demoData.students));
                 
