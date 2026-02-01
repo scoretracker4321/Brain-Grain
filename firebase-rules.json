@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "brain_grain": {
+      "primary_user": {
+        ".read": true,
+        ".write": true
+      }
+    }
+  }
+}

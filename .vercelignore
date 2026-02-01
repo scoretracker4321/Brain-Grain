@@ -57,8 +57,7 @@ setup-test-data.html
 test-*.html
 debug-*.html
 
-# Demo workflow scripts
-demo-workflow.js
+# Demo workflow scripts (demo-workflow.js is needed for production)
 run-demo.js
 smoke-test.js
 test-api-vercel.js
