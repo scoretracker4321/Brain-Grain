@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Test Data - Brain Grain</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 { color: #0b66d0; margin-bottom: 10px; }
+        .subtitle { color: #666; margin-bottom: 30px; }
+        .btn {
+            background: #0b66d0;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 10px 10px 0;
+            font-weight: 600;
+        }
+        .btn:hover { background: #1976d2; }
+        .btn-secondary {
+            background: #22c55e;
+        }
+        .btn-secondary:hover { background: #16a34a; }
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            display: none;
+        }
+        .status.success {
+            background: #dcfce7;
+            border: 1px solid #22c55e;
+            color: #166534;
+        }
+        .status.error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background: #e0f2fe;
+            border-left: 4px solid #0b66d0;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .data-summary {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Data Setup</h1>
+        <p class="subtitle">Populate Brain Grain with demo students, pods, and session plans</p>
+
+        <div class="info">
+            <strong>📋 What This Does:</strong>
+            <ul>
+                <li>Creates 4 test students with varying performance levels</li>
+                <li>Sets up 2 sample pods (Beginner & Advanced)</li>
+                <li>Adds complete student profiles with academic scores</li>
+                <li>Syncs to Firebase if cloud sync is enabled</li>
+            </ul>
+        </div>
+
+        <button class="btn" onclick="setupTestData()">🚀 Setup Test Data</button>
+        <button class="btn btn-secondary" onclick="viewData()">👀 View Current Data</button>
+        <button class="btn" style="background: #ef4444;" onclick="clearAllData()">🗑️ Clear All Data</button>
+
+        <div id="status" class="status"></div>
+        <div id="summary" class="data-summary" style="display:none;"></div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <a href="index.html" style="color: #0b66d0; text-decoration: none;">← Back to Brain Grain Platform</a>
+        </div>
+    </div>
+
+    <script src="utils.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        function showStatus(message, type = 'success') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+        }
+
+        function setupTestData() {
+            try {
+                const now = new Date().toISOString();
+                
+                // Create 4 test students with comprehensive data
+                const students = [
+                    {
+                        id: 'STU_ALICE_LOW',
+                        firstName: 'Alice',
+                        lastName: 'Kumar',
+                        grade: '6',
+                        school: 'Sunrise Public School',
+                        phone: '9876500100',
+                        dob: '2013-05-21',
+                        doorNo: '12A',
+                        street: 'Lake Road',
+                        area: 'Shanthi Nagar',
+                        city: 'Chennai',
+                        state: 'Tamil Nadu',
+                        pincode: '600042',
+                        parentName: 'Ravi Kumar',
+                        parentRelation: 'Father',
+                        parentPhone: '9876500199',
+                        parentEmail: 'ravi@example.com',
+                        childGoodAt: 'Drawing and storytelling',
+                        wishForChild: 'Improve confidence in maths',
+                        source: 'Friend',
+                        examType: 'midterm',
+                        maxMarks: 60,
+                        english: 22,
+                        maths: 18,
+                        tamil: 26,
+                        science: 24,
+                        social: 25,
+                        behaviour: 'good',
+                        supportNeeds: ['extra-practice', 'one-on-one', 'study-plan'],
+                        enjoyDoing: 'Reading comics',
+                        findDifficult: 'Word problems',
+                        assessmentScore: 32,
+                        assessmentBreakdown: {
+                            selPercent: 40,
+                            ctPercent: 35,
+                            leadPercent: 25,
+                            selScore: 16,
+                            ctScore: 10.5,
+                            leadScore: 7.5
+                        },
+                        assessmentStatus: 'Completed',
+                        assessmentComments: 'Requires foundational support; responds well to positive feedback.',
+                        registeredAt: now
+                    },
+                    {
+                        id: 'STU_BOB_DEVELOPING',
+                        firstName: 'Bob',
+                        lastName: 'Sharma',
+                        grade: '7',
+                        school: 'Green Valley School',
+                        phone: '9876500200',
+                        dob: '2012-08-15',
+                        doorNo: '44',
+                        street: 'MG Road',
+                        area: 'Indiranagar',
+                        city: 'Bengaluru',
+                        state: 'Karnataka',
+                        pincode: '560038',
+                        parentName: 'Neha Sharma',
+                        parentRelation: 'Mother',
+                        parentPhone: '9876500299',
+                        parentEmail: 'neha@example.com',
+                        childGoodAt: 'Sports, teamwork',
+                        wishForChild: 'Better study habits',
+                        source: 'Facebook',
+                        examType: 'midterm',
+                        maxMarks: 60,
+                        english: 32,
+                        maths: 28,
+                        tamil: 30,
+                        science: 34,
+                        social: 29,
+                        behaviour: 'average',
+                        supportNeeds: ['extra-practice', 'mock-tests', 'study-plan'],
+                        enjoyDoing: 'Football',
+                        findDifficult: 'Long-form writing',
+                        assessmentScore: 48,
+                        assessmentBreakdown: {
+                            selPercent: 55,
+                            ctPercent: 50,
+                            leadPercent: 40,
+                            selScore: 22,
+                            ctScore: 15,
+                            leadScore: 12
+                        },
+                        assessmentStatus: 'Completed',
+                        assessmentComments: 'Developing skills; practice tests improve performance.',
+                        registeredAt: now
+                    },
+                    {
+                        id: 'STU_CHARLIE_PROGRESSING',
+                        firstName: 'Charlie',
+                        lastName: 'Patel',
+                        grade: '8',
+                        school: 'Riverdale High',
+                        phone: '9876500300',
+                        dob: '2011-01-30',
+                        doorNo: '7/2',
+                        street: 'Station Road',
+                        area: 'RK Puram',
+                        city: 'New Delhi',
+                        state: 'Delhi',
+                        pincode: '110022',
+                        parentName: 'Anil Patel',
+                        parentRelation: 'Father',
+                        parentPhone: '9876500399',
+                        parentEmail: 'anil@example.com',
+                        childGoodAt: 'Problem solving, presentations',
+                        wishForChild: 'Balanced academics',
+                        source: 'WhatsApp',
+                        examType: 'midterm',
+                        maxMarks: 60,
+                        english: 38,
+                        maths: 36,
+                        tamil: 34,
+                        science: 40,
+                        social: 35,
+                        behaviour: 'excellent',
+                        supportNeeds: ['mock-tests', 'doubt-clearing'],
+                        enjoyDoing: 'Science experiments',
+                        findDifficult: 'Memorizing dates in Social',
+                        assessmentScore: 67,
+                        assessmentBreakdown: {
+                            selPercent: 70,
+                            ctPercent: 65,
+                            leadPercent: 65,
+                            selScore: 28,
+                            ctScore: 19.5,
+                            leadScore: 19.5
+                        },
+                        assessmentStatus: 'Completed',
+                        assessmentComments: 'Consistent progress; ready for advanced practice sets.',
+                        registeredAt: now
+                    },
+                    {
+                        id: 'STU_DANA_ADVANCED',
+                        firstName: 'Dana',
+                        lastName: 'Iyer',
+                        grade: '8',
+                        school: 'Blue Ridge Academy',
+                        phone: '9876500400',
+                        dob: '2011-11-12',
+                        doorNo: '88B',
+                        street: 'Park Street',
+                        area: 'Alwarpet',
+                        city: 'Chennai',
+                        state: 'Tamil Nadu',
+                        pincode: '600018',
+                        parentName: 'Sanjay Iyer',
+                        parentRelation: 'Father',
+                        parentPhone: '9876500499',
+                        parentEmail: 'sanjay@example.com',
+                        childGoodAt: 'Logical reasoning, reading comprehension',
+                        wishForChild: 'Olympiad preparation',
+                        source: 'Website',
+                        examType: 'midterm',
+                        maxMarks: 60,
+                        english: 52,
+                        maths: 50,
+                        tamil: 48,
+                        science: 54,
+                        social: 49,
+                        behaviour: 'excellent',
+                        supportNeeds: ['mock-tests', 'study-plan'],
+                        enjoyDoing: 'Chess',
+                        findDifficult: 'Maintaining neat notes',
+                        assessmentScore: 85,
+                        assessmentBreakdown: {
+                            selPercent: 90,
+                            ctPercent: 85,
+                            leadPercent: 80,
+                            selScore: 36,
+                            ctScore: 25.5,
+                            leadScore: 24
+                        },
+                        assessmentStatus: 'Completed',
+                        assessmentComments: 'High performer; challenge with olympiad-level material.',
+                        registeredAt: now
+                    }
+                ];
+
+                // Save students
+                StorageHelper.saveStudents(students);
+                console.log('✓ Created 4 test students');
+
+                // Create 2 test pods
+                const pods = [
+                    {
+                        id: 'POD_BEGINNERS',
+                        name: 'Beginner Pod - Foundation Builders',
+                        studentIds: ['STU_ALICE_LOW', 'STU_BOB_DEVELOPING'],
+                        createdAt: now,
+                        updatedAt: now
+                    },
+                    {
+                        id: 'POD_ADVANCED',
+                        name: 'Advanced Pod - High Achievers',
+                        studentIds: ['STU_CHARLIE_PROGRESSING', 'STU_DANA_ADVANCED'],
+                        createdAt: now,
+                        updatedAt: now
+                    }
+                ];
+
+                // Save pods
+                StorageHelper.savePods(pods);
+                console.log('✓ Created 2 test pods');
+
+                showStatus('✅ Test data created successfully! 4 students and 2 pods added.', 'success');
+                
+                // Auto-view data
+                setTimeout(viewData, 500);
+            } catch (error) {
+                console.error('Setup failed:', error);
+                showStatus('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        function viewData() {
+            try {
+                const students = StorageHelper.loadStudents();
+                const pods = StorageHelper.loadPods();
+                
+                const summary = document.getElementById('summary');
+                summary.innerHTML = `
+<strong>📊 Current Data:</strong><br><br>
+<strong>Students (${students.length}):</strong><br>
+${students.map(s => `  • ${s.firstName} ${s.lastName} - Grade ${s.grade} - Assessment: ${s.assessmentScore || 'N/A'}`).join('<br>')}
+<br><br>
+<strong>Pods (${pods.length}):</strong><br>
+${pods.map(p => `  • ${p.name} (${p.studentIds?.length || 0} students)`).join('<br>')}
+                `;
+                summary.style.display = 'block';
+                
+                showStatus(`📋 Loaded ${students.length} students and ${pods.length} pods`, 'success');
+            } catch (error) {
+                showStatus('❌ Error loading data: ' + error.message, 'error');
+            }
+        }
+
+        function clearAllData() {
+            if (!confirm('⚠️ Are you sure? This will delete all students and pods!')) {
+                return;
+            }
+            
+            try {
+                StorageHelper.saveStudents([]);
+                StorageHelper.savePods([]);
+                showStatus('✅ All data cleared successfully', 'success');
+                document.getElementById('summary').style.display = 'none';
+            } catch (error) {
+                showStatus('❌ Error clearing data: ' + error.message, 'error');
+            }
+        }
+
+        // Auto-load current data on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(viewData, 500);
+        });
+    </script>
+</body>
+</html>
