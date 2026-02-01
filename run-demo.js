@@ -232,10 +232,13 @@ function createDemoPod(students) {
 
 // Create 3 session plans
 function createSessionPlans(pod) {
+  const now = Date.now();
   const plans = [
     {
+      id: 'DEMO_PLAN_1',
       name: 'Welcome Session',
       type: 'welcome',
+      executedAt: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
       plan: {
         session_title: 'Welcome to Brain Grain - Building Trust & Connection',
         objective: 'Create a safe, inclusive environment where students feel comfortable sharing, establish group norms, and begin building trust through structured activities.',
@@ -303,8 +306,10 @@ function createSessionPlans(pod) {
       }
     },
     {
+      id: 'DEMO_PLAN_2',
       name: 'First Full Session - Skill Building',
       type: 'first',
+      executedAt: new Date(now - 1 * 24 * 60 * 60 * 1000).toISOString(),
       plan: {
         session_title: 'Building Core Skills - Problem Solving & Collaboration',
         objective: 'Introduce structured problem-solving framework, practice active listening and respectful disagreement, build confidence through achievable challenges.',
@@ -372,8 +377,10 @@ function createSessionPlans(pod) {
       }
     },
     {
+      id: 'DEMO_PLAN_3',
       name: 'Follow-up Session - Deepening Skills',
       type: 'followup',
+      executedAt: new Date().toISOString(),
       plan: {
         session_title: 'Deepening Skills - Leadership & Peer Support',
         objective: 'Build on problem-solving foundation by introducing peer teaching, develop leadership skills through structured roles, strengthen group cohesion through shared challenges.',
@@ -444,12 +451,12 @@ function createSessionPlans(pod) {
   
   plans.forEach((planData, idx) => {
     const plan = {
-      id: `PLAN_${Date.now()}_${idx}`,
+      id: planData.id,
       sessionType: planData.type,
       sessionName: planData.name,
       status: 'executed',
-      acceptedAt: new Date().toISOString(),
-      executedAt: new Date().toISOString(),
+      acceptedAt: planData.executedAt,
+      executedAt: planData.executedAt,
       plan: JSON.stringify(planData.plan),
       facilitatorHtml: generateFacilitatorHTML(planData.plan)
     };
@@ -505,6 +512,7 @@ function generateFacilitatorHTML(planObj) {
 // Create feedback
 function createFeedback(pod, students) {
   const feedback = students.map((s, idx) => ({
+    sessionId: 'DEMO_PLAN_3',
     studentId: s.id,
     studentName: `${s.firstName} ${s.lastName}`,
     behaviour: ['😊', '🙂', '😐'][idx % 3],
