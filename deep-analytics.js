@@ -243,8 +243,18 @@
 
       const data = extractMetricsForCorrelation(students);
       
+      console.log('DeepAnalytics: Extracted correlation data:', {
+        totalStudents: students.length,
+        withCompleteData: data.academic.length,
+        academic: data.academic,
+        assessment: data.assessment,
+        sel: data.sel,
+        ct: data.ct,
+        leadership: data.leadership
+      });
+      
       if (!data || data.academic.length < 3) {
-        console.warn('DeepAnalytics.analyzeCorrelations: Insufficient complete data for correlation');
+        console.warn('DeepAnalytics.analyzeCorrelations: Insufficient complete data for correlation. Need at least 3 students with complete assessment breakdowns.');
         return null;
       }
 
@@ -335,11 +345,19 @@
           const ctPercent = breakdown.ctPercent || breakdown.criticalThinkingPercent || 0;
           const leadPercent = breakdown.leadPercent || breakdown.leadershipPercent || 0;
           
-          if (typeof student.assessmentScore === 'number' && 
+          const hasCompleteData = typeof student.assessmentScore === 'number' && 
               breakdown.selPercent && 
               ctPercent && 
-              leadPercent) {
-            
+              leadPercent;
+          
+          console.log(`Student ${student.id} (${student.firstName}): hasCompleteData=${hasCompleteData}`, {
+            assessmentScore: student.assessmentScore,
+            selPercent: breakdown.selPercent,
+            ctPercent,
+            leadPercent
+          });
+          
+          if (hasCompleteData) {
             data.academic.push(academicAvg);
             data.assessment.push(student.assessmentScore);
             data.sel.push(breakdown.selPercent);
