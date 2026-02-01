@@ -1,0 +1,29 @@
+[
+  {
+    "id": "PLAN_1769948234027_2",
+    "sessionType": "followup",
+    "sessionName": "Follow-up Session",
+    "status": "executed",
+    "acceptedAt": "2026-02-01T12:17:14.027Z",
+    "executedAt": "2026-02-01T12:17:14.027Z",
+    "plan": "{\"session_title\":\"Follow-up Session\",\"objective\":\"Build momentum\",\"duration_minutes\":45,\"activities\":[{\"activity_title\":\"Warm-Up\",\"duration_minutes\":10,\"description\":\"Ice breaker activity\"},{\"activity_title\":\"Main Activity\",\"duration_minutes\":25,\"description\":\"Core learning\"},{\"activity_title\":\"Reflection\",\"duration_minutes\":10,\"description\":\"Share learnings\"}]}"
+  },
+  {
+    "id": "PLAN_1769948234026_1",
+    "sessionType": "first",
+    "sessionName": "First Full Session",
+    "status": "executed",
+    "acceptedAt": "2026-02-01T12:17:14.026Z",
+    "executedAt": "2026-02-01T12:17:14.026Z",
+    "plan": "{\"session_title\":\"First Full Session\",\"objective\":\"Build skills\",\"duration_minutes\":45,\"activities\":[{\"activity_title\":\"Warm-Up\",\"duration_minutes\":10,\"description\":\"Ice breaker activity\"},{\"activity_title\":\"Main Activity\",\"duration_minutes\":25,\"description\":\"Core learning\"},{\"activity_title\":\"Reflection\",\"duration_minutes\":10,\"description\":\"Share learnings\"}]}"
+  },
+  {
+    "id": "PLAN_1769948234024_0",
+    "sessionType": "welcome",
+    "sessionName": "Welcome Session",
+    "status": "executed",
+    "acceptedAt": "2026-02-01T12:17:14.024Z",
+    "executedAt": "2026-02-01T12:17:14.024Z",
+    "plan": "{\"session_title\":\"Welcome Session\",\"objective\":\"Build trust\",\"duration_minutes\":45,\"activities\":[{\"activity_title\":\"Warm-Up\",\"duration_minutes\":10,\"description\":\"Ice breaker activity\"},{\"activity_title\":\"Main Activity\",\"duration_minutes\":25,\"description\":\"Core learning\"},{\"activity_title\":\"Reflection\",\"duration_minutes\":10,\"description\":\"Share learnings\"}]}"
+  }
+]

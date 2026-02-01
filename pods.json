@@ -1,0 +1,14 @@
+[
+  {
+    "id": "DEMO_POD_1",
+    "name": "Demo Pod - Mixed Abilities",
+    "studentIds": [
+      "DEMO_STU_1",
+      "DEMO_STU_2",
+      "DEMO_STU_3",
+      "DEMO_STU_4"
+    ],
+    "createdAt": "2026-02-01T12:17:14.023Z",
+    "updatedAt": "2026-02-01T12:17:14.023Z"
+  }
+]

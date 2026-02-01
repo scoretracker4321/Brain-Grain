@@ -318,30 +318,37 @@
     };
 
     students.forEach(student => {
-      // Academic average
-      const subjects = config.academic?.subjects || ['english', 'maths', 'tamil', 'science', 'social'];
-      const maxMarks = student.maxMarks || 60;
-      const subjectScores = subjects
-        .map(s => student[s])
-        .filter(s => typeof s === 'number' && s >= 0)
-        .map(s => (s / maxMarks) * 100);
-      
-      if (subjectScores.length > 0) {
-        const academicAvg = mean(subjectScores);
-        const breakdown = student.assessmentBreakdown || {};
+      try {
+        // Academic average
+        const subjects = config.academic?.subjects || ['english', 'maths', 'tamil', 'science', 'social'];
+        const maxMarks = student.maxMarks || 60;
+        const subjectScores = subjects
+          .map(s => student[s])
+          .filter(s => typeof s === 'number' && s >= 0)
+          .map(s => (s / maxMarks) * 100);
         
-        // Only include students with complete data
-        if (typeof student.assessmentScore === 'number' && 
-            breakdown.selPercent && 
-            breakdown.criticalThinkingPercent && 
-            breakdown.leadershipPercent) {
+        if (subjectScores.length > 0) {
+          const academicAvg = mean(subjectScores);
+          const breakdown = student.assessmentBreakdown || {};
           
-          data.academic.push(academicAvg);
-          data.assessment.push(student.assessmentScore);
-          data.sel.push(breakdown.selPercent);
-          data.ct.push(breakdown.criticalThinkingPercent);
-          data.leadership.push(breakdown.leadershipPercent);
+          // Only include students with complete data - check for all property name variants
+          const ctPercent = breakdown.ctPercent || breakdown.criticalThinkingPercent || 0;
+          const leadPercent = breakdown.leadPercent || breakdown.leadershipPercent || 0;
+          
+          if (typeof student.assessmentScore === 'number' && 
+              breakdown.selPercent && 
+              ctPercent && 
+              leadPercent) {
+            
+            data.academic.push(academicAvg);
+            data.assessment.push(student.assessmentScore);
+            data.sel.push(breakdown.selPercent);
+            data.ct.push(ctPercent);
+            data.leadership.push(leadPercent);
+          }
         }
+      } catch (err) {
+        console.warn(`Skipping student ${student?.id} in correlation analysis:`, err);
       }
     });
 

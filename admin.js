@@ -2049,6 +2049,13 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
       
       // Populate student dropdown
       populateStudentAnalyticsDropdown();
+      
+      // Auto-select first student
+      const select = document.getElementById('studentAnalyticsSelect');
+      if (select && select.options.length > 1) {
+        select.selectedIndex = 1; // Skip "-- Choose a student --" option
+        loadStudentAnalytics(select.value);
+      }
     } else {
       studentBtn.className = 'btn btn-secondary';
       podBtn.className = 'btn btn-primary';
@@ -2057,6 +2064,13 @@ ${idx + 1}. ${st.name} (Grade ${st.grade || 'N/A'})`);
       
       // Populate pod dropdown
       populatePodAnalyticsDropdown();
+      
+      // Auto-select first pod
+      const select = document.getElementById('podAnalyticsSelect');
+      if (select && select.options.length > 1) {
+        select.selectedIndex = 1; // Skip "-- Choose a pod --" option
+        loadPodAnalytics(select.value);
+      }
     }
   }
 
